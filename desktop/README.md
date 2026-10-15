@@ -68,7 +68,8 @@ version; otherwise it's `APP_VERSION` in `scripts/app_info.py`.
     screen. Windows reserves that strip the way it reserves the taskbar's, so
     maximized windows fit beside it. While docked, the window shows
     `scripts/dock.py`: your latest match round by round, your numbers and your
-    recent form. It refreshes every 15 seconds.
+    recent form, from the matches you've added. It refreshes every 15 seconds,
+    and says when the game has saved a match you haven't added yet.
 
   You can dock from the Dashboard's sidebar, from the jump list, or from the
   panel itself (**Dock left/right** to move it, **Full window** to undock). The
@@ -122,7 +123,7 @@ Only a certificate from a certificate authority that Windows trusts replaces "Un
 Since June 2023, certificate authorities have issued new code-signing certificates only on hardware keys, and those can't be exported as a `.pfx`. A `.pfx` fits a certificate issued before then. A newer certificate needs its provider's cloud signing service in place of `sign.ps1`'s `/f` option.
 
 The app writes its log to `%LOCALAPPDATA%\R6MatchStats\app.log`, and its stats
-database (every match it reads, the teams you build and tracked season stats)
+database (the matches you add, the teams you build and tracked season stats)
 to `%LOCALAPPDATA%\R6MatchStats\season_stats.db`.
 
 For testing, set `R6_NO_WINDOW=1` to open the app in the default browser

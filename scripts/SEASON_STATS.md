@@ -130,10 +130,13 @@ player ends up with no team at all, `LogResult.warnings` says so.
 
 ### 5. Use the dashboard tracker
 
-After loading a replay, expand **Season tracker** below the scoreboards. Select
-the roster and team label, track those players, then save the match. The
-Match History and Team Analytics navigation pages show saved totals; repeated
-imports skip rounds already recorded for the season.
+After loading a replay, go to **Add to your stats** below the scoreboards. Pick
+the players to track from that match, tick **Also save it to the season
+tracker**, enter the season and a team or school name for each team, then
+confirm. Only the players picked are logged (`log_match(match, players=...)`),
+never another tracked player who was in the match. Team Analytics' Season teams
+tab shows saved totals; saving a match again skips rounds already recorded for
+the season.
 
 ---
 
@@ -150,7 +153,7 @@ season, or several on the same file.
 - `tracked_players() -> {username: team_or_None}`
 
 **Logging**
-- `log_match(match, match_id=None) -> LogResult`: logs every round of a normalized match in one transaction.
+- `log_match(match, match_id=None, players=None) -> LogResult`: logs every round of a normalized match in one transaction. `players` limits it to the players confirmed for this match (any case); `None` logs every tracked player in it.
 - `log_round(match_id, round_num, {username: RoundResult}, {username: team}=None) -> LogResult`: lower-level entry point for per-round data you've computed yourself.
 - `is_round_logged(match_id, round_num, username=None) -> bool`
 - `rebuild_totals()`: recomputes this season's totals from the per-round log.

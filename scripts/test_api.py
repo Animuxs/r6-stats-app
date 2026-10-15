@@ -54,6 +54,23 @@ class TestApi(unittest.TestCase):
         players = self.client.get("/api/v1/seasons/S1/summary").json()["players"]
         self.assertTrue(all(p["eps"] is not None for p in players))
 
+    def test_only_the_players_picked_for_the_match_are_logged(self):
+        # tracked earlier, but not picked for this match (a stranger's teammate in Ranked, say)
+        self.client.post("/api/v1/seasons/S1/rosters", json={"team": "Varsity", "players": TEAM0})
+        body = {"match": SAMPLE_MATCH, "rosters": {"Varsity": TEAM0[:2]}}
+        response = self.client.post("/api/v1/seasons/S1/matches/log", json=body)
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json()["players_logged"], sorted(TEAM0[:2]))
+        players = self.client.get("/api/v1/seasons/S1/summary").json()["players"]
+        self.assertEqual(sorted(p["username"] for p in players), sorted(TEAM0[:2]))
+
+    def test_a_match_saved_without_picking_players_is_a_400(self):
+        self.client.post("/api/v1/seasons/S1/rosters", json={"team": "Varsity", "players": TEAM0})
+        for rosters in ({}, {"Varsity": [" "]}):
+            response = self.client.post("/api/v1/seasons/S1/matches/log", json={"match": SAMPLE_MATCH, "rosters": rosters})
+            self.assertEqual(response.status_code, 400)
+        self.assertEqual(self.client.get("/api/v1/seasons/S1/summary").json()["players"], [])
+
     def test_a_malformed_match_is_a_400(self):
         broken = copy.deepcopy(SAMPLE_MATCH)
         del broken["rounds"]

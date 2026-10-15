@@ -80,33 +80,12 @@ class TestReportPage(unittest.TestCase):
         self.assertEqual([b.proto.label for b in buttons], ["⬇ CSV", "⬇ JSON", "⬇ TXT", "⬇ Rounds CSV"])
         self.assertEqual([Path(b.proto.url).suffix for b in buttons], [".csv", ".json", ".txt", ".csv"])
 
-    @staticmethod
-    def tracker(at: AppTest):
-        """The season tracker's roster team, team name and players widgets."""
-        name = next(t for t in at.text_input if str(t.key).startswith("r6_tracker_team_name"))
-        players = next(m for m in at.multiselect if str(m.key).startswith("r6_tracker_players"))
-        return at.selectbox(key="r6_tracker_team"), name, players
-
-    def test_season_tracker_follows_the_selected_team(self):
-        from sample_data import SAMPLE_MATCH
-
+    def test_the_demo_match_is_never_added_to_your_stats(self):
         at = run_app(R6_HOSTED="1")
         at.toggle[0].set_value(True).run()
-        team, name, players = self.tracker(at)
-        team.set_value(1).run()
-        team, name, players = self.tracker(at)
-        self.assertEqual(name.value, SAMPLE_MATCH["team_names"][1])  # not the other team's name
-        self.assertEqual(sorted(players.value), sorted(p["name"] for p in SAMPLE_MATCH["players"] if p["team"] == 1))
-
-    def test_season_tracker_never_offers_a_replays_generic_label_as_the_team(self):
-        from sample_data import SAMPLE_MATCH
-
-        generic = {**SAMPLE_MATCH, "team_names": ["YOUR TEAM", "ENEMY TEAM"]}
-        with mock.patch.object(replay_parser, "load_demo_match", return_value=generic):
-            at = run_app(R6_HOSTED="1")
-            at.toggle[0].set_value(True).run()
         self.assertFalse(at.exception)
-        self.assertEqual(self.tracker(at)[1].value, "")  # asks for the real name instead
+        self.assertTrue(any("can't be added to your stats" in c.value for c in at.caption))
+        self.assertFalse([b for b in at.button if "Confirm" in b.label])
 
     def test_demo_match_renders_both_scoreboards(self):
         at = run_app(R6_HOSTED="1")
@@ -185,19 +164,33 @@ class TestSchoolCatalog(unittest.TestCase):
             necc_data.normalize_school_catalog({"schools": []})
 
 
-def with_matches(at: AppTest, count: int = 2) -> AppTest:
-    """Give the session a replay source of `count` demo matches (Fabian recorded them), already
-    parsed, the way Dashboard leaves it after loading a folder."""
+def demo_matches(count: int = 2) -> dict[str, dict]:
+    """`count` copies of the demo match, as found in a replay folder: {match folder: MatchData}.
+    Fabian recorded them."""
     from sample_data import SAMPLE_MATCH
 
-    parsed = {}
+    found = {}
     for i in range(count):
         match = copy.deepcopy(SAMPLE_MATCH)
         match.update(match_id=f"demo-{i}", played_at=f"2026-09-2{i} 20:00:00", recording_player="Fabian",
                      match_type="Ranked")
-        parsed[f"Match-2026-09-2{i}_20-00-00-1"] = (match, {}, [])
+        found[f"Match-2026-09-2{i}_20-00-00-1"] = match
+    return found
+
+
+def with_matches(at: AppTest, count: int = 2, added: bool = True) -> AppTest:
+    """Give the session a replay source of `count` demo matches, already parsed, the way Dashboard
+    leaves it after loading a folder; and, if `added`, put them in the stats database with every
+    player, as if each had been confirmed on the Dashboard."""
+    from stats_db import StatsDB
+
+    parsed = {name: (match, {}, []) for name, match in demo_matches(count).items()}
     at.session_state["source"] = {"sig": ("upload", "test"), "workdir": tempfile.mkdtemp(), "parsed": parsed,
                                   "groups": {n: [f"{n}-R01.rec"] for n in parsed}, "skipped": None}
+    if added:
+        with StatsDB() as db:
+            for name, (match, _raw, _warnings) in parsed.items():
+                db.import_match(name, match, files=1)
     return at
 
 
@@ -394,6 +387,25 @@ class TestAnalyticsPages(unittest.TestCase):
         self.assertEqual([at.checkbox(key=f"in_season_current_{i}").value for i in ids], [True, False, True])
         self.assertEqual({m.label: m.value for m in at.metric}["Maps"], "2")
 
+    def test_a_season_match_saves_only_the_players_picked_for_it(self):
+        from sample_data import TEAM0
+        from season_stats import StatsManager
+        from stats_db import StatsDB
+
+        at = with_matches(run_app(), count=1, added=False)
+        name, (match, _raw, _warnings) = next(iter(at.session_state["source"]["parsed"].items()))
+        with StatsDB() as db:  # added on the Dashboard with three of the team: the other two were subs today
+            db.import_match(name, match, files=1, players=TEAM0[:3])
+        with StatsManager(season="current") as tracker:
+            tracker.add_players(TEAM0, team="Squad")
+        at.switch_page("teams.py").run()
+        at.slider(key="season_need_current_Squad").set_value(1).run()
+        at.checkbox(key=f"in_season_current_{match['match_id']}").check()
+        at = next(b for b in at.button if b.label == "Save season matches").click().run()
+        self.assertFalse(at.exception)
+        with StatsManager(season="current") as tracker:
+            self.assertEqual(sorted(p.username for p in tracker.all_player_stats()), sorted(TEAM0[:3]))
+
     def test_each_season_team_counts_only_its_own_matches(self):
         from metrics_engine import compute_match_metrics
         from sample_data import TEAM0, TEAM1
@@ -481,31 +493,172 @@ class TestAnalyticsPages(unittest.TestCase):
         self.assertEqual([t.label for t in at.tabs], ["Build a team", "Season teams"])
 
 
-class TestStatsSync(unittest.TestCase):
-    """sources.sync_stats_db: every replay of a folder into the stats database."""
+class TestAddingMatches(unittest.TestCase):
+    """Nothing goes into the stats database on its own: a match is added only once it's confirmed on
+    the Dashboard, with just the players picked for it."""
 
-    def test_a_replay_that_fails_is_skipped_and_the_rest_are_added(self):
-        from sample_data import SAMPLE_MATCH
-        from sources import sync_stats_db
+    def setUp(self):
+        self.folder = Path(tempfile.mkdtemp(dir=_DB_FOLDER))  # the game's replay folder, found on this PC
+        self.matches = demo_matches(2)
+        for patch in (
+            mock.patch.object(season_stats, "DEFAULT_DB_PATH", Path(tempfile.mkdtemp(dir=_DB_FOLDER)) / "stats.db"),
+            mock.patch.object(replay_parser, "find_replay_folders", return_value=[self.folder]),
+            mock.patch.object(app_info, "is_loopback", return_value=True),  # on this PC for every run, not just the first
+            mock.patch("sources.collect_rec_files", side_effect=lambda path, workdir, scanner: [
+                str(path / name / f"{name}-R01.rec") for name in self.matches]),
+            mock.patch("sources.parse_match",
+                       side_effect=lambda recs: (self.matches[Path(recs[0]).parent.name], {}, [])),
+        ):
+            patch.start()
+            self.addCleanup(patch.stop)
+
+    @staticmethod
+    def stats() -> dict[str, list[str]]:
+        """{match id: the players kept in it} in the stats database."""
         from stats_db import StatsDB
 
-        def parse_match(recs):
-            if recs == ["b.rec"]:
-                raise KeyError("roundNumber")  # read by r6-dissect, but not the way this app expects
-            if recs == ["c.rec"]:
-                raise replay_parser.ReplayParseError("r6-dissect couldn't read it")
-            return dict(SAMPLE_MATCH, match_id=recs[0]), {}, []
+        with StatsDB() as db:
+            return db.players_by_match()
 
-        groups = {"Match-2026-09-20_19-00-00-1": ["a.rec"], "Match-2026-09-21_19-00-00-2": ["b.rec"],
-                  "Match-2026-09-22_19-00-00-3": ["c.rec"]}
-        state = {"groups": groups, "parsed": {}}
-        with StatsDB(":memory:") as db, mock.patch("sources.parse_match", side_effect=parse_match):
-            self.assertEqual(sync_stats_db(state, db), 1)
-            self.assertEqual(db.summary()["matches"], 1)
-            skipped = {r["source"]: r["reason"] for r in db.query("SELECT source, reason FROM skipped")}
-            self.assertEqual(sorted(skipped), ["Match-2026-09-21_19-00-00-2", "Match-2026-09-22_19-00-00-3"])
-            self.assertIn("roundNumber", skipped["Match-2026-09-21_19-00-00-2"])
-            self.assertEqual(sync_stats_db(state, db), 0)  # and they aren't tried again on every page
+    @staticmethod
+    def picker(at: AppTest, team: int):
+        return next(m for m in at.multiselect if str(m.key).startswith("confirm_players:")
+                    and str(m.key).endswith(f":{team}"))
+
+    @staticmethod
+    def confirm(at: AppTest):
+        return next(b for b in at.button if b.label in ("Confirm match and players", "Update players"))
+
+    def test_opening_a_match_adds_nothing(self):
+        at = run_app()
+        self.assertFalse(at.exception)
+        self.assertEqual(len(at.get("selectbox")[0].options), 2)  # both matches, the newest open
+        self.assertEqual([self.picker(at, team).value for team in (0, 1)], [[], []])  # nobody picked for you
+        self.assertTrue(self.confirm(at).disabled)
+        for page in ("ask.py", "history.py", "operators.py", "teams.py"):
+            with self.subTest(page=page):
+                at.switch_page(page).run()
+                self.assertFalse(at.exception)
+                self.assertTrue(any("No matches yet" in i.value for i in at.info))
+        self.assertEqual(self.stats(), {})
+
+    def test_only_the_players_picked_are_added(self):
+        from sample_data import TEAM0
+
+        at = run_app()
+        self.picker(at, 0).set_value(TEAM0[:3]).run()
+        at = self.confirm(at).click().run()
+        self.assertFalse(at.exception)
+        self.assertIn("Added to your stats, tracking 3 players: Fabian, Kanto, Sens.", at.success[0].value)
+        self.assertEqual(self.stats(), {"demo-1": ["Fabian", "Kanto", "Sens"]})  # the newest match, nobody else
+        self.assertTrue(any("In your stats, tracking" in c.value for c in at.caption))
+        self.assertEqual(self.confirm(at).label, "Update players")
+        self.assertTrue(at.get("selectbox")[0].format_func("Match-2026-09-21_20-00-00-1").endswith("✓ added"))
+        at.switch_page("history.py").run()
+        self.assertEqual(list(at.dataframe[0].value["Tracked"]), ["Fabian, Kanto, Sens"])
+
+    def test_confirming_again_replaces_the_players(self):
+        from sample_data import TEAM0
+
+        at = run_app()
+        self.picker(at, 0).set_value(TEAM0).run()
+        at = self.confirm(at).click().run()
+        self.picker(at, 0).set_value(TEAM0[:1]).run()
+        at = self.confirm(at).click().run()
+        self.assertEqual(self.stats(), {"demo-1": ["Fabian"]})
+
+    def test_a_matchmade_match_warns_that_a_teammate_may_be_a_stranger(self):
+        at = run_app()
+        self.assertTrue(any("**Ranked** match" in w.value for w in at.warning))
+        self.matches = {name: dict(match, match_type="Custom game") for name, match in self.matches.items()}
+        at = run_app()
+        self.assertFalse(any("Pick only the players you track" in w.value for w in at.warning))
+
+    def test_saving_to_a_season_logs_only_the_picked_players(self):
+        from sample_data import TEAM0, TEAM1
+        from season_stats import StatsManager
+
+        with StatsManager(season="S1") as tracker:  # tracked earlier; one of them is on the other team today
+            tracker.add_players(TEAM0 + TEAM1[:1], team="Varsity")
+        at = run_app()
+        self.picker(at, 0).set_value(TEAM0[:3]).run()
+        at.checkbox(key="confirm_season").check().run()
+        at.text_input(key="r6_season_input").set_value("S1").run()
+        at = self.confirm(at).click().run()
+        self.assertFalse(at.exception)
+        self.assertIn("player-rounds to S1", at.success[0].value)
+        with StatsManager(season="S1") as tracker:
+            logged = {r["username"] for r in tracker._conn.execute("SELECT DISTINCT username FROM logged_rounds")}
+        self.assertEqual(logged, set(TEAM0[:3]))
+        self.assertEqual(self.stats(), {"demo-1": ["Fabian", "Kanto", "Sens"]})
+
+    def test_a_replays_generic_label_is_never_offered_as_the_team(self):
+        from sample_data import TEAM0
+
+        self.matches = {name: dict(match, team_names=["YOUR TEAM", "ENEMY TEAM"])
+                        for name, match in self.matches.items()}
+        at = run_app()
+        self.picker(at, 0).set_value(TEAM0[:1]).run()
+        at.checkbox(key="confirm_season").check().run()
+        self.assertFalse(at.exception)
+        self.assertEqual(at.text_input(key="confirm_team_name:demo-1:0").value, "")  # asks for the real name
+        self.assertNotIn("confirm_team_name:demo-1:1", [t.key for t in at.text_input])  # nobody picked there
+
+
+class TestCheckingEarlierMatches(unittest.TestCase):
+    """Matches an earlier version added on its own, with every player in them, wait on Match History
+    until they're checked."""
+
+    def setUp(self):
+        patch = mock.patch.object(season_stats, "DEFAULT_DB_PATH", Path(tempfile.mkdtemp(dir=_DB_FOLDER)) / "stats.db")
+        patch.start()
+        self.addCleanup(patch.stop)
+
+    @staticmethod
+    def added_by_an_earlier_version(at: AppTest) -> AppTest:
+        from stats_db import StatsDB
+
+        at = with_matches(at)
+        with StatsDB() as db:  # as an earlier version left it: the next open holds its matches back
+            db._conn.execute("DELETE FROM stats_meta WHERE key = 'data'")
+            db._conn.commit()
+        return at
+
+    def test_they_dont_count_until_checked(self):
+        from sample_data import TEAM0
+
+        at = self.added_by_an_earlier_version(run_app())
+        at.switch_page("ask.py").run()
+        self.assertIn("2 matches added by an earlier version are waiting", at.info[0].value)
+        at.switch_page("history.py").run()
+        self.assertFalse(at.exception)
+        self.assertIn("2 matches added by an earlier version don't count yet", at.warning[0].value)
+        self.assertEqual(len(at.dataframe), 0)
+        self.assertEqual(at.multiselect(key="check:demo-1:0").value, [])
+        at.multiselect(key="check:demo-1:0").set_value(TEAM0[:2]).run()
+        at = next(b for b in at.button if b.label == "Keep these players").click().run()
+        self.assertFalse(at.exception)
+        self.assertIn("1 match added by an earlier version doesn't count yet", at.warning[0].value)
+        self.assertEqual(list(at.dataframe[0].value["Tracked"]), ["Fabian, Kanto"])
+
+    def test_keep_just_your_own_stats_in_all_of_them(self):
+        at = self.added_by_an_earlier_version(run_app())
+        at.switch_page("history.py").run()
+        at = next(b for b in at.button if b.label == "Keep just your own stats in all 2").click().run()
+        self.assertFalse(at.exception)
+        self.assertIn("Kept your own stats in 2 matches.", at.success[0].value)
+        self.assertEqual(list(at.dataframe[0].value["Tracked"]), ["Fabian", "Fabian"])
+        self.assertEqual({m.label: m.value for m in at.metric}["Matches"], "2")
+
+    def test_remove_them(self):
+        at = self.added_by_an_earlier_version(run_app())
+        at.switch_page("history.py").run()
+        at = next(b for b in at.button if b.label == "Remove this match").click().run()
+        self.assertIn("1 match added by an earlier version", at.warning[0].value)
+        at = next(b for b in at.button if b.label == "Yes, remove all 1").click().run()
+        self.assertFalse(at.exception)
+        self.assertFalse(at.warning)
+        self.assertTrue(any("No matches yet" in i.value for i in at.info))
 
 
 class TestMatchLabels(unittest.TestCase):
@@ -598,7 +751,16 @@ class TestDockedView(unittest.TestCase):
         self.assertIn("Last 2 matches", page)
         self.assertIn("As Fabian", page)
         self.assertNotIn('<div class="identity-banner">', page)  # no school banner in the narrow panel
+        self.assertNotIn("Not in your stats yet", page)
         self.assertEqual([b.label for b in at.button], ["⇱ Full window"])  # docking itself needs the Windows app
+
+    def test_a_match_the_game_saved_waits_to_be_added(self):
+        at = self.docked(with_matches(run_app(), added=False))
+        self.assertFalse(at.exception)
+        page = "".join(m.value for m in at.markdown)
+        self.assertIn("New match", page)
+        self.assertIn("Not in your stats yet", page)
+        self.assertNotIn("Latest match", page)  # nothing's in your stats until you add it
 
     def test_without_matches_says_why(self):
         at = self.docked(run_app())

@@ -1,4 +1,5 @@
-"""The Ask page: plain-English questions about every match in the stats database."""
+"""The Ask page: plain-English questions about every match in the stats database (the ones you've
+confirmed on the Dashboard, with the players you picked)."""
 
 from __future__ import annotations
 
@@ -7,7 +8,7 @@ import streamlit as st
 
 from ask_engine import Answer, Vocab, ask, suggestions
 from metrics_engine import rows_csv
-from sources import current_source, open_stats_db, sync_with_progress
+from sources import no_matches_yet, open_stats_db
 from stats_db import nice_day
 from branding import current_theme, readable_accent
 from ui import md
@@ -47,13 +48,9 @@ st.caption("Ask anything about your matches in plain English: trends, maps, oper
            "your team. Everything stays on this computer.")
 
 with open_stats_db() as db:
-    source = current_source()
-    if source and "error" not in source:
-        sync_with_progress(db, source)
     summary = db.summary()
     if not summary["matches"]:
-        st.info("No matches yet. Open your replays on **Dashboard** (or upload them there), and they'll "
-                "show up here.")
+        no_matches_yet(db)
         st.stop()
     vocab = Vocab.from_db(db)
     me = vocab.players.get(vocab.me) if vocab.me else None

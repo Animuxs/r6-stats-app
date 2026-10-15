@@ -2,8 +2,9 @@
 
 `R6MatchStats/` is the Unity 6 desktop-client project. The command-center scene
 is generated at runtime: it includes the tactical 3D board, module navigation,
-replay-path input, school/roster selection, and UnityWebRequest calls to the
-same FastAPI service as the React client.
+replay-path input, a player picker for saving a parsed match to a season (only
+the players you pick are saved), school/roster selection, and UnityWebRequest
+calls to the same FastAPI service as the React client.
 
 ## Run
 
@@ -12,7 +13,8 @@ client expects the local API at `http://127.0.0.1:8000/api/v1` by default. Start
 it from the repository root in a separate terminal:
 
 ```powershell
-python -m pip install -r scriptsequirements-api.txt
+python -m pip install -r scripts
+equirements-api.txt
 $env:R6_DESKTOP = "1"
 python -m uvicorn api:app --app-dir scripts --host 127.0.0.1 --port 8000
 ```

@@ -9,7 +9,7 @@ import streamlit as st
 
 from ask_engine import operator_table
 from metrics_engine import compute_match_metrics, side_label
-from sources import current_source, match_time, open_stats_db, parse, sync_with_progress
+from sources import current_source, match_time, no_matches_yet, open_stats_db, parse
 from ui import md
 
 ALL, THIS = "All matches", "This match"
@@ -110,13 +110,10 @@ if view == THIS:
         this_match(match)
 else:
     with open_stats_db() as db:
-        source = current_source()
-        if source and "error" not in source:
-            sync_with_progress(db, source)
         players = db.players()
         me = db.me()
         if not players:
-            st.info("No matches yet. Open your replays on **Dashboard** (or upload them there) first.")
+            no_matches_yet(db)
             st.stop()
         keys = sorted(players, key=lambda k: (k != (me or "").casefold(), players[k].casefold()))
         player = st.selectbox("Player", keys, format_func=lambda k: players[k] + (" (you)" if players[k] == me else ""))

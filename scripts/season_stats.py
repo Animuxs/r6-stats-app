@@ -338,9 +338,14 @@ class StatsManager:
 
     # ---------------------------------------------------------- logging ----
 
-    def log_match(self, match: dict[str, Any], match_id: str | None = None) -> LogResult:
+    def log_match(self, match: dict[str, Any], match_id: str | None = None,
+                  players: Iterable[str] | None = None) -> LogResult:
         """Log every round of a normalized MatchData (parser.parse_match /
         parser.parse_replay output) for the tracked players in it.
+
+        `players` limits it to the players confirmed for this match (any case):
+        a tracked player who was only a stranger's teammate in Ranked, or on the
+        other side of a scrim, isn't logged. None logs every tracked player.
 
         `match_id` overrides match["match_id"]; it must identify the match
         uniquely, since (match_id, round_num, player) is the dedupe key."""
@@ -352,7 +357,10 @@ class StatsManager:
                 "match has no matchID; pass match_id=... explicitly so rounds can be de-duplicated"
             )
         team_names = list(match.get("team_names") or [])
-        stats = compute_match_metrics(match)
+        stats = compute_match_metrics(match)  # EPS against everyone in the match
+        if players is not None:
+            picked = {p.strip().casefold() for p in players if p.strip()}
+            stats = {name: ps for name, ps in stats.items() if name.casefold() in picked}
 
         # regroup the engine's per-player breakdowns into per-round dicts
         rounds: dict[int, dict[str, RoundResult]] = {}
