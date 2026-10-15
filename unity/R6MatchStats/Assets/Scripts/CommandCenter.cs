@@ -31,6 +31,9 @@ namespace R6MatchIntelligence
         private string _selectedSchoolName = "";
         private string _selectedTeamName = "";
         private ParsedReplay _currentReplay;
+        // the players picked to save from the parsed match: nobody until picked, since someone on
+        // your team in Ranked may be a stranger
+        private readonly HashSet<string> _pickedPlayers = new HashSet<string>();
         private readonly List<Renderer> _brandMeshes = new List<Renderer>();
         private Color _accent = new Color(0.83f, 0.54f, 0.30f);
         private RectTransform _activeTabPlate;
@@ -259,9 +262,10 @@ namespace R6MatchIntelligence
                 CreateText(_pageBody, _currentReplay.match.map + "   /   " + _currentReplay.match.match_id,
                     new Vector2(0f, -250f), new Vector2(700f, 30f), 21, Color.white, FontStyle.Bold, TextAnchor.MiddleLeft);
                 var score = _currentReplay.match.final_score ?? new int[2];
-                CreateText(_pageBody, score[0] + " : " + score[1] + "     " + (_currentReplay.match.players == null ? 0 : _currentReplay.match.players.Length) + " PLAYERS",
-                    new Vector2(0f, -284f), new Vector2(400f, 22f), 12, new Color(0.65f, 0.76f, 0.71f), FontStyle.Normal, TextAnchor.MiddleLeft);
-                CreateButton(_pageBody, "SAVE TO SEASON", new Vector2(0f, -329f), new Vector2(180f, 40f), () => StartCoroutine(SaveCurrentMatch()));
+                CreateText(_pageBody, score[0] + " : " + score[1] + "     " + (_currentReplay.match.players == null ? 0 : _currentReplay.match.players.Length) + " PLAYERS     PICK THE PLAYERS TO TRACK",
+                    new Vector2(0f, -284f), new Vector2(520f, 22f), 12, new Color(0.65f, 0.76f, 0.71f), FontStyle.Normal, TextAnchor.MiddleLeft);
+                CreateButton(_pageBody, "SAVE " + _pickedPlayers.Count + " TO SEASON", new Vector2(578f, -278f), new Vector2(180f, 34f), () => StartCoroutine(SaveCurrentMatch()));
+                DrawPlayerPicks(_currentReplay.match);
             }
             else
             {
@@ -272,6 +276,26 @@ namespace R6MatchIntelligence
             CreateInput(_pageBody, "Season label", new Vector2(78f, -379f), new Vector2(180f, 33f), _season).onEndEdit.AddListener(value => _season = string.IsNullOrWhiteSpace(value) ? "current" : value.Trim());
             _apiInput = CreateInput(_pageBody, "Local or hosted API URL", new Vector2(285f, -379f), new Vector2(350f, 33f), _apiBase);
             CreateButton(_pageBody, "CONNECT", new Vector2(646f, -379f), new Vector2(112f, 33f), ConnectApi);
+        }
+
+        private void DrawPlayerPicks(NormalizedMatch match)
+        {
+            if (match.players == null) return;
+            for (var teamIndex = 0; teamIndex < 2; teamIndex++)
+            {
+                var x = 0f;
+                foreach (var player in match.players.Where(item => item.team == teamIndex).Take(5))
+                {
+                    var name = player.name;
+                    var label = (_pickedPlayers.Contains(name) ? "[X] " : "[  ] ") + name;
+                    CreateButton(_pageBody, label, new Vector2(x, -314f - teamIndex * 30f), new Vector2(148f, 26f), () =>
+                    {
+                        if (!_pickedPlayers.Remove(name)) _pickedPlayers.Add(name);
+                        DrawPage();
+                    });
+                    x += 152f;
+                }
+            }
         }
 
         private void CreateMetric(string label, string value, Vector2 position)
@@ -391,6 +415,7 @@ namespace R6MatchIntelligence
             {
                 var response = JsonUtility.FromJson<ParseResponse>(value);
                 _currentReplay = response != null && response.matches != null && response.matches.Length > 0 ? response.matches[0] : null;
+                _pickedPlayers.Clear();
                 SetStatus(_currentReplay == null ? "No replay match returned." : "Replay parsed / " + _currentReplay.match.map);
             });
             DrawPage();
@@ -399,6 +424,7 @@ namespace R6MatchIntelligence
         private IEnumerator SaveCurrentMatch()
         {
             if (_currentReplay == null || _currentReplay.match == null) { SetStatus("Parse a replay first."); yield break; }
+            if (_pickedPlayers.Count == 0) { SetStatus("Pick the players to track from this match first."); yield break; }
             var body = BuildLogPayload(_currentReplay);
             SetStatus("Saving tracked rounds...");
             yield return Post("/seasons/" + UnityWebRequest.EscapeURL(_season) + "/matches/log", body, value =>
@@ -462,7 +488,7 @@ namespace R6MatchIntelligence
                 var teamCount = match.team_names == null ? 0 : match.team_names.Length;
                 for (var teamIndex = 0; teamIndex < teamCount; teamIndex++)
                 {
-                    var roster = match.players.Where(player => player.team == teamIndex).Select(player => player.name).ToArray();
+                    var roster = match.players.Where(player => player.team == teamIndex && _pickedPlayers.Contains(player.name)).Select(player => player.name).ToArray();
                     if (roster.Length == 0) continue;
                     if (wroteTeam) json.Append(',');
                     json.Append(QuoteJson(match.team_names[teamIndex])).Append(':').Append(ToJsonArray(roster));

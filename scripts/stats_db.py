@@ -1,10 +1,14 @@
 """
 stats_db.py
 ===========
-A database of every match the app has read: one row per match, per player per
-match, and per player per round. It fills itself from the replays (Ask, Match
-History and Build a team read from it), so nothing is ever imported by hand, and
-the teams built on the Team page are kept in it so questions can name them.
+A database of the matches you've confirmed: one row per match, per player per
+match, and per player per round (Ask, Match History and Build a team read from
+it), and the teams built on the Team page, so questions can name them.
+
+Nothing goes in on its own. A match is only added when you confirm it on the
+Dashboard, and only the players you pick in it are kept: in Ranked, or a scrim
+with someone filling in, a stranger can be on your team, and their numbers would
+otherwise count for your team.
 
 Tables (SQLite, in the same file as the season tracker's tables):
 
@@ -17,12 +21,14 @@ Tables (SQLite, in the same file as the season tracker's tables):
                    Every round of a match counts for both
                    teams, so a player who disconnected doesn't take rounds away from their team.
     rosters        the teams built on the Team page: team name -> players
-    skipped        replays that couldn't be read, so they aren't retried until they change (or the
-                   app is updated: a newer version may read them)
+    review_*       copies of the four match tables, for the matches an earlier version added on
+                   its own with every player in them. They don't count until you check them on
+                   Match History: keep the players you track, or remove the match.
 
 Every number comes from metrics_engine.compute_match_metrics, exactly what the
-scoreboards show. Importing a match again replaces it (a match still being played
-gains rounds), so nothing is ever counted twice.
+scoreboards show. A player's EPS is still worked out against everyone in the
+match, picked or not. Adding a match again replaces it (with the players picked
+this time), so nothing is ever counted twice.
 """
 
 from __future__ import annotations
@@ -31,10 +37,9 @@ import re
 import sqlite3
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 import season_stats
-from app_info import APP_VERSION
 from metrics_engine import compute_match_metrics
 
 SCHEMA = """
@@ -127,12 +132,6 @@ CREATE TABLE IF NOT EXISTS rosters (
     PRIMARY KEY (team, player_key)
 );
 
-CREATE TABLE IF NOT EXISTS skipped (
-    source TEXT PRIMARY KEY,
-    files  INTEGER NOT NULL,
-    reason TEXT NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS stats_meta (
     key   TEXT PRIMARY KEY,
     value TEXT
@@ -156,10 +155,17 @@ _INSERT_ROUND = _insert("round_players", "match_id round player_key player team 
                                          "died headshots assists entry_kill entry_death traded trade_kills "
                                          "planted defused kost clutch")
 _INSERT_TEAM_ROUND = _insert("team_rounds", "match_id round team side won planted man_down back_to_even")
-DATA_VERSION = 2  # 2: team_rounds. Matches read by an earlier version are read again, if their replays remain
+# 2: team_rounds. 3: only confirmed matches and players; what an earlier version added on its own waits in review_*
+DATA_VERSION = 3
+MATCH_TABLES = ("matches", "match_players", "round_players", "team_rounds")
+_PLAYER_TABLES = {"match_players", "round_players"}
 # how a round ends once the defuser is down, even when the kill feed missed the plant itself
 _PLANTED_ENDINGS = {"DefusedBomb", "DisabledDefuser", "bomb_detonated"}  # the last: the demo match's name
 _MATCH_FOLDER_TIME = re.compile(r"Match-(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})")
+
+
+class NotAdded(ValueError):
+    """A match that can't be added, and why (in words to show as they are)."""
 
 
 def default_path() -> Path:
@@ -242,19 +248,15 @@ class StatsDB:
         # Streamlit may run a session's reruns on different threads; each page opens its own
         self._conn = sqlite3.connect(str(path), check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
+        self._columns: dict[str, list[str]] = {}
         with self._conn:
             self._conn.executescript(SCHEMA)
-            # replays an earlier version couldn't read are tried again: this one may read them
-            seen = self._conn.execute("SELECT value FROM stats_meta WHERE key = 'version'").fetchone()
-            if not seen or seen[0] != APP_VERSION:
-                self._conn.execute("DELETE FROM skipped")
-                self._conn.execute("INSERT OR REPLACE INTO stats_meta VALUES ('version', ?)", (APP_VERSION,))
-            # matches read before a table was added are read again, once, wherever their replays still are
+            for table in MATCH_TABLES:  # the same columns as the table it holds matches for
+                self._conn.execute(f"CREATE TABLE IF NOT EXISTS review_{table} AS SELECT * FROM {table} WHERE 0")
             data = self._conn.execute("SELECT value FROM stats_meta WHERE key = 'data'").fetchone()
-            if not data or int(data[0]) < DATA_VERSION:
-                self._conn.execute("UPDATE matches SET files = 0 WHERE match_id NOT IN "
-                                   "(SELECT DISTINCT match_id FROM team_rounds)")
-                self._conn.execute("INSERT OR REPLACE INTO stats_meta VALUES ('data', ?)", (str(DATA_VERSION),))
+            if not data or int(data[0]) < 3:  # filled on its own by an earlier version
+                self._hold_unconfirmed()
+            self._conn.execute("INSERT OR REPLACE INTO stats_meta VALUES ('data', ?)", (str(DATA_VERSION),))
 
     def close(self) -> None:
         self._conn.close()
@@ -267,44 +269,36 @@ class StatsDB:
 
     # ---------------------------------------------------------- importing ----
 
-    def imported(self) -> dict[str, int]:
-        """{replay folder: round files it was read from} for every match in the database,
-        plus the replays that couldn't be read (so they're only retried once they change)."""
-        rows = self._conn.execute("SELECT source, files FROM matches UNION ALL SELECT source, files FROM skipped")
-        found: dict[str, int] = {}
-        for r in rows:
-            found[r["source"]] = max(found.get(r["source"], 0), r["files"])
-        return found
-
-    def needs_import(self, groups: dict[str, list[str]]) -> list[str]:
-        """The matches in `groups` ({folder: round files}) that are new, or have gained rounds."""
-        done = self.imported()
-        return [name for name, recs in groups.items() if done.get(name, -1) < len(recs)]
-
-    def import_match(self, source: str, match: dict[str, Any], files: int = 0) -> str | None:
+    def import_match(self, source: str, match: dict[str, Any], files: int = 0,
+                     players: Iterable[str] | None = None) -> str:
         """Add (or replace) a parsed match (parser.parse_match's MatchData) read from the replay
-        folder `source`; returns its match id, or None if it was skipped. A recording with no
-        players (an aborted one) is skipped, and when two folders hold the same match, the one
-        with more rounds is kept, whichever is imported first."""
+        folder `source`, keeping only `players`' stats (usernames, any case; None keeps everyone);
+        returns its match id. Raises NotAdded for a recording with no players (an aborted one),
+        when none of `players` played in it, or when another folder already added holds more of
+        the same match (folders holding the same match keep the fuller one, in either order)."""
         match_id = str(match.get("match_id") or "")
         if not match_id or match_id == "unknown":
             match_id = f"folder:{source}"
         rounds = match.get("rounds") or []
         if not match.get("players"):
-            self.skip(source, files, "no players in this recording")
-            return None
+            raise NotAdded("This recording has no players in it (the match was left while loading).")
         other = self._conn.execute("SELECT source, files, rounds FROM matches WHERE match_id = ? AND source != ?",
                                    (match_id, source)).fetchone()
-        if other and other["rounds"] >= len(rounds):
-            self.skip(source, files, f"the same match as {other['source']}, which has more of it")
-            return None
-        stats = compute_match_metrics(match)
+        if other and other["rounds"] > len(rounds):
+            raise NotAdded(f"This match is already in your stats from {other['source']}, which has more of it.")
+        stats = compute_match_metrics(match)  # EPS against everyone in the match, picked or not
+        keep = None if players is None else {p.strip().casefold() for p in players if p.strip()}
+        if keep is not None and not any(n.casefold() in keep and s.rounds_played for n, s in stats.items()):
+            raise NotAdded("None of the players you picked played in this match.")
         score = list(match.get("final_score") or [0, 0]) + [0, 0]
         team_names = list(match.get("team_names") or []) + ["", ""]
 
+        def kept(name: str) -> bool:
+            return keep is None or name.casefold() in keep
+
         player_rows = []
         for name, s in stats.items():
-            if not s.rounds_played:
+            if not s.rounds_played or not kept(name):
                 continue
             won = None if score[0] == score[1] else int(score[s.team] > score[1 - s.team])
             player_rows.append((
@@ -326,7 +320,7 @@ class StatsDB:
             operators = rnd.get("operators") or only_operator
             for name in [n for n in (rnd.get("players") or team_of) if n in team_of]:
                 rb = next(breakdowns[name], None)
-                if rb is None:
+                if rb is None or not kept(name):
                     continue
                 team = team_of[name]
                 round_rows.append((
@@ -341,17 +335,14 @@ class StatsDB:
 
         now = datetime.now().isoformat(timespec="seconds")
         with self._conn:  # one transaction: a match is either fully in or not at all
-            # replace this match, and anything imported from the same folder under another id
-            old = {r[0] for r in self._conn.execute(
-                "SELECT match_id FROM matches WHERE match_id = ? OR source = ?", (match_id, source))}
-            for mid in old | {match_id}:
-                for table in ("team_rounds", "round_players", "match_players", "matches"):
-                    self._conn.execute(f"DELETE FROM {table} WHERE match_id = ?", (mid,))
-            self._conn.execute("DELETE FROM skipped WHERE source = ?", (source,))
-            if other:  # this folder has more of the match than the one imported before: that one is skipped now
-                self._conn.execute("INSERT OR REPLACE INTO skipped VALUES (?, ?, ?)",
-                                   (other["source"], other["files"],
-                                    f"the same match as {source}, which has more of it"))
+            # replace this match, and anything added from the same folder under another id (or the
+            # other folder with less of this match), checked or still waiting to be
+            for prefix in ("", "review_"):
+                old = {r[0] for r in self._conn.execute(
+                    f"SELECT match_id FROM {prefix}matches WHERE match_id = ? OR source = ?", (match_id, source))}
+                for mid in old | {match_id}:
+                    for table in MATCH_TABLES:
+                        self._conn.execute(f"DELETE FROM {prefix}{table} WHERE match_id = ?", (mid,))
             self._conn.execute(_INSERT_MATCH, (
                 match_id, source, files, played_at_from_folder(source) or match.get("played_at"), match.get("map"),
                 match.get("match_type"), team_names[0], team_names[1], score[0], score[1], len(rounds),
@@ -362,10 +353,99 @@ class StatsDB:
             self._conn.executemany(_INSERT_TEAM_ROUND, [(match_id, *row) for row in team_rounds(match)])
         return match_id
 
-    def skip(self, source: str, files: int, reason: str) -> None:
-        """Remember a replay that couldn't be read, so it isn't retried until it changes."""
+    def remove_match(self, match_id: str) -> None:
+        """Take a match out of your stats (or out of the ones waiting to be checked)."""
         with self._conn:
-            self._conn.execute("INSERT OR REPLACE INTO skipped VALUES (?, ?, ?)", (source, files, reason[:500]))
+            for prefix in ("", "review_"):
+                for table in MATCH_TABLES:
+                    self._conn.execute(f"DELETE FROM {prefix}{table} WHERE match_id = ?", (match_id,))
+
+    def added(self, source: str) -> dict[str, Any] | None:
+        """The match added from the replay folder `source` (its matches row, and the players kept
+        in it as "players": [usernames]), or None if it isn't in your stats."""
+        row = self._conn.execute("SELECT * FROM matches WHERE source = ?", (source,)).fetchone()
+        if not row:
+            return None
+        found = dict(row)
+        found["players"] = [r["player"] for r in self._conn.execute(
+            "SELECT player FROM match_players WHERE match_id = ? ORDER BY team, player COLLATE NOCASE",
+            (row["match_id"],))]
+        return found
+
+    def players_by_match(self) -> dict[str, list[str]]:
+        """{match id: the players kept in it}, each match's in team order."""
+        found: dict[str, list[str]] = {}
+        for r in self._conn.execute("SELECT match_id, player FROM match_players "
+                                    "ORDER BY match_id, team, player COLLATE NOCASE"):
+            found.setdefault(r["match_id"], []).append(r["player"])
+        return found
+
+    # ----------------------------------------------- waiting to be checked ----
+
+    def _table_columns(self, table: str) -> list[str]:
+        if table not in self._columns:
+            self._columns[table] = [r["name"] for r in self._conn.execute(f"PRAGMA table_info({table})")]
+        return self._columns[table]
+
+    def _move(self, match_id: str, to_review: bool, players: set[str] | None = None) -> None:
+        """Move a match between the stats and the matches waiting to be checked, with only the
+        rows of `players` (casefolded usernames; None: all of them). Call inside a transaction."""
+        for table in MATCH_TABLES:
+            source, target = (table, f"review_{table}") if to_review else (f"review_{table}", table)
+            columns = ", ".join(c for c in self._table_columns(target) if c in self._table_columns(source))
+            where, params = "match_id = ?", [match_id]
+            if players is not None and table in _PLAYER_TABLES:
+                where += f" AND player_key IN ({', '.join('?' * len(players))})"
+                params += sorted(players)
+            self._conn.execute(f"DELETE FROM {target} WHERE match_id = ?", (match_id,))
+            self._conn.execute(f"INSERT INTO {target} ({columns}) SELECT {columns} FROM {source} WHERE {where}",
+                               params)
+            self._conn.execute(f"DELETE FROM {source} WHERE match_id = ?", (match_id,))
+
+    def _hold_unconfirmed(self) -> None:
+        """Once, on opening a database an earlier version filled on its own: its matches have every
+        player in them, so they wait to be checked. A match saved to a season was confirmed there:
+        it stays, with just the players saved from it."""
+        saved: dict[str, set[str]] = {}
+        if self._conn.execute("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'logged_rounds'").fetchone():
+            for r in self._conn.execute("SELECT DISTINCT match_id, username FROM logged_rounds"):
+                saved.setdefault(r[0], set()).add(r[1].casefold())
+        for (match_id,) in self._conn.execute("SELECT match_id FROM matches").fetchall():
+            keep = saved.get(match_id, set())
+            found = self._conn.execute(
+                f"SELECT COUNT(*) FROM match_players WHERE match_id = ? AND player_key IN ({', '.join('?' * len(keep))})",
+                (match_id, *keep)).fetchone()[0] if keep else 0
+            if not found:
+                self._move(match_id, to_review=True)
+                continue
+            for table in _PLAYER_TABLES:
+                self._conn.execute(f"DELETE FROM {table} WHERE match_id = ? AND player_key NOT IN "
+                                   f"({', '.join('?' * len(keep))})", (match_id, *keep))
+
+    def to_check(self) -> list[dict[str, Any]]:
+        """The matches an earlier version added on its own, newest first, each with its players as
+        "players": [(username, team)]. They don't count until they're confirmed or removed."""
+        rows = self.query("SELECT * FROM review_matches ORDER BY played_at DESC, match_id")
+        players: dict[str, list[tuple[str, int]]] = {}
+        for r in self._conn.execute("SELECT match_id, player, team FROM review_match_players "
+                                    "ORDER BY team, player COLLATE NOCASE"):
+            players.setdefault(r["match_id"], []).append((r["player"], r["team"]))
+        for row in rows:
+            row["players"] = players.get(row["match_id"], [])
+        return rows
+
+    def confirm_checked(self, match_id: str, players: Iterable[str]) -> None:
+        """Count a match that was waiting to be checked, with only `players`' stats kept."""
+        keep = {p.strip().casefold() for p in players if p.strip()}
+        if not keep:
+            raise NotAdded("Pick at least one player to keep.")
+        found = self._conn.execute(
+            f"SELECT COUNT(*) FROM review_match_players WHERE match_id = ? AND player_key IN "
+            f"({', '.join('?' * len(keep))})", (match_id, *sorted(keep))).fetchone()[0]
+        if not found:
+            raise NotAdded("None of those players played in this match.")
+        with self._conn:
+            self._move(match_id, to_review=False, players=keep)
 
     # ------------------------------------------------------------ rosters ----
 

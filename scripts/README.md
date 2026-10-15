@@ -17,9 +17,10 @@ It comes three ways, all with CSV, JSON and TXT export:
   straight from the game's folder,
 - **a command-line tool** (`match_stats.py`).
 
-The website and the Windows app also keep every match they read in your own
-stats database, so you can follow your trends over weeks, build a team out of
-the players you queue with, and **ask questions in plain English**: "How has
+The website and the Windows app also keep the matches you confirm in your own
+stats database, with just the players you pick in each, so you can follow your
+trends over weeks, build a team out of the players you queue with, and **ask
+questions in plain English**: "How has
 my K/D changed over my last 10 matches?", "What's my best map?", "Who had the
 most kills in a single match?". No SQL needed, and nothing leaves your computer.
 
@@ -59,7 +60,8 @@ app**. Dashboard takes a **Replay source**:
   your whole `MatchReplay` folder. It's filled in automatically when Siege is
   installed through Steam (any library) or Ubisoft Connect, and the latest
   match opens right away. With several matches you get a picker, and each
-  match is parsed only when you pick it.
+  match is parsed only when you pick it. Matches already in your stats say
+  **✓ added**.
 - **Upload**: drop the match's `.zip`, or every `.rec` file from the match folder.
 - **From the replays/ folder**: copy matches into `replays/` at the repo
   root. Use this on GitHub Codespaces, where browser uploads over ~50 MB fail.
@@ -83,25 +85,37 @@ Below the scoreboards you'll find the downloads and a round-by-round section:
 
 Operator Analytics also shows which side each operator is played on.
 
+Opening a match adds nothing to your stats. Below the scoreboards, **Add to your
+stats** is the only way in: pick the players whose stats to keep from that
+match, one list per team, then **Confirm match and players**. Nobody is picked
+for you, and a Ranked, Unranked or Quick Match match warns that the game made
+the teams, so someone on yours may not be one of your players. Tick **Also save
+it to the season tracker** to add the same players' rounds to a season, with a
+team or school name for each team. Confirm again with different players to
+update a match. The demo match can't be added.
+
 In the Windows app you can **dock** the app to the left or right edge of your
 screen, next to the game or your other apps. Use the buttons in the sidebar, or
 right-click the app's taskbar icon. The docked panel (`dock.py`) shows your
 latest match round by round (⚔ attack, ♜ defense, won or lost), your K-D-A, EPS,
-KOST and operators, and your last five results. It picks up a new match about
-15 seconds after the game saves it. See [desktop/README.md](../desktop/README.md).
+KOST and operators, and your last five results, from the matches you've added.
+About 15 seconds after the game saves a match it says **New match: not in your
+stats yet**, so you can add it from the full window. See [desktop/README.md](../desktop/README.md).
 
 The **Use demo match** toggle loads a built-in
 sample match, so you can try the dashboard without a replay. The **Get the
 Windows app** page has the download button and install steps.
 
-The other pages work from every match, not just the one on the Dashboard:
+The other pages work from every match you've added, not just the one on the
+Dashboard:
 
 - **Ask**: type a question, or tap one of the examples (see below).
-- **Match History**: every match, newest first, with your record, K/D and EPS.
-  Select a match to open its scoreboards on the Dashboard.
+- **Match History**: every match you've added, newest first, with your record,
+  K/D and EPS, and who's **Tracked** in each. Select a match to open its
+  scoreboards on the Dashboard, or to remove it from your stats.
 - **Team Analytics > Build a team**: up to five players, filled in with you and
   the four teammates you play with most. Every match where enough of them (you
-  choose how many) played on the same side is found. Teams are saved: pick one
+  choose how many) were tracked on the same side is found. Teams are saved: pick one
   again from the **Team** list, and Ask knows its name ("How is Varsity
   doing?"). You see:
   - **the team's own stats**, never its players' numbers added together:
@@ -114,9 +128,11 @@ The other pages work from every match, not just the one on the Dashboard:
     - on **defense**, how often it stops the plant and wins after a plant;
   - **each player's own stats** from playing for this team, with their EPS for
     this team and their **all-time EPS** over every match they've played.
-- **Team Analytics > Season teams** and the **Season tracker** below a loaded
-  scoreboard: choose a roster and record matches into season totals. Only the
-  players you track are saved, and duplicate rounds are ignored. Each season
+- **Team Analytics > Season teams**: the season tracker's teams, from the
+  matches saved to a season, either with the Dashboard's **Also save it to the
+  season tracker** or picked here. Only the players picked for each match when
+  it was added are saved, never another tracked player who happened to be in
+  it, and duplicate rounds are ignored. Each season
   team gets the same team stats, from the matches saved to the season, and
   each player's EPS is recalculated from those matches, alongside their
   all-time EPS. Under **Choose … matches**, tick the matches that count toward
@@ -131,15 +147,21 @@ The other pages work from every match, not just the one on the Dashboard:
 
 ### Your stats database and Ask
 
-Every match the app reads goes into a local SQLite database: the Dashboard adds
-each match you open, and Ask, Match History, Team Analytics and Operator
-Analytics add the rest of your replay source (the game's `MatchReplay` folder,
-by default) when they open, with a progress bar the first time. Matches stay in
-the database after the game deletes old replays, and reading a match again
-replaces it, so nothing is counted twice. Every number comes from the same code
-as the scoreboards. A recording with no players (a match you left during
-loading) is skipped, and when two folders hold the same match the fuller one is
-kept.
+Your stats are a local SQLite database of the matches you've confirmed on the
+Dashboard, with only the players you picked in each. Nothing is added on its
+own, so a stranger who was on your team in Ranked, or a sub in a scrim, never
+counts toward your team. Each player's EPS is still worked out against everyone
+in the match. Matches stay in the database after the game deletes old replays,
+and confirming a match again replaces it, so nothing is counted twice. Every
+number comes from the same code as the scoreboards. A recording with no players
+(a match you left during loading) can't be added, and when two folders hold the
+same match the fuller one is kept.
+
+Earlier versions added every replay on their own, with every player in it.
+After updating, those matches don't count until you check them: **Match
+History > Check earlier matches** lets you keep just the players you track in
+each one, keep only your own stats in all of them at once, or remove them.
+Matches you'd saved to a season stay, with the players saved from them.
 
 **Ask** turns a plain-English question into a database query and answers with
 a sentence, a table (downloadable as CSV) and, for trends and rankings, a chart.
@@ -289,8 +311,8 @@ To build it on your own PC instead, run
   Unsigned releases make Windows SmartScreen warn about the app.
 - **Replays are temporary; stats stay on your computer.** The Windows app reads
   replays in place and never writes to the game's folders. Uploads are deleted
-  after an hour unused. The stats database (every match's numbers and player
-  names, and your saved teams) and the season tracker's totals are stored in
+  after an hour unused. The stats database (the numbers and names of the
+  players you picked in each match you added, and your saved teams) and the season tracker's totals are stored in
   SQLite: `%LOCALAPPDATA%\R6MatchStats\season_stats.db` in the Windows app, or
   `data/season_stats.db` in a source checkout. Delete that file to remove
   everything the app has saved. On the public website each visitor gets their
@@ -350,8 +372,8 @@ app.py → report.py (Dashboard), ask.py, history.py, teams.py, operators.py,
 `app.py` is the entry point: it sets up the page's styling, header and
 navigation. `sources.py` is where every page gets its replays: the source
 picked on the Dashboard (or, on your PC, the game's `MatchReplay` folder), each
-match parsed at most once per session, and the stats database kept up to date
-from it, four matches parsed at a time. `stats_db.py` is the database.
+match parsed at most once per session. `stats_db.py` is the database, which
+only takes a match when it's confirmed on the Dashboard.
 `ask_engine.py` reads a question into a query (whose stats, which ones, which
 filters, what kind of answer), runs it with every value passed as a query
 parameter, and writes the answer; it also works out Build a team and the

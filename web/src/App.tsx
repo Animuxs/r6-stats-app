@@ -102,6 +102,7 @@ function ReplayIntake({
       {match && <div className="parsed-match">
         <div className="parsed-title"><div><p className="eyebrow">Parsed match</p><strong>{match.map}</strong></div><span>{match.final_score?.[0] ?? 0} : {match.final_score?.[1] ?? 0}</span></div>
         <div className="parsed-meta">{match.rounds.length} ROUNDS <i /> {match.players.length} PLAYERS <i /> ID {match.match_id}</div>
+        <div className="inline-status">Pick the players to track from this match. Only they are saved.</div>
         <div className="roster-pick-list">{match.players.map((player) => (
           <label className="roster-pick" key={player.name}>
             <input type="checkbox" checked={selectedPlayers.includes(player.name)} onChange={() => onTogglePlayer(player.name)} />
@@ -283,7 +284,7 @@ export default function App() {
       if (!result.matches.length) throw new Error(result.skipped || "No valid Siege replay found.");
       const nextMatch = result.matches[0].match;
       setParsedMatch(nextMatch);
-      setSelectedPlayers(nextMatch.players.map((player) => player.name));
+      setSelectedPlayers([]);  // nobody until picked: someone on your team in Ranked may be a stranger
       setNotice(result.skipped || `${result.matches.length} match group${result.matches.length === 1 ? "" : "s"} parsed.`);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Replay parse failed");

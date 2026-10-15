@@ -13,7 +13,7 @@ from app_info import is_public_host
 from ask_engine import eps_by_player, rate, team_report, team_summary
 from metrics_engine import pro_league_row, round_eps, rows_csv
 from season_stats import StatsError, StatsManager
-from sources import current_source, match_label, open_stats_db, parse, sync_with_progress
+from sources import current_source, match_label, no_matches_yet, open_stats_db, parse
 from stats_db import nice_time
 from ui import md
 
@@ -103,9 +103,10 @@ def _season_matches(season: str, team: str, players: list[str], counted: set[str
     with st.expander(f"Choose {md(team)}'s matches for {md(season)} ({len(counted)} counted)",
                      expanded=not counted):
         st.caption("Tick the matches that count toward this season, like your Game Day matches, and untick "
-                   "practice. Only ticked matches go into this season's stats. Adding a match needs its replay "
-                   "on this PC; taking one out doesn't. A match is in the season or not, so one between two of "
-                   "your tracked teams counts for both.")
+                   "practice. Only ticked matches go into this season's stats, with just the players you picked "
+                   "when you added each one on the Dashboard. Adding a match needs its replay on this PC; taking "
+                   "one out doesn't. A match is in the season or not, so one between two of your tracked teams "
+                   "counts for both.")
         need = st.slider("Show matches with at least this many of the team on one side", 1, max(1, len(players)),
                          min(3, max(1, len(players))), key=f"season_need_{season}_{team}")
         with open_stats_db() as db:
@@ -115,8 +116,8 @@ def _season_matches(season: str, team: str, players: list[str], counted: set[str
         listed = {r["match_id"] for r in rows}
         gone = sorted(counted - {r["match_id"] for r in every})  # counted, but not in the stats database
         if not rows and not gone:
-            st.info("No matches with that many of the team yet. Open their replays on **Dashboard**, or lower the "
-                    "number above.")
+            st.info("No matches with that many of the team yet. Add them on **Dashboard**, picking these players, "
+                    "or lower the number above.")
             return
         with st.form(f"season_matches_{season}_{team}", border=False):
             box = st.container(height=min(420, 44 * (len(rows) + len(gone)) + 10))
@@ -135,10 +136,13 @@ def _season_matches(season: str, team: str, players: list[str], counted: set[str
 
 
 def _apply_season_matches(season: str, add: list[dict], remove: list[str]) -> None:
-    """Save the ticked matches to the season (from their replays) and take out the unticked ones."""
+    """Save the ticked matches to the season (from their replays) and take out the unticked ones.
+    A match saves only the players picked for it when it was added on the Dashboard."""
     failed = []
     state = current_source()
     groups = (state or {}).get("groups") or {}
+    with open_stats_db() as db:
+        picked = db.players_by_match()
     with StatsManager(season=season) as manager:
         for match_id in remove:
             manager.remove_match(match_id)
@@ -149,7 +153,7 @@ def _apply_season_matches(season: str, add: list[dict], remove: list[str]) -> No
                 failed.append(label)
                 continue
             try:
-                manager.log_match(parsed[0])
+                manager.log_match(parsed[0], players=picked.get(r["match_id"], []))
             except StatsError:
                 failed.append(label)
     for key in [k for k in st.session_state if str(k).startswith(f"in_season_{season}_")]:
@@ -165,21 +169,18 @@ build_tab, season_tab = st.tabs(["Build a team", "Season teams"])
 
 # ------------------------------------------------------------ build a team --
 with build_tab:
-    st.caption("Pick up to five players. Every match where enough of them played on the same side is found: you "
-               "see how they do as a team, and each player's own stats. Teams you build are saved, and **Ask** "
-               "understands their names.")
+    st.caption("Pick up to five players. Every match you've added with enough of them tracked on the same side is "
+               "found: you see how they do as a team, and each player's own stats. Teams you build are saved, and "
+               "**Ask** understands their names.")
     with open_stats_db() as db:
-        source = current_source()
-        if source and "error" not in source:
-            sync_with_progress(db, source)
         has_matches = db.summary()["matches"] > 0
+        if not has_matches:
+            no_matches_yet(db)
         me = db.me()
         teams = db.rosters()
         mates = [name for name, _ in db.teammates(me, limit=ROSTER_SIZE - 1)] if me else []
 
-    if not has_matches:
-        st.info("No matches yet. Open your replays on **Dashboard** (or upload them there) first.")
-    else:
+    if has_matches:
         if st.session_state.get("team_choice") not in [NEW, *teams]:
             st.session_state["team_choice"] = NEW
         choice = st.selectbox("Team", [NEW, *teams], key="team_choice") if teams else NEW
@@ -268,7 +269,8 @@ with season_tab:
 
     if not rosters:
         st.info("No season teams yet. Track a roster first: **Also track … in the season tracker** under Build a "
-                "team, the Dashboard's **Season tracker**, or **School Selection**. Then pick its matches here.")
+                "team, the Dashboard's **Also save it to the season tracker**, or **School Selection**. Then pick "
+                "its matches here.")
     else:
         selected = st.selectbox("Season team", sorted(rosters, key=str.casefold))
         _season_matches(season, selected, rosters[selected], counted_by[selected])

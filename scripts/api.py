@@ -35,6 +35,7 @@ app.add_middleware(
 
 class MatchLogRequest(BaseModel):
     match: dict[str, Any]
+    # team name -> the players confirmed for this match: only they are logged
     rosters: dict[str, list[str]] = Field(default_factory=dict)
 
 
@@ -148,13 +149,17 @@ def parse_replay_path(payload: ReplayPathRequest) -> dict[str, Any]:
 
 @app.post("/api/v1/seasons/{season}/matches/log")
 def log_match(season: str, payload: MatchLogRequest) -> dict[str, Any]:
+    # only the players picked for this match are logged, never every tracked player who was in it
+    picked = [p.strip() for players in payload.rosters.values() for p in players if p.strip()]
+    if not picked:
+        raise HTTPException(status_code=400, detail="Pick the players to save from this match.")
     with StatsManager(season=_season_or_400(season)) as manager:
         for team, players in payload.rosters.items():
             # a replay's own labels ("YOUR TEAM", ...) would lump every opponent together
             generic = team.strip().upper() in GENERIC_TEAM_NAMES
             manager.add_players([p for p in players if p.strip()], team=None if generic else team.strip())
         try:
-            result = manager.log_match(payload.match)
+            result = manager.log_match(payload.match, players=picked)
         except StatsError as error:
             raise HTTPException(status_code=400, detail=str(error)) from error
         except (KeyError, TypeError, ValueError, AttributeError) as error:

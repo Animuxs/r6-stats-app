@@ -20,8 +20,9 @@ service, which also works through a Codespaces forwarded port. Set
 The API intentionally binds to loopback by default and has no user authentication;
 do not expose it to an untrusted network.
 
-The client parses replay uploads with the existing replay scanner, saves
-selected players into a season, and exports season reports as JSON. School
+The client parses replay uploads with the existing replay scanner, saves the
+players you pick from each match into a season (nobody is picked until you do,
+and the API logs only those players), and exports season reports as JSON. School
 catalogs can be imported in the School Selection module. An authorized HTTPS
 feed can be configured for the API with `NECC_R6_DATA_URL`; the payload contract
 is described in [scripts/README.md](../scripts/README.md#necc-school-data).

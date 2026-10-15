@@ -3,8 +3,10 @@ dock.py
 =======
 The docked view. When the Windows app is docked to the edge of the screen (desktop/launcher.py),
 its narrow panel shows this page instead of the full app: your latest match round by round
-(⚔ attack, ♜ defense, won or lost), your numbers in it, and your recent form. It checks the
-replay folder every few seconds, so a match shows up here soon after the game saves it.
+(⚔ attack, ♜ defense, won or lost), your numbers in it, and your recent form, from the matches
+you've added to your stats. It checks the replay folder every few seconds, and says when the game
+has saved a match you haven't added yet: matches are only added once you confirm them, and the
+players to track in them, on the Dashboard.
 """
 
 from __future__ import annotations
@@ -16,7 +18,7 @@ import streamlit as st
 
 from app_info import can_dock, send_window_command
 from metrics_engine import SIDE_ICONS, SIDE_NAMES, eps_from_rating
-from sources import current_source, open_stats_db, sync_stats_db
+from sources import current_source, match_time, open_stats_db
 from stats_db import nice_time
 
 REFRESH_SECONDS = 15
@@ -55,6 +57,9 @@ header[data-testid="stHeader"] { display:none; }
 .dk-form .w { color:var(--pos); border-color:rgba(134,185,159,.6); } .dk-form .l { color:var(--neg); border-color:rgba(225,126,105,.55); }
 .dk-line { color:var(--dim); font-size:.8rem; margin-top:6px; } .dk-line b { color:var(--text); }
 .dk-foot { color:#5d6f84; font-size:.7rem; margin-top:14px; }
+.dk-new { border:1px dashed var(--school, var(--accent)); border-radius:4px; padding:10px 12px; margin-top:4px;
+          color:var(--dim); font-size:.8rem; line-height:1.45; }
+.dk-new b { color:var(--text); font-weight:600; }
 </style>""", unsafe_allow_html=True)
 
 edge = st.query_params.get("edge", "right")
@@ -144,20 +149,32 @@ def form_html(rows: list[dict]) -> str:
             f'<div class="dk-line">Record <b>{wins}–{losses}</b> · K/D <b>{kills / deaths if deaths else kills:.2f}</b></div>')
 
 
+def new_match_html(name: str) -> str:
+    """The newest replay in the folder, when it isn't in your stats: where to add it."""
+    when = match_time(name)
+    return (f'<div class="dk-kicker">New match{" · " + html.escape(nice_time(when)) if when else ""}</div>'
+            '<div class="dk-new"><b>Not in your stats yet.</b> Open the full window to check it and pick the '
+            "players to track: nothing is added without you.</div>")
+
+
 @st.fragment(run_every=REFRESH_SECONDS)
 def panel() -> None:
     with open_stats_db() as db:
         source = current_source()
-        if source and "error" not in source:
-            sync_stats_db(source, db)  # a match the game just saved shows up without a click
+        groups = (source or {}).get("groups") or {}
+        newest = max(groups, key=lambda n: match_time(n) or n) if groups else None
+        waiting = newest and not db.added(newest) and new_match_html(newest)
         me = db.me()
         rows = db.match_list(me, limit=FORM_MATCHES)
         if not rows:
-            st.info("No matches yet. Play one: once the game saves its replay, it shows up here."
-                    if source else "The game's replay folder wasn't found. Open the full window and pick it on "
-                                   "the Dashboard.")
+            if waiting:
+                st.markdown(waiting, unsafe_allow_html=True)
+            else:
+                st.info("No matches yet. Play one, then add it from the full window's Dashboard."
+                        if source else "The game's replay folder wasn't found. Open the full window and pick it on "
+                                       "the Dashboard.")
             return
-        st.markdown(latest_match_html(db, me, rows[0]) + form_html(rows), unsafe_allow_html=True)
+        st.markdown((waiting or "") + latest_match_html(db, me, rows[0]) + form_html(rows), unsafe_allow_html=True)
     who = f"As {html.escape(me)} · " if me else ""
     st.markdown(f'<div class="dk-foot">{who}updated {datetime.now():%H:%M:%S}, every {REFRESH_SECONDS} s</div>',
                 unsafe_allow_html=True)

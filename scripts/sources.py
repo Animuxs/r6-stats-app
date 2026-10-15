@@ -6,7 +6,8 @@ Where every page's replays come from, so the pages don't each load them their ow
 - the replay source picked on the Dashboard (a folder, a zip, uploads): its matches
   are found once, and each is parsed at most once per session (load_source, parse);
 - on this PC, the game's MatchReplay folder when nothing was picked yet (current_source);
-- the stats database, kept up to date from that source (open_stats_db, sync_stats_db);
+- the stats database (open_stats_db). Replays never go into it on their own: a match is
+  added only when it's confirmed on the Dashboard, with the players picked there;
 - the cleanup of extracted uploads nobody has used for an hour.
 """
 
@@ -18,7 +19,6 @@ import shutil
 import tempfile
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any, Callable
 
@@ -32,7 +32,6 @@ from stats_db import StatsDB, default_path, nice_time, played_at_from_folder
 
 WORKDIR_PREFIX = "r6-match-"
 WORKDIR_MAX_IDLE = 3600  # seconds; extracted replays are deleted after an hour unused
-PARALLEL_PARSES = 4      # r6-dissect runs as its own process; each can use a few hundred MB
 
 
 def sweep_idle_workdirs() -> None:
@@ -165,60 +164,10 @@ def open_stats_db() -> StatsDB:
     return StatsDB(stats_db_path())
 
 
-def sync_stats_db(state: dict[str, Any] | None, db: StatsDB,
-                  on_progress: Callable[[int, int], None] | None = None) -> int:
-    """Add the source's new (or grown) matches to the stats database, parsing a few at once;
-    returns how many were added. Matches already parsed this session aren't parsed again, and a
-    replay that can't be read is noted as skipped rather than stopping the rest."""
-    if not state or not state.get("groups"):
-        return 0
-    groups = state["groups"]
-    todo = db.needs_import(groups)
-    if not todo:
-        return 0
-    done = added = 0
-
-    def add(name: str) -> None:
-        nonlocal done, added
-        result, files = state["parsed"][name], len(groups[name])
-        if isinstance(result, ReplayParseError):
-            db.skip(name, files, str(result))
-        else:
-            try:
-                added += db.import_match(name, result[0], files=files) is not None
-            except Exception as e:  # an odd replay mustn't keep every other one out
-                db.skip(name, files, f"couldn't be added: {e}")
-        done += 1
-        if on_progress:
-            on_progress(done, len(todo))
-
-    for name in [n for n in todo if n in state["parsed"]]:
-        add(name)
-    to_parse = [n for n in todo if n not in state["parsed"]]
-    with ThreadPoolExecutor(max_workers=PARALLEL_PARSES) as pool:
-        futures = {pool.submit(parse_match, groups[n]): n for n in to_parse}
-        for future in as_completed(futures):
-            name = futures[future]
-            try:
-                match, _raw, warnings = future.result()
-                state["parsed"][name] = (match, {}, warnings)  # the raw JSON isn't kept: only the Dashboard shows it
-            except ReplayParseError as e:
-                state["parsed"][name] = e
-            except Exception as e:  # as above
-                state["parsed"][name] = ReplayParseError(f"couldn't be read: {e}")
-            add(name)  # the database is written from this thread only
-    return added
-
-
-def sync_with_progress(db: StatsDB, state: dict[str, Any] | None) -> int:
-    """sync_stats_db with a progress bar while matches are being added."""
-    if not state or not state.get("groups"):
-        return 0
-    pending = db.needs_import(state["groups"])
-    if not pending:
-        return 0
-    bar = st.progress(0.0, text=f"Adding {len(pending)} match{'es' if len(pending) != 1 else ''} to your stats…")
-    added = sync_stats_db(state, db, lambda done, total: bar.progress(
-        done / total, text=f"Adding matches to your stats… {done} of {total}"))
-    bar.empty()
-    return added
+def no_matches_yet(db: StatsDB) -> None:
+    """What a page that reads the stats database says while nothing's in it."""
+    waiting = len(db.to_check())
+    st.info("No matches yet. Open a match on **Dashboard**, confirm it and pick the players to track, and "
+            "it'll show up here."
+            + (f" {waiting} match{'es' if waiting != 1 else ''} added by an earlier version "
+               f"{'are' if waiting != 1 else 'is'} waiting to be checked on **Match History**." if waiting else ""))

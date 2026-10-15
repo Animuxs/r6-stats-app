@@ -3,6 +3,10 @@ report.py
 =========
 The "Match report" page: load a match's replay and show an R6 Pro League-style
 scoreboard for every player, a round-by-round breakdown, and CSV/JSON exports.
+
+It's also the only way a match gets into your stats: looking at a match adds nothing.
+You confirm it, picking the players whose stats to keep (and, if you like, save it to
+a season), so a stranger who was on your team in Ranked never counts as your teammate.
 """
 
 from __future__ import annotations
@@ -23,11 +27,12 @@ from metrics_engine import (
 from parser import (
     ReplayParseError, find_replay_folders, load_demo_match, r6_dissect_available, raw_shape_preview, save_uploads,
 )
-from season_stats import GENERIC_TEAM_NAMES, StatsManager
+from season_stats import GENERIC_TEAM_NAMES, StatsError, StatsManager
 from sources import (
     can_read_local_files, folder_source, load_source, match_label, match_time, open_stats_db, parse,
     start_workdir_sweeper,
 )
+from stats_db import NotAdded
 from ui import md
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -36,6 +41,8 @@ REPLAYS_DIR = REPO_ROOT / "replays"
 UPLOAD = "Upload"
 FOLDER = "Folder or zip on this computer"
 REPLAYS_FOLDER = "From the replays/ folder"
+# the game makes these teams: someone on yours may be a stranger, not one of your players
+MATCHMADE = {"Ranked", "Unranked", "Quick Match"}
 
 
 def _signed_cell(text: str) -> str:
@@ -135,6 +142,102 @@ def side_split_html(breakdown: list) -> str:
     return f'<div class="side-split">{"".join(parts)}</div>' if parts else ""
 
 
+def _picked_key(match: dict, team: int) -> str:
+    return f"confirm_players:{match['match_id']}:{team}"
+
+
+def _team_name_key(match: dict, team: int) -> str:
+    return f"confirm_team_name:{match['match_id']}:{team}"
+
+
+def _add_match(source: str, match: dict, files: int) -> None:
+    """Add the match to the stats database with the players picked for it and, when asked, save
+    those same players' rounds to the season. Runs as the confirm button's callback."""
+    picked = {team: list(st.session_state.get(_picked_key(match, team), [])) for team in (0, 1)}
+    players = picked[0] + picked[1]
+    try:
+        with open_stats_db() as db:
+            db.import_match(source, match, files=files, players=players)
+    except NotAdded as e:
+        st.session_state["dashboard_note"] = ("error", str(e))
+        return
+    notes = [f"Added to your stats, tracking {len(players)} player{'s' if len(players) != 1 else ''}: "
+             f"{', '.join(players)}."]
+    kind = "success"
+    if st.session_state.get("confirm_season") and not is_public_host():
+        season = (st.session_state.get("r6_season_input") or "").strip() or "current"
+        st.session_state["r6_season"] = season
+        with StatsManager(season=season) as tracker:
+            tracked = {u.casefold() for u in tracker.tracked_players()}
+            for team in (0, 1):
+                team_name = (st.session_state.get(_team_name_key(match, team)) or "").strip()
+                if team_name.upper() in GENERIC_TEAM_NAMES:
+                    team_name = ""  # never save a replay's generic label as a team: it'd lump opponents together
+                for player in picked[team]:
+                    if team_name or player.casefold() not in tracked:  # a blank name keeps the team they have
+                        tracker.add_player(player, team_name or None)
+            try:
+                result = tracker.log_match(match, players=players)
+            except StatsError as e:
+                notes.append(f"It couldn't be saved to {season}: {e}")
+                kind = "warning"
+            else:
+                notes.append(f"Saved {result.rounds_logged} player-rounds to {season}." if result.rounds_logged else
+                             f"Its rounds for these players were already saved to {season}.")
+                notes += result.warnings
+    st.session_state["dashboard_note"] = (kind, " ".join(notes))
+
+
+def confirm_match(source: str, match: dict, files: int) -> None:
+    """The step that adds a match to your stats: a person checks the match and picks exactly whose
+    stats to keep. Nothing is picked until they do."""
+    team_names = match["team_names"]
+    st.subheader("Add to your stats")
+    if note := st.session_state.pop("dashboard_note", None):
+        getattr(st, note[0])(md(note[1]))
+    with open_stats_db() as db:
+        added = db.added(source)
+    if added:
+        st.caption(f"✓ In your stats, tracking **{md(', '.join(added['players']))}**. Change who's picked and "
+                   "confirm again to update it, or remove it on **Match History**.")
+        if added["files"] < files:
+            st.info("The replay has more rounds than when you added it: confirm again to add them.")
+    else:
+        st.caption("Not in your stats yet: matches are never added on their own. Pick exactly whose stats to keep "
+                   "from this match, then confirm. Only they count on Ask, Match History and Team Analytics.")
+    if match.get("match_type") in MATCHMADE:
+        st.warning(f"This is a **{match['match_type']}** match: the game made the teams, so someone on your team may "
+                   "not be one of your players. Pick only the players you track.", icon="⚠️")
+    picked = {}
+    for team, column in enumerate(st.columns(2)):
+        names = [p["name"] for p in match.get("players", []) if p.get("team") == team]
+        key = _picked_key(match, team)
+        # what's in the database for this match, or nobody: never a guess
+        st.session_state.setdefault(key, [n for n in (added or {}).get("players", []) if n in names])
+        picked[team] = column.multiselect(team_names[team], names, key=key, placeholder="Players to track")
+
+    season_on = st.checkbox("Also save it to the season tracker", key="confirm_season", disabled=is_public_host(),
+                            help="Adds these players' rounds to a season's totals. Only the players picked above are "
+                                 "saved, even if you track others who played in this match.")
+    if is_public_host():
+        st.caption("Season tracking is off on the public website, to keep visitors' stats apart. Use the Windows "
+                   "app or run the app on your own computer.")
+    elif season_on:
+        st.text_input("Season", value=st.session_state.get("r6_season", "current"), key="r6_season_input")
+        for team, column in enumerate(st.columns(2)):
+            if not picked[team]:
+                continue
+            generic = team_names[team].strip().upper() in GENERIC_TEAM_NAMES
+            column.text_input(
+                f"Team or school name for {team_names[team]}", value="" if generic else team_names[team],
+                key=_team_name_key(match, team), placeholder="e.g. Varsity" if generic else None,
+                help=f'The replay only calls this team "{team_names[team]}", so enter its real name. Left blank, '
+                     "players keep the team they already have in the tracker." if generic else None,
+            )
+    st.button("Update players" if added else "Confirm match and players", type="primary",
+              disabled=not (picked[0] or picked[1]), on_click=_add_match, args=(source, match, files))
+
+
 start_workdir_sweeper()
 local_files = can_read_local_files()
 if not local_files:
@@ -161,6 +264,7 @@ st.title("Dashboard")
 
 # ------------------------------------------------------------- input -------
 match = raw = None
+name, files = None, 0  # the replay's match folder and its round files; none for the demo match
 parse_warnings: list[str] = []
 
 if demo_mode:
@@ -231,7 +335,8 @@ else:
             known = {r["source"]: r for r in db.match_list(db.me())}
         opening = st.session_state.pop("open_match", None)  # "Open" on Match History
         if len(names) > 1:
-            name = st.selectbox(f"{len(names)} matches", names, format_func=lambda n: match_label(n, known.get(n)),
+            name = st.selectbox(f"{len(names)} matches", names,
+                                format_func=lambda n: match_label(n, known.get(n)) + (" · ✓ added" if n in known else ""),
                                 index=names.index(opening) if opening in names else 0)
         else:
             name = names[0]
@@ -243,9 +348,7 @@ else:
             st.error(f"{name}: {result}")
             st.stop()
         match, raw, parse_warnings = result
-        with open_stats_db() as db:  # every match looked at goes into the stats database
-            if db.needs_import({name: state["groups"][name]}):
-                db.import_match(name, match, files=len(state["groups"][name]))
+        files = len(state["groups"][name])
         for w in parse_warnings:
             st.warning(w, icon="⚠️")
         with st.sidebar:
@@ -295,53 +398,10 @@ for team_idx, team_name in enumerate(team_names[:2]):
         won = score[team_idx] > score[1 - team_idx]
         st.markdown(scoreboard_html(team_name, won, team_rows), unsafe_allow_html=True)
 
-with st.expander("Season tracker", expanded=False):
-    # r6_season is plain state, not the widget's key: Streamlit drops a widget's state when
-    # another page is shown, and the other pages read the season from it
-    tracker_season = st.text_input(
-        "Season", value=st.session_state.get("r6_season", "current"), key="r6_season_input"
-    ).strip() or "current"
-    st.session_state["r6_season"] = tracker_season
-    available_teams = team_names[:2]
-    selected_team_index = st.selectbox("Roster team", range(len(available_teams)),
-                                       format_func=lambda i: available_teams[i], key="r6_tracker_team")
-    selected_team = available_teams[selected_team_index]
-    player_names = [
-        player["name"] for player in match.get("players", [])
-        if player.get("team") == selected_team_index
-    ]
-    # keyed by match and team, so switching either starts from that team's players and name
-    # (with fixed keys, the name box kept the other team's name and the list came up empty)
-    roster_key = f"{match['match_id']}:{selected_team_index}"
-    selected_players = st.multiselect(
-        "Players to track", player_names, default=player_names, key=f"r6_tracker_players:{roster_key}"
-    )
-    generic = selected_team.strip().upper() in GENERIC_TEAM_NAMES
-    tracked_team = st.text_input(
-        "Team or school name", value="" if generic else selected_team, key=f"r6_tracker_team_name:{roster_key}",
-        placeholder="e.g. Varsity" if generic else None,
-        help=f'The replay only calls this team "{selected_team}", so enter its real name.' if generic else None,
-    ).strip()
-    if tracked_team.upper() in GENERIC_TEAM_NAMES:
-        tracked_team = ""  # never save a replay's generic label as a team: it'd lump opponents together
-    if is_public_host():
-        st.info("Season tracking is disabled on shared public hosting to keep visitors' stats separate. Use the Windows app or a private local deployment.")
-    with StatsManager(season=tracker_season) as tracker:
-        track_column, log_column = st.columns(2)
-        if track_column.button("Track selected roster", disabled=not selected_players or is_public_host(), type="primary"):
-            tracker.add_players(selected_players, team=tracked_team or None)
-            st.success(f"Tracking {len(selected_players)} players for {md(tracked_team)}." if tracked_team else
-                       f"Tracking {len(selected_players)} players, without a team name: enter one to group them as a team.")
-        tracked = tracker.tracked_players()
-        if log_column.button("Save this match", disabled=not tracked or is_public_host()):
-            result = tracker.log_match(match)
-            if result.rounds_logged:
-                st.success(f"Saved {result.rounds_logged} player-rounds for {tracker_season}.")
-            else:
-                st.info("All tracked player-rounds from this match were already saved.")
-            for warning in result.warnings:
-                st.warning(warning)
-        st.caption(f"{len(tracked)} players tracked in {tracker_season}. Re-importing a match never counts a round twice.")
+if name is not None:
+    confirm_match(name, match, files)
+else:
+    st.caption("The demo match is only for trying the app, so it can't be added to your stats.")
 
 rounds = round_rows(match, stats)
 c1, c2, c3, c4, _ = st.columns([1, 1, 1, 1.4, 2])
