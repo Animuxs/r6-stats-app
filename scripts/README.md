@@ -291,10 +291,10 @@ download button automatically points at the fork's releases.
 1. On GitHub, fork this repository to your account.
 2. Go to <https://share.streamlit.io>, sign in with GitHub, and choose
    **Create app** > **Deploy a public app from GitHub**.
-3. Fill in: **Repository** `<you>/r6-dissect`, **Branch** the branch with
-   this code (for example `feat/pro-league-stats`), **Main file path**
-   `scripts/app.py`. Optionally pick a custom **App URL**.
-4. Under **Advanced settings**, choose Python 3.13, then click **Deploy**.
+3. Fill in: **Repository** `<you>/r6-dissect`, **Branch** `main`, **Main file
+   path** `scripts/app.py`. Optionally pick a custom **App URL**.
+4. Under **Advanced settings**, choose Python 3.12 (what the tests run on), then
+   click **Deploy**.
 
 It uses the Linux `r6-dissect` binary committed at the repo root, so rebuild
 and commit it (`GOOS=linux GOARCH=amd64 go build -trimpath -o r6-dissect .`;
