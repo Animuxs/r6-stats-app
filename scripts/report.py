@@ -18,7 +18,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from app_info import APP_NAME, APP_VERSION, NOTICE, is_public_host, is_windows_app
+from app_info import APP_NAME, APP_VERSION, NOTICE, is_windows_app
 from metrics_engine import (
     PRO_LEAGUE_COLUMNS, SIDE_ICONS, SIDE_NAMES, compute_match_metrics, leaderboard_rows, pro_league_rows,
     round_player_rows, round_rows, rounds_text, rows_csv, running_scores, scoreboard_text, side_split, team_side,
@@ -29,8 +29,8 @@ from parser import (
 )
 from season_stats import GENERIC_TEAM_NAMES, StatsError, StatsManager
 from sources import (
-    can_read_local_files, folder_source, load_source, match_label, match_time, open_stats_db, parse,
-    start_workdir_sweeper,
+    can_read_local_files, demo_active, folder_source, load_source, match_label, match_time, open_stats_db, parse,
+    start_workdir_sweeper, tracker_off,
 )
 from stats_db import NotAdded
 from ui import md
@@ -164,7 +164,7 @@ def _add_match(source: str, match: dict, files: int) -> None:
     notes = [f"Added to your stats, tracking {len(players)} player{'s' if len(players) != 1 else ''}: "
              f"{', '.join(players)}."]
     kind = "success"
-    if st.session_state.get("confirm_season") and not is_public_host():
+    if st.session_state.get("confirm_season") and not tracker_off():
         season = (st.session_state.get("r6_season_input") or "").strip() or "current"
         st.session_state["r6_season"] = season
         with StatsManager(season=season) as tracker:
@@ -216,12 +216,11 @@ def confirm_match(source: str, match: dict, files: int) -> None:
         st.session_state.setdefault(key, [n for n in (added or {}).get("players", []) if n in names])
         picked[team] = column.multiselect(team_names[team], names, key=key, placeholder="Players to track")
 
-    season_on = st.checkbox("Also save it to the season tracker", key="confirm_season", disabled=is_public_host(),
+    season_on = st.checkbox("Also save it to the season tracker", key="confirm_season", disabled=bool(tracker_off()),
                             help="Adds these players' rounds to a season's totals. Only the players picked above are "
                                  "saved, even if you track others who played in this match.")
-    if is_public_host():
-        st.caption("Season tracking is off on the public website, to keep visitors' stats apart. Use the Windows "
-                   "app or run the app on your own computer.")
+    if tracker_off():
+        st.caption(tracker_off())
     elif season_on:
         st.text_input("Season", value=st.session_state.get("r6_season", "current"), key="r6_season_input")
         for team, column in enumerate(st.columns(2)):
@@ -253,7 +252,7 @@ with st.sidebar:
     if not r6_dissect_available():
         st.warning("r6-dissect not found, so real replays can't be parsed. "
                    "See the README to build it, or use the demo match below.", icon="⚠️")
-    demo_mode = st.toggle("Use demo match (no file needed)", value=not r6_dissect_available())
+    demo_mode = st.toggle("Use demo match (no file needed)", value=demo_active() or not r6_dissect_available())
     st.divider()
     st.caption("EPS · KD (+/-) · Entry · KOST · KPR · HS · SRV · Clutches · Multikills · "
                "Objectives · Dead for trade kill · Trade kills")
@@ -267,7 +266,20 @@ match = raw = None
 name, files = None, 0  # the replay's match folder and its round files; none for the demo match
 parse_warnings: list[str] = []
 
-if demo_mode:
+if demo_mode and demo_active():  # the demo season: any of its matches, newest first
+    import demo_season
+
+    season = demo_season.season()
+    with open_stats_db() as db:
+        known = {r["source"]: r for r in db.match_list(db.me())}
+    folders = sorted(season, reverse=True)
+    opening = st.session_state.pop("open_match", None)  # "Open" on Match History
+    picked = st.selectbox(f"{len(folders)} demo season matches", folders,
+                          index=folders.index(opening) if opening in folders else 0,
+                          format_func=lambda n: match_label(n, known.get(n)) + f" · vs {season[n]['team_names'][1]}")
+    match = season[picked]
+    st.caption("A made-up match from the demo season. Turn off demo mode in the sidebar to load a real replay.")
+elif demo_mode:
     match = load_demo_match()
     st.caption("Showing the bundled demo match. Turn off demo mode in the sidebar to load a real replay.")
 else:
@@ -400,6 +412,8 @@ for team_idx, team_name in enumerate(team_names[:2]):
 
 if name is not None:
     confirm_match(name, match, files)
+elif demo_mode and demo_active():
+    st.caption("This match is part of the demo season, which already has it in its stats.")
 else:
     st.caption("The demo match is only for trying the app, so it can't be added to your stats.")
 

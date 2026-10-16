@@ -8,6 +8,8 @@ Where every page's replays come from, so the pages don't each load them their ow
 - on this PC, the game's MatchReplay folder when nothing was picked yet (current_source);
 - the stats database (open_stats_db). Replays never go into it on their own: a match is
   added only when it's confirmed on the Dashboard, with the players picked there;
+- the demo season (start_demo, stop_demo): a made-up season in a stats database of its
+  own for the session, so every page has something to show and no real stats are touched;
 - the cleanup of extracted uploads nobody has used for an hour.
 """
 
@@ -149,8 +151,15 @@ def match_label(name: str, row: dict[str, Any] | None = None) -> str:
 
 
 def stats_db_path() -> Path:
-    """The stats database: the user's own on this PC; on the public website, one per visitor
-    that's deleted with their uploads once unused for an hour."""
+    """The stats database: the demo season's while it's on; else the user's own on this PC, and
+    on the public website one per visitor that's deleted with their uploads once unused for an hour."""
+    if demo_active():
+        folder = Path(st.session_state[DEMO_KEY])
+        if not (folder / "stats.db").is_file():  # swept after an hour unused: made again
+            start_demo()
+            folder = Path(st.session_state[DEMO_KEY])
+        _touch(folder)
+        return folder / "stats.db"
     if not app_info.is_public_host():
         return default_path()
     folder = st.session_state.get("stats_db_folder")
@@ -162,6 +171,60 @@ def stats_db_path() -> Path:
 
 def open_stats_db() -> StatsDB:
     return StatsDB(stats_db_path())
+
+
+DEMO_KEY = "demo_season_folder"
+_BEFORE_DEMO = "identity_before_demo"  # the league and theme to go back to
+
+
+def demo_active() -> bool:
+    return bool(st.session_state.get(DEMO_KEY))
+
+
+def start_demo() -> None:
+    """Turn the demo season on for this session: its matches go into a stats database of their own
+    (in a folder swept like uploads), and the banner shows the demo league, for this session only."""
+    import demo_season
+
+    folder = demo_season.database_folder()
+    with StatsDB(folder / "stats.db") as db:
+        demo_season.load(db)
+    old = st.session_state.get(DEMO_KEY)
+    if old:
+        shutil.rmtree(old, ignore_errors=True)
+    if _BEFORE_DEMO not in st.session_state:
+        st.session_state[_BEFORE_DEMO] = {k: st.session_state.get(k) for k in ("competition", "appearance")}
+    st.session_state[DEMO_KEY] = str(folder)
+    # the demo team's league and identity on the banner, for this session only (neither is saved)
+    st.session_state["competition"] = dict(demo_season.COMPETITION)
+    st.session_state["appearance"] = dict(demo_season.THEME)
+    st.session_state["team_choice"] = demo_season.TEAM  # Build a team opens on the demo team
+
+
+def stop_demo() -> None:
+    """Back to the user's own stats and league."""
+    folder = st.session_state.pop(DEMO_KEY, None)
+    if folder:
+        shutil.rmtree(folder, ignore_errors=True)
+    st.session_state.pop("team_choice", None)
+    before = st.session_state.pop(_BEFORE_DEMO, {})
+    for key in ("competition", "appearance"):
+        if before.get(key) is None:
+            st.session_state.pop(key, None)  # read from this PC again
+        else:
+            st.session_state[key] = before[key]
+
+
+def tracker_off() -> str:
+    """Why the season tracker can't be saved to here ("" when it can): the demo season is made up,
+    and the public website keeps visitors' stats apart."""
+    if demo_active():
+        return ("Season tracking is off in the demo season: its matches are made up, so nothing goes into a "
+                "real season. Leave the demo from the sidebar to track your own.")
+    if app_info.is_public_host():
+        return ("Season tracking is off on the public website, to keep visitors' stats apart. Use the Windows "
+                "app or run the app on your own computer.")
+    return ""
 
 
 def no_matches_yet(db: StatsDB) -> None:

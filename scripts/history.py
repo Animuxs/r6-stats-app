@@ -6,7 +6,7 @@ from __future__ import annotations
 import streamlit as st
 
 from metrics_engine import eps_from_rating, round_eps, rows_csv
-from sources import current_source, match_label, no_matches_yet, open_stats_db
+from sources import current_source, demo_active, match_label, no_matches_yet, open_stats_db
 from stats_db import NotAdded, nice_time
 from ui import md
 
@@ -145,7 +145,7 @@ if chosen:
     r = rows[chosen[0]]
     name, label = r["source"], match_label(r["source"], r)
     opened, removed = st.columns([1, 1])
-    if source and name in (source.get("groups") or {}):
+    if demo_active() or (source and name in (source.get("groups") or {})):  # the demo's are on the Dashboard too
         if opened.button("Open on Dashboard", type="primary"):
             st.session_state["open_match"] = name
             st.switch_page("report.py")

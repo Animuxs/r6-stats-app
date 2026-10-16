@@ -19,6 +19,7 @@ from app_info import is_public_host
 from branding import DEFAULT_COMPETITION, DEFAULT_THEME, apply_competition, apply_theme, current_competition
 from necc_data import MAX_CATALOG_BYTES, bundled_school_catalog, fetch_school_catalog, normalize_school_catalog
 from season_stats import StatsError, StatsManager
+from sources import tracker_off
 from ui import md
 
 LIQUIPEDIA, NECC, CUSTOM = "Liquipedia event (S–D Tier)", "NECC", "My league isn't listed"
@@ -188,9 +189,9 @@ def track_players(team: str) -> None:
                "replays count toward its season stats.")
     with st.form("league_players"):
         usernames = st.text_area("Siege usernames", placeholder="One exact in-game username per line")
-        saved = st.form_submit_button("Track these players", disabled=is_public_host() or not team)
-    if is_public_host():
-        st.caption("Roster tracking is off on the public website. Use the Windows app or run the app yourself.")
+        saved = st.form_submit_button("Track these players", disabled=bool(tracker_off()) or not team)
+    if tracker_off():
+        st.caption(tracker_off())
     if saved:
         names = list(dict.fromkeys(n.strip() for n in usernames.splitlines() if n.strip()))
         if not names:
@@ -309,7 +310,7 @@ def necc_directory() -> None:
         st.metric("Roster", len(roster))
         if roster:
             st.dataframe([{"Player": name} for name in roster], hide_index=True)
-            if st.button("Track this roster", disabled=is_public_host(), type="primary"):
+            if st.button("Track this roster", disabled=bool(tracker_off()), type="primary"):
                 season = st.session_state.get("r6_season", "current")
                 with StatsManager(season=season) as manager:
                     manager.add_players(roster, team=team["name"])
