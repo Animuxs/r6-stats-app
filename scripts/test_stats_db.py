@@ -324,6 +324,18 @@ class TestAddedByAnEarlierVersion(unittest.TestCase):
             self.assertEqual(db.players_by_match(), {SAMPLE_MATCH["match_id"]: sorted(TEAM0[:2], key=str.casefold)})
             self.assertEqual([r["match_id"] for r in db.to_check()], ["ranked"])
 
+    def test_matches_waiting_are_found_by_index(self):
+        with StatsDB(self.path) as db:
+            for table in ("matches", "match_players", "round_players", "team_rounds"):
+                plan = " ".join(r[3] for r in db._conn.execute(
+                    f"EXPLAIN QUERY PLAN DELETE FROM review_{table} WHERE match_id = ?", ("ranked",)))
+                self.assertIn(f"review_{table}_match", plan)
+
+    def test_opening_an_up_to_date_database_writes_nothing(self):
+        StatsDB(self.path).close()  # the one-time move into review_*
+        with StatsDB(self.path) as db:
+            self.assertEqual(db._conn.total_changes, 0)
+
 
 if __name__ == "__main__":
     unittest.main()
