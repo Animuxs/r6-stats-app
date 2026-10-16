@@ -9,11 +9,10 @@ import re
 
 import streamlit as st
 
-from app_info import is_public_host
 from ask_engine import eps_by_player, rate, team_report, team_summary
 from metrics_engine import pro_league_row, round_eps, rows_csv
 from season_stats import StatsError, StatsManager
-from sources import current_source, match_label, no_matches_yet, open_stats_db, parse
+from sources import current_source, demo_active, match_label, no_matches_yet, open_stats_db, parse, tracker_off
 from stats_db import nice_time
 from ui import md
 
@@ -128,7 +127,7 @@ def _season_matches(season: str, team: str, players: list[str], counted: set[str
             for match_id in gone:
                 box.checkbox(f"{md(match_id)} · saved earlier, not in your stats database",
                              value=True, key=_picker_key(season, match_id))
-            saved = st.form_submit_button("Save season matches", type="primary", disabled=is_public_host())
+            saved = st.form_submit_button("Save season matches", type="primary", disabled=bool(tracker_off()))
         if saved:
             ticked = {m for m in listed | set(gone) if st.session_state.get(_picker_key(season, m))}
             _apply_season_matches(season, [r for r in rows if r["match_id"] in ticked - counted],
@@ -241,7 +240,7 @@ with build_tab:
                 safe_name = re.sub(r"[^\w\- ]+", "", team).strip() or "team"  # a usable file name
                 dl.download_button("⬇ CSV", rows_csv(table).encode("utf-8"), file_name=f"{safe_name}_team_stats.csv",
                                    mime="text/csv")
-                if not is_public_host() and track.button(f"Also track {md(team)} in the season tracker"):
+                if not tracker_off() and track.button(f"Also track {md(team)} in the season tracker"):
                     with StatsManager(season=st.session_state.get("r6_season", "current")) as manager:
                         manager.add_players(teams[team], team=team)
                     st.success(f"Tracking {len(teams[team])} players as {md(team)}. Save matches from Dashboard to add "
@@ -251,6 +250,10 @@ with build_tab:
 with season_tab:
     st.caption("The season tracker: the players you track and the matches you count toward the season. Pick the "
                "matches below, or save one from the Dashboard.")
+    if demo_active():  # the tracker holds real seasons: the demo season's made-up matches stay out of it
+        st.info("The season tracker isn't part of the demo season. Leave the demo from the sidebar to see your own "
+                "seasons. **Build a team** shows Lakeside Varsity's demo stats.")
+        st.stop()  # the last thing on the page
     season = st.text_input("Season", value=st.session_state.get("r6_season", "current"), key="team_season").strip() or "current"
     st.session_state["r6_season"] = season
     with StatsManager(season=season) as manager:

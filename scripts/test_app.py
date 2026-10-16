@@ -194,6 +194,75 @@ def with_matches(at: AppTest, count: int = 2, added: bool = True) -> AppTest:
     return at
 
 
+class TestDemoSeason(unittest.TestCase):
+    """The demo season: a made-up season in a stats database of its own, so every page has something
+    to show without replays, and nobody's real stats are touched."""
+
+    def setUp(self):
+        self.db = Path(tempfile.mkdtemp(dir=_DB_FOLDER)) / "stats.db"  # the user's real database
+        patch = mock.patch.object(season_stats, "DEFAULT_DB_PATH", self.db)
+        patch.start()
+        self.addCleanup(patch.stop)
+
+    def test_the_season_is_the_same_every_time_and_holds_together(self):
+        import demo_season
+        from metrics_engine import compute_match_metrics
+
+        first, again = demo_season.season(), demo_season.season()
+        self.assertEqual(first, again)
+        self.assertEqual(len(first), 12)
+        for folder, match in first.items():
+            with self.subTest(folder=folder):
+                self.assertEqual(sum(match["final_score"]), len(match["rounds"]))
+                self.assertIn(max(match["final_score"]), (7, 8))  # first to 7, or 8 after 6-6
+                names = {p["name"] for p in match["players"]}
+                for rnd in match["rounds"]:
+                    for event in rnd["events"]:
+                        self.assertTrue({event.get("actor"), event.get("target", event.get("actor"))} <= names)
+                stats = compute_match_metrics(match)
+                self.assertEqual(len(stats), 10)
+                self.assertTrue(all(s.rounds_played == len(match["rounds"]) for s in stats.values()))
+
+    def test_every_page_has_the_season_and_real_stats_are_untouched(self):
+        at = run_app()
+        at = next(b for b in at.button if b.label == "Try the demo season").click().run()
+        self.assertFalse(at.exception)
+        self.assertTrue(any("Demo season" in i.value for i in at.info))
+        banner = "".join(m.value for m in at.markdown if "identity-banner" in m.value)
+        self.assertIn("R6 MATCH STATS DEMO LEAGUE", banner)
+        self.assertIn("Lakeside Varsity", banner)  # the demo team's identity, for this session only
+        self.assertIn("12 demo season matches", [s.label for s in at.selectbox])  # Dashboard opens any of them
+        for page in ("ask.py", "history.py", "operators.py", "teams.py", "league.py"):
+            with self.subTest(page=page):
+                at.switch_page(page).run()
+                self.assertFalse(at.exception)
+                self.assertFalse(any("No matches yet" in i.value for i in at.info), page)
+        at.switch_page("history.py").run()
+        self.assertEqual(len(at.dataframe[0].value), 12)
+        at.switch_page("league.py").run()
+        self.assertTrue(next(b for b in at.button if b.label == "Track these players").disabled)  # no real season
+        self.assertFalse(self.db.exists() and _matches_in(self.db))  # the user's own stats have none of it
+        at = next(b for b in at.button if b.label == "Leave the demo season").click().run()
+        at.switch_page("ask.py").run()
+        self.assertTrue(any("No matches yet" in i.value for i in at.info))
+        self.assertNotIn("Lakeside Varsity", "".join(m.value for m in at.markdown if "identity-banner" in m.value))
+
+    def test_a_link_opens_the_demo(self):
+        with mock.patch.object(app_info, "is_loopback", return_value=True):
+            at = AppTest.from_file(APP, default_timeout=60)
+            at.query_params["demo"] = "1"
+            at.run()
+        self.assertFalse(at.exception)
+        self.assertTrue(any("Demo season" in i.value for i in at.info))
+
+
+def _matches_in(path: Path) -> int:
+    from stats_db import StatsDB
+
+    with StatsDB(path) as db:
+        return db.summary()["matches"]
+
+
 class TestAnalyticsPages(unittest.TestCase):
     """The pages that read the stats database, run as in the Windows app (on this PC)."""
 

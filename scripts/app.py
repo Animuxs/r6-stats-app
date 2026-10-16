@@ -5,7 +5,8 @@ Entry point of the R6 Match Stats website and Windows app (Streamlit).
 Pages: report.py (Dashboard: one match's scoreboards), ask.py (plain-English questions about
 every match), history.py (every match), teams.py (build a team; season teams), operators.py,
 league.py (your league or tournament: Liquipedia events, NECC divisions, or your own; NECC's school
-directory), appearance.py (team colors and logo) and download.py (get the Windows app).
+directory), appearance.py (team colors and logo) and download.py (get the Windows app). The sidebar's
+demo season (or ?demo in the address) fills every page with made-up matches (demo_season.py).
 
 Run with:  streamlit run scripts/app.py   (from the repo root)
 """
@@ -19,6 +20,7 @@ import streamlit as st
 
 from app_info import APP_NAME, can_dock, quiet_windows_connection_resets, send_window_command
 from branding import current_competition, render_identity
+from sources import demo_active, start_demo, stop_demo
 
 if __name__ == "__main__":
     from streamlit import runtime
@@ -142,7 +144,29 @@ if can_dock():
             send_window_command("dock", edge="left")
         if right.button("Dock right ⇥", width="stretch", key="dock_right"):
             send_window_command("dock", edge="right")
+# the demo season: a made-up season in a stats database of its own, from the sidebar or ?demo in the
+# address (a link to share), so every page has something to show and nobody's real stats are touched
+if "demo" in st.query_params and not st.session_state.get("demo_from_link"):
+    st.session_state["demo_from_link"] = True
+    if not demo_active():
+        start_demo()
+with st.sidebar:
+    if demo_active():
+        st.caption("You're looking at the **demo season**: made-up matches, not your own.")
+        if st.button("Leave the demo season", width="stretch", key="demo_leave"):
+            stop_demo()
+            st.query_params.pop("demo", None)
+            st.rerun()
+    else:
+        st.caption("No replays handy? See every page with a season of made-up matches:")
+        if st.button("Try the demo season", width="stretch", key="demo_start"):
+            start_demo()
+            st.rerun()
 if "r6_season" not in st.session_state and current_competition()["season"]:
     st.session_state["r6_season"] = current_competition()["season"]  # the season named after your league
 render_identity()
+if demo_active():
+    st.info("**Demo season**: twelve made-up league matches of Lakeside Varsity, so you can try Ask, Match History, "
+            "Team Analytics and the rest without replays. Your own stats aren't touched. Leave it from the sidebar.",
+            icon=":material/science:")
 page.run()

@@ -301,6 +301,24 @@ and commit it (`GOOS=linux GOARCH=amd64 go build -trimpath -o r6-dissect .`;
 `-trimpath` keeps your PC's folder paths out of it) after changing the Go
 parser. Every push to the branch redeploys the site.
 
+### A demo of the whole app to share
+
+**Try the demo season** in the sidebar (or `?demo` at the end of the app's
+address) fills every page with a made-up season: twelve league matches of a
+college team, Lakeside Varsity, across the map pool (`demo_season.py`, the same
+every time). Ask, Match History, Team Analytics and Operator Analytics then have
+a season to show, and the Dashboard opens any of its matches. It goes into a
+stats database of its own for that browser session, so nobody's real stats are
+touched, and the season tracker stays off while it's on. **Leave the demo
+season** goes back to your own.
+
+To share the whole app, deploy the website as above and send its address with
+`/?demo` at the end, for example `https://<your-app>.streamlit.app/?demo`:
+each visitor gets their own copy of the demo season. (Link to the root address:
+the first visit after the site wakes up always opens the Dashboard.) The browser
+edition ([browser/](../browser/README.md)) is the lighter option: the scoreboards
+of any replay, with no server at all.
+
 ### The Windows app (GitHub Releases)
 
 The **Windows app** workflow (`.github/workflows/windows-app.yaml`) builds the

@@ -16,7 +16,7 @@ APP_VERSION = (STAMPED_VERSION.read_text().strip() if STAMPED_VERSION.is_file()
 APP_FILES = ["app.py", "report.py", "dock.py", "ask.py", "history.py", "operators.py", "teams.py", "league.py",
              "events.py", "liquipedia_events.json", "necc_divisions.json", "download.py", "app_info.py", "ui.py", "branding.py", "appearance.py", "necc_data.py",
              "necc_season.json", "season_stats.py", "sources.py", "stats_db.py", "ask_engine.py",
-             "parser.py", "file_guard.py", "metrics_engine.py", "sample_data.py", "icon.png"]
+             "parser.py", "file_guard.py", "metrics_engine.py", "sample_data.py", "demo_season.py", "icon.png"]
 datas = [(str(ROOT / "scripts" / name), "scripts") for name in APP_FILES]
 for stamp in ("repo.txt", "version.txt"):
     if (ROOT / "build" / stamp).is_file():
@@ -35,7 +35,7 @@ hiddenimports = (
     # (scripts/test_app.py checks this list against their imports)
     + ["base64", "calendar", "collections", "concurrent.futures", "contextlib", "csv", "dataclasses", "datetime",
        "difflib", "gzip", "html", "http.client", "io", "ipaddress", "itertools", "json", "logging", "os", "pathlib",
-       "re", "shutil", "sqlite3", "subprocess", "sys", "tempfile", "threading", "time", "typing", "unicodedata",
+       "random", "re", "shutil", "sqlite3", "subprocess", "sys", "tempfile", "threading", "time", "typing", "unicodedata",
        "urllib.parse", "urllib.request", "zipfile"]
 )
 
