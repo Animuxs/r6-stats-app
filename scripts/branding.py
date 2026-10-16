@@ -202,6 +202,8 @@ def render_identity(banner=True):
     .identity-badge {{margin-left:auto;border:1px solid var(--secondary);color:var(--secondary);padding:8px 12px;font:700 11px monospace;white-space:nowrap;}}
     @media(max-width:700px) {{.identity-banner {{padding:18px 14px;gap:12px;}}.identity-badge {{display:none;}}h1 {{font-size:2rem!important;}}}}
     </style>''', unsafe_allow_html=True)
+    if theme['logo']:
+        st.logo(theme['logo'], size='large')  # your team's logo atop the sidebar, on every page
     if not banner:
         return
     competition = current_competition()

@@ -430,7 +430,7 @@ def cache_path() -> Path:
     return Path(season_stats.DEFAULT_DB_PATH).parent / "liquipedia_events.json"
 
 
-_loaded: dict[str, tuple[tuple[int, int], dict[str, Any] | None]] = {}
+_loaded: dict[str, tuple[tuple[int, int, int], dict[str, Any] | None]] = {}
 
 
 def load_catalog(path: Path) -> dict[str, Any] | None:
@@ -440,7 +440,7 @@ def load_catalog(path: Path) -> dict[str, Any] | None:
         stat = os.stat(path)
     except OSError:
         return None
-    key, stamp = str(path), (stat.st_mtime_ns, stat.st_size)
+    key, stamp = str(path), (stat.st_mtime_ns, stat.st_size, stat.st_ino)  # a file replaced in the same tick is new
     if key in _loaded and _loaded[key][0] == stamp:
         return _loaded[key][1]
     try:

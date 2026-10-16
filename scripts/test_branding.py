@@ -6,6 +6,7 @@ from unittest import mock
 
 from PIL import Image
 from streamlit.testing.v1 import AppTest
+import app_info
 import branding
 import necc_data
 
@@ -45,7 +46,9 @@ class TestSchoolIdentity(unittest.TestCase):
             branding.uploaded_logo(b'x' * (2 * 1024 * 1024 + 1))
 
     def test_school_preset_updates_identity_and_search(self):
-        with mock.patch.dict('os.environ', {'R6_HOSTED': '1'}):
+        with mock.patch.dict('os.environ', {'R6_HOSTED': '1'}), \
+                mock.patch.object(app_info, 'is_loopback', return_value=True), \
+                mock.patch('branding.is_loopback', return_value=True):
             app = AppTest.from_file(str(Path(__file__).with_name('app.py')), default_timeout=60).run()
             app.switch_page('appearance.py').run()
             self.assertFalse(app.exception)

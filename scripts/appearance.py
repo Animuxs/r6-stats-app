@@ -1,15 +1,37 @@
-"""Team identity controls: colors, names and logo, starting from a NECC school if you like."""
+"""Team identity controls: colors, names and logo, starting from your team (any NECC team: its own
+colors and logo) or a NECC school if you like."""
 import streamlit as st
-from branding import DEFAULT_THEME, apply_theme, current_theme, local_preferences, uploaded_logo
+import rosters
+from branding import DEFAULT_THEME, apply_theme, current_competition, current_theme, local_preferences, uploaded_logo
 from necc_data import bundled_school_catalog
+from team_ui import team_card, team_css
 
 st.caption('PERSONALIZE YOUR COMMAND CENTER')
 st.title('Team colors & identity')
 st.write('Make every match report and analytics page feel like home.')
 theme = current_theme()
 schools = st.session_state.get('necc_schools') or bundled_school_catalog()
+team_css()
 left, right = st.columns([2, 1], gap='large')
 with left:
+    teams = sorted(rosters.teams(), key=lambda t: (t['name'].casefold(), t['division']))
+    if teams:
+        st.subheader('Start with your team')
+        mine = rosters.mine(current_competition())
+        index = next((i for i, t in enumerate(teams) if mine and rosters.team_key(t) == rosters.team_key(mine)), 0)
+        picked = st.selectbox('Team', teams, index=index, key='theme_team',
+                              format_func=lambda t: f"{t['name']} · {t['school']} · Division {t['division']}")
+        st.markdown(team_card(picked, mine=bool(mine) and rosters.team_key(picked) == rosters.team_key(mine)),
+                    unsafe_allow_html=True)
+        if st.button("Use this team's colors and logo", type='primary', key='theme_team_apply'):
+            try:
+                apply_theme(rosters.theme_of(picked))
+                st.rerun()
+            except OSError as error:
+                st.error(f'Could not save appearance: {error}')
+        st.caption('Its primary and secondary colors and its logo, as NECC shows them. Saving your team on '
+                   '**League & Team** does this for you.')
+        st.divider()
     st.subheader('Start with a NECC school')
     selected = st.selectbox('School preset', schools, format_func=lambda s: s['name'],
         index=next((i for i, s in enumerate(schools) if s['name'] == theme['name']), 0))
@@ -46,7 +68,8 @@ with right:
         st.image(theme['logo'], width=120)
     st.write(theme['name'])
     st.caption(theme['team'])
-    st.caption('Your colors style the header, report scores, navigation accents and performance cards. Text accents adapt for readability on dark backgrounds.')
+    st.caption('Your colors and logo style the banner, the sidebar, scoreboards, cards, charts, the docked panel '
+               'and the Windows app\'s launch screen. Text accents adapt for readability on dark backgrounds.')
     st.info('Saved on this computer across restarts.' if local_preferences() else 'Theme stays in this browser session. The desktop app saves it across restarts.')
     if st.button('Restore the default theme'):
         try:

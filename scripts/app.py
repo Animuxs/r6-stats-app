@@ -18,7 +18,8 @@ from pathlib import Path
 
 import streamlit as st
 
-from app_info import APP_NAME, can_dock, quiet_windows_connection_resets, send_window_command
+import rosters
+from app_info import APP_NAME, can_dock, is_windows_app, quiet_windows_connection_resets, send_window_command
 from branding import current_competition, render_identity
 from sources import demo_active, start_demo, stop_demo
 
@@ -69,6 +70,10 @@ button[kind="primaryFormSubmit"], button[kind="primaryFormSubmit"]:hover { backg
              border-radius:4px; padding:18px 24px; margin-bottom:18px; display:flex; align-items:center;
              justify-content:space-between; gap:16px; flex-wrap:wrap; box-shadow:0 12px 28px rgba(0,0,0,.18); }
 .team-name { font-size:1.05rem; color:var(--text); font-weight:700; }
+.sc-side { display:flex; align-items:center; gap:12px; flex:1 1 0; min-width:0; }
+.sc-logo { width:46px; height:46px; object-fit:contain; flex:none; }
+.sc-you { display:inline-block; margin-top:3px; padding:1px 6px; border:1px solid var(--secondary, var(--accent));
+          color:var(--secondary, var(--accent)); font:700 9px var(--mono); letter-spacing:.1em; border-radius:2px; }
 .score-big { font:600 2.35rem var(--mono); color:var(--accent); }
 .map-pill { display:inline-block; background:#252d2e; color:var(--dim); border-radius:2px;
             padding:4px 10px; font:10px var(--mono); text-transform:uppercase; border:1px solid var(--border); }
@@ -144,6 +149,8 @@ if can_dock():
             send_window_command("dock", edge="left")
         if right.button("Dock right ⇥", width="stretch", key="dock_right"):
             send_window_command("dock", edge="right")
+if is_windows_app():
+    rosters.update_on_launch()  # newer team rosters, at most once a day, in the background
 # the demo season: a made-up season in a stats database of its own, from the sidebar or ?demo in the
 # address (a link to share), so every page has something to show and nobody's real stats are touched
 if "demo" in st.query_params and not st.session_state.get("demo_from_link"):

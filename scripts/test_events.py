@@ -12,6 +12,7 @@ from unittest import mock
 
 from streamlit.testing.v1 import AppTest
 
+import app_info
 import branding
 import events
 import season_stats
@@ -326,11 +327,14 @@ class TestLeaguePage(unittest.TestCase):
         folder = Path(tempfile.mkdtemp())
         for patch in (mock.patch.object(season_stats, "DEFAULT_DB_PATH", folder / "season_stats.db"),
                       mock.patch.object(branding, "DEFAULT_DB_PATH", folder / "season_stats.db"),
-                      mock.patch.object(branding, "local_preferences", return_value=True)):
+                      mock.patch.object(branding, "local_preferences", return_value=True),
+                      mock.patch("rosters.update_on_launch")):  # never online in a test
             patch.start()
             self.addCleanup(patch.stop)
         self.folder = folder
-        with mock.patch.dict(os.environ, {"R6_DESKTOP": "1"}):
+        with mock.patch.dict(os.environ, {"R6_DESKTOP": "1"}), \
+                mock.patch.object(app_info, "is_loopback", return_value=True), \
+                mock.patch("branding.is_loopback", return_value=True):
             self.at = AppTest.from_file(str(Path(__file__).with_name("app.py")), default_timeout=60).run()
         self.at.switch_page("league.py").run()
         self.assertFalse(self.at.exception)
@@ -346,7 +350,7 @@ class TestLeaguePage(unittest.TestCase):
         team = next(s for s in at.selectbox if s.label.startswith("Your team"))
         team.set_value("Fisher College").run()
         self.widget("checkbox", "Name my season after it").check().run()
-        at = self.widget("button", "Save as my league").click().run()
+        at = self.widget("button", "Save my team").click().run()
         self.assertFalse(at.exception)
         saved = branding.load_competition(self.folder / "competition.json")
         self.assertEqual((saved["source"], saved["tier"], saved["team"]), ("liquipedia", "C", "Fisher College"))
@@ -364,7 +368,7 @@ class TestLeaguePage(unittest.TestCase):
         at = self.widget("radio", "Where do you compete?").set_value("My league isn't listed").run()
         self.widget("text_input", "League or tournament").set_value("Midwest HS League").run()
         self.widget("text_input", "Your team's name").set_value("Lakeside Varsity").run()
-        at = self.widget("button", "Save as my league").click().run()
+        at = self.widget("button", "Save my team").click().run()
         saved = branding.load_competition(self.folder / "competition.json")
         self.assertEqual((saved["source"], saved["name"], saved["team"]), ("custom", "Midwest HS League", "Lakeside Varsity"))
         self.assertTrue(any("Saved: Lakeside Varsity in Midwest HS League" in s.value for s in at.success))
@@ -375,10 +379,37 @@ class TestLeaguePage(unittest.TestCase):
         self.assertEqual(division.value, "necc:aa437rpne256ozzb6f5lv012y")  # Division I to start with
         self.assertTrue(division.options[1].startswith("NECC R6 | Division I ·"))
         next(s for s in at.selectbox if s.label.startswith("Your team")).set_value("UdeS Esports").run()
-        self.widget("button", "Save as my league").click().run()
+        self.assertTrue(any('class="tm-card tm-mine"' in m.value and "UdeS Esports" in m.value for m in at.markdown))
+        at = self.widget("button", "Save my team").click().run()
+        self.assertFalse(at.exception)
         saved = branding.load_competition(self.folder / "competition.json")
         self.assertEqual((saved["source"], saved["team"]), ("necc", "UdeS Esports"))
         self.assertIn("School", [s.label for s in self.at.selectbox])  # the NECC school directory is there too
+        # nothing typed: the roster is tracked, it's a Team Analytics team, and the team's look is on
+        import rosters
+        from stats_db import StatsDB
+
+        team = rosters.find("UdeS Esports", "I")
+        names = rosters.in_game_names(team)
+        self.assertGreaterEqual(len(names), 5)
+        with season_stats.StatsManager(self.folder / "season_stats.db") as manager:
+            self.assertEqual({u: t for u, t in manager.tracked_players().items()}, {n: "UdeS Esports" for n in names})
+        with StatsDB(self.folder / "season_stats.db") as db:
+            self.assertEqual(db.rosters(), {"UdeS Esports": names})
+        theme = branding.load_theme(self.folder / "appearance.json")
+        self.assertEqual((theme["team"], theme["primary"], theme["logo"]), ("UdeS Esports", team["color"], team["logo_url"]))
+        self.assertTrue(any("Tracking" in s.value or "are your team" in s.value for s in at.success))
+
+    def test_find_any_team_and_make_it_yours(self):
+        at = self.widget("text_input", "Search teams, schools or players").set_value("Akron").run()
+        self.assertTrue(any("Akron White" in m.value and 'class="tm-card"' in m.value for m in at.markdown))
+        at = next(b for b in at.button if b.key == "choose:I|Akron White").click().run()
+        self.assertFalse(at.exception)
+        self.assertEqual(self.widget("radio", "Where do you compete?").value, "NECC")
+        self.assertEqual(next(s for s in at.selectbox if s.label.startswith("Your team")).value, "Akron White")
+        # and by a player's in-game name
+        at = self.widget("text_input", "Search teams, schools or players").set_value("Divine.UA").run()
+        self.assertTrue(any("Akron White" in m.value for m in at.markdown if 'class="tm-card"' in m.value))
 
 
 if __name__ == "__main__":

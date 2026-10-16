@@ -16,6 +16,7 @@ Where every page's replays come from, so the pages don't each load them their ow
 from __future__ import annotations
 
 import contextlib
+import json
 import os
 import shutil
 import tempfile
@@ -30,6 +31,7 @@ import app_info
 import parser as replay_parser
 from file_guard import ReplayScanner
 from parser import ReplayParseError, collect_rec_files, group_by_match, parse_match, replay_source_version
+from events import save_catalog
 from stats_db import StatsDB, default_path, nice_time, played_at_from_folder
 
 WORKDIR_PREFIX = "r6-match-"
@@ -97,6 +99,43 @@ def load_source(sig: tuple, collect: Callable[[Path, ReplayScanner], list[str]])
     return state
 
 
+def _folder_file() -> Path:
+    return default_path().parent / "replay_folder.json"
+
+
+def saved_replay_folder() -> Path | None:
+    """The replay folder picked on the Dashboard, kept on this PC (None if none was picked, or
+    on the public website, where folders aren't read)."""
+    if not can_read_local_files():
+        return None
+    try:
+        value = json.loads(_folder_file().read_text(encoding="utf-8")).get("path")
+    except (OSError, ValueError, AttributeError):
+        return None
+    return Path(value) if isinstance(value, str) and value.strip() else None
+
+
+def save_replay_folder(path: Path | None) -> None:
+    """Keep the Dashboard's replay folder for next time (None: go back to the one Siege uses)."""
+    if not can_read_local_files():
+        return
+    with contextlib.suppress(OSError):
+        if path is None:
+            _folder_file().unlink(missing_ok=True)
+        else:
+            save_catalog({"path": str(path)}, _folder_file())
+
+
+def preferred_folder() -> Path | None:
+    """The folder the pages read replays from: the one picked on the Dashboard while it's still
+    there, else the game's own MatchReplay folder."""
+    saved = saved_replay_folder()
+    if saved and saved.exists():
+        return saved
+    found = replay_parser.find_replay_folders()
+    return found[0] if found else None
+
+
 def folder_source(path: Path) -> dict[str, Any]:
     """A folder or zip on this PC as the source; found again whenever a replay is added to it."""
     return load_source(("path", str(path), replay_source_version(path)),
@@ -105,7 +144,8 @@ def folder_source(path: Path) -> dict[str, Any]:
 
 def current_source() -> dict[str, Any] | None:
     """The replays the pages work with: what the Dashboard loaded (refreshed if it's a folder
-    that has gained replays since) or, on this PC, the game's MatchReplay folder."""
+    that has gained replays since) or, on this PC, the folder picked there before, or the game's
+    MatchReplay folder."""
     state = st.session_state.get("source")
     if state and state["sig"][0] == "path":
         path = Path(state["sig"][1])
@@ -114,9 +154,9 @@ def current_source() -> dict[str, Any] | None:
         _touch(state["workdir"])
         return state
     if can_read_local_files():
-        found = replay_parser.find_replay_folders()
-        if found:
-            return folder_source(found[0])
+        folder = preferred_folder()
+        if folder:
+            return folder_source(folder)
     return None
 
 

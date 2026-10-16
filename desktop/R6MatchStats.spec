@@ -14,7 +14,8 @@ APP_VERSION = (STAMPED_VERSION.read_text().strip() if STAMPED_VERSION.is_file()
 
 # The app ships as plain files, because Streamlit runs app.py (and its pages) from disk.
 APP_FILES = ["app.py", "report.py", "dock.py", "ask.py", "history.py", "operators.py", "teams.py", "league.py",
-             "events.py", "liquipedia_events.json", "necc_divisions.json", "download.py", "app_info.py", "ui.py", "branding.py", "appearance.py", "necc_data.py",
+             "events.py", "liquipedia_events.json", "necc_divisions.json", "rosters.py", "necc_rosters.json", "team_ui.py",
+             "download.py", "app_info.py", "ui.py", "branding.py", "appearance.py", "necc_data.py",
              "necc_season.json", "season_stats.py", "sources.py", "stats_db.py", "ask_engine.py",
              "parser.py", "file_guard.py", "metrics_engine.py", "sample_data.py", "demo_season.py", "icon.png"]
 datas = [(str(ROOT / "scripts" / name), "scripts") for name in APP_FILES]
