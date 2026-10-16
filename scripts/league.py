@@ -28,6 +28,7 @@ from branding import DEFAULT_COMPETITION, DEFAULT_THEME, apply_competition, appl
 from necc_data import MAX_CATALOG_BYTES, bundled_school_catalog, fetch_school_catalog, normalize_school_catalog
 from season_stats import StatsError, StatsManager
 from sources import current_source, open_stats_db, parse
+from sources import tracker_off
 from ui import md
 
 LIQUIPEDIA, NECC, CUSTOM = "Liquipedia event (S–D Tier)", "NECC", "My league isn't listed"
@@ -229,7 +230,7 @@ def _track(team: str, players: list[str], season: str) -> str:
     with open_stats_db() as db:
         db.save_roster(team, players)
     done = f"{len(players)} players are your team in Team Analytics and Ask"
-    if is_public_host():
+    if tracker_off():
         return done + " (season tracking is off on the public website)."
     try:
         with StatsManager(season=season) as manager:
@@ -309,7 +310,7 @@ def find_a_team() -> None:
 
 def refresh_liquipedia() -> None:
     catalog = events.current_catalog()
-    if is_public_host():
+    if tracker_off():
         st.caption("The public website uses the event list that shipped with this version. The Windows app can "
                    "check Liquipedia for newer events.")
         return
@@ -410,7 +411,7 @@ def necc_directory() -> None:
         st.metric("Roster", len(roster))
         if roster:
             st.dataframe([{"Player": name} for name in roster], hide_index=True)
-            if st.button("Track this roster", disabled=is_public_host(), type="primary"):
+            if st.button("Track this roster", disabled=bool(tracker_off()), type="primary"):
                 season = st.session_state.get("r6_season", "current")
                 with StatsManager(season=season) as manager:
                     manager.add_players(roster, team=team["name"])
