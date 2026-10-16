@@ -1,0 +1,10653 @@
+{
+ "source_url": "https://necc.v1.leagueos.gg/",
+ "captured_at": "2026-10-16",
+ "note": "NECC's Rainbow Six teams and their players, from each division's public Rosters tab on LeagueOS. A dated snapshot: records are as of that day.",
+ "teams": [
+  {
+   "id": "bkk5ppnmuixn14ao90laq4ezf",
+   "team_id": "41ckvmi2gye9a0t5154bnjdaz",
+   "name": "Akron White",
+   "school": "The University of Akron",
+   "school_short": "Akron",
+   "division": "I",
+   "event_id": "aa437rpne256ozzb6f5lv012y",
+   "group": "Group A",
+   "color": "#041E42",
+   "color_alt": "#A89968",
+   "logo_url": "https://images.leagueos.gg/teams/41ckvmi2gye9a0t5154bnjdaz/ctzkfmvb36yhitf8qxepvtgfl",
+   "clan_tag": "UA",
+   "record": {
+    "wins": 1,
+    "losses": 2,
+    "game_wins": 3,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "brianwilliams",
+     "ubisoft": [
+      "Soup"
+     ],
+     "player": false
+    },
+    {
+     "name": "Divine Judgement",
+     "ubisoft": [
+      "Divine.UA"
+     ],
+     "player": true
+    },
+    {
+     "name": "Golden.UA",
+     "ubisoft": [
+      "Golden.UA"
+     ],
+     "player": true
+    },
+    {
+     "name": "SnowZonee",
+     "ubisoft": [
+      "Sneaux.UA",
+      "Snow.UA"
+     ],
+     "player": true
+    },
+    {
+     "name": "TPep",
+     "ubisoft": [
+      "TPep.UA"
+     ],
+     "player": true
+    },
+    {
+     "name": "Plexios",
+     "ubisoft": [
+      "Plexios.UA"
+     ],
+     "player": true
+    },
+    {
+     "name": "ph9ntm",
+     "ubisoft": [
+      "Phantm005.UA"
+     ],
+     "player": true
+    },
+    {
+     "name": "Tengo",
+     "ubisoft": [
+      "Tengo.UA"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "16lv8r6lyfen96dfif4azfvep",
+   "team_id": "15o30w7kk30em4mjwkd4srq9a",
+   "name": "CMU Eagles",
+   "school": "Central Methodist University",
+   "school_short": "",
+   "division": "I",
+   "event_id": "aa437rpne256ozzb6f5lv012y",
+   "group": "Group A",
+   "color": "#C2D501",
+   "color_alt": "#000000",
+   "logo_url": "https://images.leagueos.gg/teams/15o30w7kk30em4mjwkd4srq9a/648c9b8bb9d6364f68e676e5",
+   "clan_tag": "CMU",
+   "record": {
+    "wins": 2,
+    "losses": 1,
+    "game_wins": 4,
+    "game_losses": 3
+   },
+   "players": [
+    {
+     "name": "AZRoadrunner",
+     "ubisoft": [
+      "AZRoadrunner21"
+     ],
+     "player": false
+    },
+    {
+     "name": "Calico",
+     "ubisoft": [
+      "Calico.NOCT",
+      "Calico.-"
+     ],
+     "player": true
+    },
+    {
+     "name": "champ.3",
+     "ubisoft": [
+      "Champ.AVN",
+      "champ.."
+     ],
+     "player": true
+    },
+    {
+     "name": "Berd0",
+     "ubisoft": [
+      "berddawerd.gen",
+      "Berd0"
+     ],
+     "player": true
+    },
+    {
+     "name": "ScrubDaddySr.",
+     "ubisoft": [
+      "ScrubDaddySr."
+     ],
+     "player": true
+    },
+    {
+     "name": "SaintESP.TTV",
+     "ubisoft": [
+      "SaintESP.TTV"
+     ],
+     "player": true
+    },
+    {
+     "name": "aid3nzera",
+     "ubisoft": [
+      "thisgamerscks",
+      "aid3nzera.AVN"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "4omct5d1nj9k5t6ci3xl647aa",
+   "team_id": "8s4557kkp7cf4psx62chvv330",
+   "name": "CU Gold",
+   "school": "University of Colorado Boulder",
+   "school_short": "CU Boulder",
+   "division": "I",
+   "event_id": "aa437rpne256ozzb6f5lv012y",
+   "group": "Group B",
+   "color": "#CFB87C",
+   "color_alt": "#000000",
+   "logo_url": "https://images.leagueos.gg/teams/8s4557kkp7cf4psx62chvv330/6490b221f14cfcf90ebf45c4",
+   "clan_tag": "CU",
+   "record": {
+    "wins": 0,
+    "losses": 2,
+    "game_wins": 1,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "and3ruu",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Nsuko",
+     "ubisoft": [
+      "Nsuko.CU"
+     ],
+     "player": false
+    },
+    {
+     "name": "pallysotan",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "sxgittal.",
+     "ubisoft": [
+      "Sxgittal.CU"
+     ],
+     "player": false
+    },
+    {
+     "name": "wuijle",
+     "ubisoft": [
+      "Buijle"
+     ],
+     "player": false
+    },
+    {
+     "name": "Tax",
+     "ubisoft": [
+      "Tax.Cu"
+     ],
+     "player": true
+    },
+    {
+     "name": "Humblexnuckles",
+     "ubisoft": [
+      "Humble.CU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Purpy",
+     "ubisoft": [
+      "Purpy.CU"
+     ],
+     "player": true
+    },
+    {
+     "name": "ok",
+     "ubisoft": [
+      "ok...o_0",
+      "ok.CU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Tetqa",
+     "ubisoft": [
+      "Tetqa.CU",
+      "TetqaDemon-_-"
+     ],
+     "player": true
+    },
+    {
+     "name": "Jetta",
+     "ubisoft": [
+      "Jetta-Oni"
+     ],
+     "player": true
+    },
+    {
+     "name": "Lunari",
+     "ubisoft": [
+      "Lunari.CU"
+     ],
+     "player": true
+    },
+    {
+     "name": "noos",
+     "ubisoft": [
+      "noos.CU",
+      "nooszera.CU",
+      "Noosfps"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "d3l6vv40xkf3fl31azews6i8s",
+   "team_id": "034gpklylm09rna7884aw7s62",
+   "name": "Charlotte Esports",
+   "school": "University of North Carolina at Charlotte",
+   "school_short": "",
+   "division": "I",
+   "event_id": "aa437rpne256ozzb6f5lv012y",
+   "group": "Group B",
+   "color": "#005035",
+   "color_alt": "#A49665",
+   "logo_url": "https://images.leagueos.gg/teams/034gpklylm09rna7884aw7s62/dz2qyyd69y8q3478r47l16q8a",
+   "clan_tag": "CLT",
+   "record": {
+    "wins": 2,
+    "losses": 0,
+    "game_wins": 4,
+    "game_losses": 1
+   },
+   "players": [
+    {
+     "name": "Ian",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "reaper.117",
+     "ubisoft": [
+      "Reaper.116",
+      "Reaper.CLT"
+     ],
+     "player": true
+    },
+    {
+     "name": "cancercrabb",
+     "ubisoft": [
+      "cancercrabb",
+      "cancercrabb.CLT"
+     ],
+     "player": true
+    },
+    {
+     "name": "BlueFishy",
+     "ubisoft": [
+      "BlueFishy.CLT",
+      "BlueFishy."
+     ],
+     "player": true
+    },
+    {
+     "name": "exins",
+     "ubisoft": [
+      "exins999.CLT",
+      "exins."
+     ],
+     "player": true
+    },
+    {
+     "name": "Lemon The Wise",
+     "ubisoft": [
+      "LemonNoTrigger"
+     ],
+     "player": true
+    },
+    {
+     "name": "Zephyr",
+     "ubisoft": [
+      "Zephyr6ix.CLT"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "2e3n3hxi410bth0a3sgt8yzxd",
+   "team_id": "9zo00q26sdqb89ocvg1o710yj",
+   "name": "Cumberland Phoenix",
+   "school": "Cumberland University",
+   "school_short": "",
+   "division": "I",
+   "event_id": "aa437rpne256ozzb6f5lv012y",
+   "group": "Group B",
+   "color": "#84152C",
+   "color_alt": "#B0B5BC",
+   "logo_url": "https://images.leagueos.gg/teams/9zo00q26sdqb89ocvg1o710yj/648ca2a6f14cfcf90ebf44f1",
+   "clan_tag": "PHX",
+   "record": {
+    "wins": 2,
+    "losses": 0,
+    "game_wins": 4,
+    "game_losses": 1
+   },
+   "players": [
+    {
+     "name": "The End of You",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "coachclaypool",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "chriswakko",
+     "ubisoft": [
+      "Wakko"
+     ],
+     "player": true
+    },
+    {
+     "name": "Fluancyyy",
+     "ubisoft": [
+      "Fluancyyy"
+     ],
+     "player": true
+    },
+    {
+     "name": "Scar",
+     "ubisoft": [
+      "Scar.o_o"
+     ],
+     "player": true
+    },
+    {
+     "name": "SP00MAN",
+     "ubisoft": [
+      "SP00MAN.",
+      "SpxxMan"
+     ],
+     "player": true
+    },
+    {
+     "name": "pronestarz",
+     "ubisoft": [
+      "ProneStarz"
+     ],
+     "player": true
+    },
+    {
+     "name": "Nxrway",
+     "ubisoft": [
+      "Nxrway"
+     ],
+     "player": true
+    },
+    {
+     "name": "Ashaman",
+     "ubisoft": [
+      "Ashaman.CU"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "82lysa4xwwwf8xh13aeml59fa",
+   "team_id": "anvabsh1bj8i0jhz5lfv65f6g",
+   "name": "Fisher Esports",
+   "school": "Fisher College",
+   "school_short": "",
+   "division": "I",
+   "event_id": "aa437rpne256ozzb6f5lv012y",
+   "group": "Group A",
+   "color": "#0A1F3E",
+   "color_alt": "#ABB4BC",
+   "logo_url": "https://images.leagueos.gg/teams/anvabsh1bj8i0jhz5lfv65f6g/648cae31832b120a065cdfe0",
+   "clan_tag": "FC",
+   "record": {
+    "wins": 3,
+    "losses": 0,
+    "game_wins": 6,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "Izzy",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Aaron Colaiacomo",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "RSheehan98",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Vazsz",
+     "ubisoft": [
+      "Vazsz",
+      "Vazsz.NRG"
+     ],
+     "player": true
+    },
+    {
+     "name": "ItsRxpid",
+     "ubisoft": [
+      "ItsRxpid",
+      "ltsRxpid"
+     ],
+     "player": true
+    },
+    {
+     "name": "Skoob",
+     "ubisoft": [
+      "SkoobIsSwag",
+      "Skoob.ICR"
+     ],
+     "player": true
+    },
+    {
+     "name": "annikangelo",
+     "ubisoft": [
+      "annika..."
+     ],
+     "player": true
+    },
+    {
+     "name": "Marmalade",
+     "ubisoft": [
+      "Marmalade.-."
+     ],
+     "player": true
+    },
+    {
+     "name": "bvmb.",
+     "ubisoft": [
+      "bvmb."
+     ],
+     "player": true
+    },
+    {
+     "name": "rushze",
+     "ubisoft": [
+      "rushze",
+      "rushzera.dex"
+     ],
+     "player": true
+    },
+    {
+     "name": "SWEETTEA34",
+     "ubisoft": [
+      "SweetTea34"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "cxmr3g1d4n1y0cdd02vql9hir",
+   "team_id": "d656d51x7xw6cxbg5du6qt0ve",
+   "name": "Knights Gold",
+   "school": "University of Central Florida",
+   "school_short": "",
+   "division": "I",
+   "event_id": "aa437rpne256ozzb6f5lv012y",
+   "group": "Group B",
+   "color": "#B7A369",
+   "color_alt": "#000000",
+   "logo_url": "https://images.leagueos.gg/teams/d656d51x7xw6cxbg5du6qt0ve/6490b15bf14cfcf90ebf45c3",
+   "clan_tag": "UCF",
+   "record": {
+    "wins": 1,
+    "losses": 2,
+    "game_wins": 3,
+    "game_losses": 5
+   },
+   "players": [
+    {
+     "name": "Mouui",
+     "ubisoft": [
+      "Mouui"
+     ],
+     "player": true
+    },
+    {
+     "name": "kishorehardin",
+     "ubisoft": [
+      "bear.UCF"
+     ],
+     "player": true
+    },
+    {
+     "name": "PixelR6",
+     "ubisoft": [
+      "Pixel.UCF"
+     ],
+     "player": true
+    },
+    {
+     "name": "wicked",
+     "ubisoft": [
+      "wicked.UCF",
+      "wickedsama"
+     ],
+     "player": true
+    },
+    {
+     "name": "pwrs",
+     "ubisoft": [
+      "pwrs.FACTOR"
+     ],
+     "player": true
+    },
+    {
+     "name": "Mugsy",
+     "ubisoft": [
+      "Mugsy.UCF"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "912yjofydxqoa2ay5acg9rguq",
+   "team_id": "1v9ja3wndjl9l576k29jpxzxv",
+   "name": "Marshalltown Community College Gold",
+   "school": "Marshalltown Community College",
+   "school_short": "Marshalltown",
+   "division": "I",
+   "event_id": "aa437rpne256ozzb6f5lv012y",
+   "group": "Group A",
+   "color": "#003A70",
+   "color_alt": "#FDB827",
+   "logo_url": "https://images.leagueos.gg/teams/1v9ja3wndjl9l576k29jpxzxv/6520232397addde53ddf3a36",
+   "clan_tag": "MCC",
+   "record": {
+    "wins": 2,
+    "losses": 0,
+    "game_wins": 4,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "Mystical",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Rodeblock",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "youngsoul17",
+     "ubisoft": [
+      "Soul.MNRX",
+      "Soul.FM"
+     ],
+     "player": false
+    },
+    {
+     "name": "Megalodon",
+     "ubisoft": [
+      "Themega1odon"
+     ],
+     "player": false
+    },
+    {
+     "name": "Clanin",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "poptartt",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Greasyyy.",
+     "ubisoft": [
+      "Greasyyy.",
+      "Greasyyy.MCC"
+     ],
+     "player": true
+    },
+    {
+     "name": "adsiverz",
+     "ubisoft": [
+      "Toadies.",
+      "Toadies.MCC"
+     ],
+     "player": true
+    },
+    {
+     "name": "J1QZ.MCC",
+     "ubisoft": [
+      "TikTok.Jiqz",
+      "J1QZ.MCC"
+     ],
+     "player": true
+    },
+    {
+     "name": "KWD_goon",
+     "ubisoft": [
+      "KWD_goon",
+      "goon.MCC"
+     ],
+     "player": true
+    },
+    {
+     "name": "BERT",
+     "ubisoft": [
+      "BERT.MCC",
+      "BIGBADBERTICUS"
+     ],
+     "player": true
+    },
+    {
+     "name": "Scholarly",
+     "ubisoft": [
+      "Scholarly.",
+      "Scholarly.MCC"
+     ],
+     "player": true
+    },
+    {
+     "name": "Tamayo",
+     "ubisoft": [
+      "Tamayo.wav",
+      "Tamayo.MCC"
+     ],
+     "player": true
+    },
+    {
+     "name": "Rsolvr",
+     "ubisoft": [],
+     "player": false
+    }
+   ]
+  },
+  {
+   "id": "149mpf9fp6jwrttst0yi5mzuf",
+   "team_id": "2ppeu2tb7wca3nvka62u00tu4",
+   "name": "NC State Red",
+   "school": "North Carolina State University",
+   "school_short": "NCSU",
+   "division": "I",
+   "event_id": "aa437rpne256ozzb6f5lv012y",
+   "group": "Group B",
+   "color": "#FF0000",
+   "color_alt": "#FFFFFF",
+   "logo_url": "https://images.leagueos.gg/teams/2ppeu2tb7wca3nvka62u00tu4/648cff50f14cfcf90ebf453a",
+   "clan_tag": "NCSU",
+   "record": {
+    "wins": 0,
+    "losses": 3,
+    "game_wins": 1,
+    "game_losses": 6
+   },
+   "players": [
+    {
+     "name": "jbugger",
+     "ubisoft": [
+      "Cipher.NCSU"
+     ],
+     "player": false
+    },
+    {
+     "name": "Cool.NCSU",
+     "ubisoft": [
+      "Cool.NCSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "uHqte",
+     "ubisoft": [
+      "uhqte"
+     ],
+     "player": true
+    },
+    {
+     "name": "Fabled",
+     "ubisoft": [
+      "Fabled.NCSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "GoingBark",
+     "ubisoft": [
+      "GoingBark"
+     ],
+     "player": true
+    },
+    {
+     "name": "LemandLime",
+     "ubisoft": [
+      "LemandLime"
+     ],
+     "player": true
+    },
+    {
+     "name": "NotReaction",
+     "ubisoft": [
+      "Reaction.NCSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Luciferaaa",
+     "ubisoft": [
+      "Lucifera.NCSU"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "ce6lyd4soo5mj7hcfqdp092y7",
+   "team_id": "8wvkum4vp0eo3xm49e2juk7jv",
+   "name": "Pace Aspen Gold",
+   "school": "Pace University",
+   "school_short": "",
+   "division": "I",
+   "event_id": "aa437rpne256ozzb6f5lv012y",
+   "group": "Group A",
+   "color": "#FFD200",
+   "color_alt": "#002D62",
+   "logo_url": "https://images.leagueos.gg/teams/8wvkum4vp0eo3xm49e2juk7jv/648d12e3f14cfcf90ebf4541",
+   "clan_tag": "PACE",
+   "record": {
+    "wins": 0,
+    "losses": 2,
+    "game_wins": 0,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "Jesse",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "s8ton",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "jeelopy",
+     "ubisoft": [
+      "Jeelopy"
+     ],
+     "player": true
+    },
+    {
+     "name": "TheFish",
+     "ubisoft": [
+      "Fishinho.PACE",
+      "Fish.PACE"
+     ],
+     "player": true
+    },
+    {
+     "name": "imphami",
+     "ubisoft": [
+      "leww.Y"
+     ],
+     "player": true
+    },
+    {
+     "name": "Saint",
+     "ubisoft": [
+      "Saint-ASPYRE",
+      "SaintBrunson",
+      "Saint.PACE"
+     ],
+     "player": true
+    },
+    {
+     "name": "Wolf",
+     "ubisoft": [],
+     "player": true
+    },
+    {
+     "name": "munch.PACE",
+     "ubisoft": [
+      "munch.PACE"
+     ],
+     "player": true
+    },
+    {
+     "name": "resuka",
+     "ubisoft": [
+      "F150vsGrandpa"
+     ],
+     "player": true
+    },
+    {
+     "name": "roso",
+     "ubisoft": [
+      "roso.",
+      "calm._.",
+      "roso.PACE"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "101jvn9vbf2zfmans3p8urpwn",
+   "team_id": "3aigsl23dwfq813st853ytrzb",
+   "name": "Southern Miss",
+   "school": "University of Southern Mississippi",
+   "school_short": "",
+   "division": "I",
+   "event_id": "aa437rpne256ozzb6f5lv012y",
+   "group": "Group B",
+   "color": "#FECD34",
+   "color_alt": "#000000",
+   "logo_url": "https://images.leagueos.gg/teams/3aigsl23dwfq813st853ytrzb/65a7f75a8d47a17cda7c97f4",
+   "clan_tag": "USM",
+   "record": {
+    "wins": 2,
+    "losses": 1,
+    "game_wins": 4,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "cluelesscookie",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Rauskk",
+     "ubisoft": [
+      "Rauskk"
+     ],
+     "player": true
+    },
+    {
+     "name": "Sqweegi",
+     "ubisoft": [
+      "Sqweegi.USM"
+     ],
+     "player": true
+    },
+    {
+     "name": "Cable.USM",
+     "ubisoft": [
+      "Cable.USM"
+     ],
+     "player": true
+    },
+    {
+     "name": "Huntah",
+     "ubisoft": [
+      "Huntah.USM"
+     ],
+     "player": true
+    },
+    {
+     "name": "ChrisTC.USM",
+     "ubisoft": [
+      "Chris.USM"
+     ],
+     "player": true
+    },
+    {
+     "name": "DuckDuk",
+     "ubisoft": [
+      "DuckToliver"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "86vd0a4t2jtg5wi3hogpnpszs",
+   "team_id": "3i21w8sagd0v9l59l64etk6ix",
+   "name": "UAA Green",
+   "school": "University of Alaska Anchorage",
+   "school_short": "Alaska Anchorage",
+   "division": "I",
+   "event_id": "aa437rpne256ozzb6f5lv012y",
+   "group": "Group B",
+   "color": "#00583D",
+   "color_alt": "#FFC425",
+   "logo_url": "https://images.leagueos.gg/teams/3i21w8sagd0v9l59l64etk6ix/35xngpqctu5p297x4hfmui0xe",
+   "clan_tag": "UAA",
+   "record": {
+    "wins": 2,
+    "losses": 1,
+    "game_wins": 5,
+    "game_losses": 3
+   },
+   "players": [
+    {
+     "name": "funknmike",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "UAA Admin",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "AKKoda",
+     "ubisoft": [
+      "AKKoda",
+      "AKKoda.UAA"
+     ],
+     "player": true
+    },
+    {
+     "name": "Thungus",
+     "ubisoft": [
+      "McGriddle994",
+      "Thungus.UAA",
+      "Thungus."
+     ],
+     "player": true
+    },
+    {
+     "name": "Bwida",
+     "ubisoft": [
+      "Bwida",
+      "Bwida.UAA"
+     ],
+     "player": true
+    },
+    {
+     "name": "Kvyle",
+     "ubisoft": [
+      "LebronKyleJames",
+      "Kyle.UAA"
+     ],
+     "player": true
+    },
+    {
+     "name": "FODBlackhawk",
+     "ubisoft": [
+      "FOD_Blackhawk",
+      "Blackhawk.UAA"
+     ],
+     "player": true
+    },
+    {
+     "name": "Number1BOZO45",
+     "ubisoft": [
+      "Number1BOZO",
+      "Number1BOZO.UAA"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "a61eegr3gsuneklu1clxlffdk",
+   "team_id": "3dudoev8jkuzgakofkmne8h4z",
+   "name": "USM Gold",
+   "school": "University of Southern Mississippi",
+   "school_short": "",
+   "division": "I",
+   "event_id": "aa437rpne256ozzb6f5lv012y",
+   "group": "",
+   "color": "#FECD34",
+   "color_alt": "#000000",
+   "logo_url": "https://images.leagueos.gg/teams/3dudoev8jkuzgakofkmne8h4z/65a7f75a8d47a17cda7c97f4",
+   "clan_tag": "USM",
+   "record": {
+    "wins": 0,
+    "losses": 0,
+    "game_wins": 0,
+    "game_losses": 0
+   },
+   "players": []
+  },
+  {
+   "id": "8r64974jfeee34t7teapc0ix6",
+   "team_id": "13ywlh0x2txcnhshc8musz5m6",
+   "name": "UdeS Esports",
+   "school": "Université de Sherbrooke",
+   "school_short": "Sherbrooke",
+   "division": "I",
+   "event_id": "aa437rpne256ozzb6f5lv012y",
+   "group": "Group A",
+   "color": "#018849",
+   "color_alt": "#3A3A3A",
+   "logo_url": "https://images.leagueos.gg/teams/13ywlh0x2txcnhshc8musz5m6/10voldx9vxf9pbzfjh1ee4uwo",
+   "clan_tag": "UdeS",
+   "record": {
+    "wins": 0,
+    "losses": 2,
+    "game_wins": 0,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "nordjan",
+     "ubisoft": [
+      "N0rd-VPN"
+     ],
+     "player": true
+    },
+    {
+     "name": "XeMz",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "SKISSUE",
+     "ubisoft": [
+      "Lachiassducoin",
+      "SKISSUE72"
+     ],
+     "player": true
+    },
+    {
+     "name": "Neexii",
+     "ubisoft": [
+      "Neexii."
+     ],
+     "player": true
+    },
+    {
+     "name": "Davox.",
+     "ubisoft": [
+      "Davox.UdeS"
+     ],
+     "player": true
+    },
+    {
+     "name": "Lord_Beb.",
+     "ubisoft": [
+      "Lord_Beb."
+     ],
+     "player": true
+    },
+    {
+     "name": "BabyBlyat",
+     "ubisoft": [
+      "BabyB.35z"
+     ],
+     "player": false
+    },
+    {
+     "name": "Shinzu",
+     "ubisoft": [
+      "Shinzu.-"
+     ],
+     "player": true
+    },
+    {
+     "name": "Osama_",
+     "ubisoft": [
+      "V8Tweeko.UdeS",
+      "V8Tweeko.clout"
+     ],
+     "player": true
+    },
+    {
+     "name": "KAIZN",
+     "ubisoft": [
+      "KAIZN.UDS"
+     ],
+     "player": false
+    },
+    {
+     "name": "AmneZIAAR--",
+     "ubisoft": [],
+     "player": true
+    },
+    {
+     "name": "UdeS NOVA",
+     "ubisoft": [
+      "Nova.VCT"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "cmvtex4f074zppi4pljzsrjxg",
+   "team_id": "5dmxs2z7k1ahjh0gcgu0baw17",
+   "name": "VCU Black.R6",
+   "school": "Virginia Commonwealth University",
+   "school_short": "VCU",
+   "division": "I",
+   "event_id": "aa437rpne256ozzb6f5lv012y",
+   "group": "Group A",
+   "color": "#000000",
+   "color_alt": "#F5A706",
+   "logo_url": "https://images.leagueos.gg/teams/5dmxs2z7k1ahjh0gcgu0baw17/1toyl34wvkpb1wdi33jpluig1",
+   "clan_tag": "VCU",
+   "record": {
+    "wins": 1,
+    "losses": 2,
+    "game_wins": 2,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "phingeas",
+     "ubisoft": [
+      "phingeas"
+     ],
+     "player": true
+    },
+    {
+     "name": "Samda",
+     "ubisoft": [
+      "Samda"
+     ],
+     "player": true
+    },
+    {
+     "name": "sho",
+     "ubisoft": [
+      "shoSHIESTY"
+     ],
+     "player": true
+    },
+    {
+     "name": "Femboy.VCU",
+     "ubisoft": [
+      "Femboy.VCU"
+     ],
+     "player": true
+    },
+    {
+     "name": "pMicheal",
+     "ubisoft": [],
+     "player": true
+    },
+    {
+     "name": "Sl1pg8r",
+     "ubisoft": [
+      "sl1pg8r123655"
+     ],
+     "player": true
+    },
+    {
+     "name": "Blunder",
+     "ubisoft": [
+      "Blunder.."
+     ],
+     "player": true
+    },
+    {
+     "name": "stinks",
+     "ubisoft": [
+      "stinks.RawInput"
+     ],
+     "player": true
+    },
+    {
+     "name": "cutefurry",
+     "ubisoft": [
+      "cutefurry"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "bfgwyan0ei7af59igqk0x27zi",
+   "team_id": "6sdzwbq6hyx24kl8n84u5yv5q",
+   "name": "Arkansas State Black",
+   "school": "Arkansas State University",
+   "school_short": "Ark State",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#000000",
+   "color_alt": "#cc092f",
+   "logo_url": "https://images.leagueos.gg/teams/6sdzwbq6hyx24kl8n84u5yv5q/648c8f54b9d6364f68e676d5",
+   "clan_tag": "ASU",
+   "record": {
+    "wins": 0,
+    "losses": 2,
+    "game_wins": 0,
+    "game_losses": 3
+   },
+   "players": [
+    {
+     "name": "Goody",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Gunnyox",
+     "ubisoft": [
+      "Gunnyox"
+     ],
+     "player": false
+    },
+    {
+     "name": "beestly",
+     "ubisoft": [
+      "beestly"
+     ],
+     "player": true
+    },
+    {
+     "name": "x.CLUTCH",
+     "ubisoft": [
+      "x.CLUTCH",
+      "CLUTCH.ASU"
+     ],
+     "player": true
+    },
+    {
+     "name": "keysz.ASU",
+     "ubisoft": [
+      "keysz.ASU",
+      "keysz."
+     ],
+     "player": true
+    },
+    {
+     "name": "captain goochan",
+     "ubisoft": [
+      "Rikka_x_yuta",
+      "Rikka.ASU"
+     ],
+     "player": true
+    },
+    {
+     "name": "greenbean",
+     "ubisoft": [
+      "greenbean.ASU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Lonex",
+     "ubisoft": [
+      "Lonexangel"
+     ],
+     "player": true
+    },
+    {
+     "name": "balloon",
+     "ubisoft": [
+      "balloon.ASU"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "bmf3f3j6wqt01nx2d8r9q16b8",
+   "team_id": "dd9j6ujnvavef4qgdl1r44g64",
+   "name": "Auburn Navy",
+   "school": "Auburn University",
+   "school_short": "",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#002B5C",
+   "color_alt": "#F47735",
+   "logo_url": "https://images.leagueos.gg/teams/dd9j6ujnvavef4qgdl1r44g64/6490db6bf14cfcf90ebf45e4",
+   "clan_tag": "AU",
+   "record": {
+    "wins": 2,
+    "losses": 1,
+    "game_wins": 4,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "LukeSwung",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "mystical",
+     "ubisoft": [
+      "mysticaI"
+     ],
+     "player": true
+    },
+    {
+     "name": "Penguin2K",
+     "ubisoft": [
+      "Penguin2K.AUB"
+     ],
+     "player": true
+    },
+    {
+     "name": "Pinecones",
+     "ubisoft": [
+      "P1necones."
+     ],
+     "player": true
+    },
+    {
+     "name": "BreenanV",
+     "ubisoft": [
+      "TeatedPlatypus"
+     ],
+     "player": true
+    },
+    {
+     "name": "SolarVia",
+     "ubisoft": [
+      "SolarVia"
+     ],
+     "player": true
+    },
+    {
+     "name": "delta4tt",
+     "ubisoft": [
+      "DeltaSchism"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "838xwfpctbed8ubremk6yvdfz",
+   "team_id": "7npmvid99wrtxci1yexh5xbxi",
+   "name": "Bronco Esports Emerald",
+   "school": "California State Polytechnic University, Pomona",
+   "school_short": "",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#098040",
+   "color_alt": "#E0A42C",
+   "logo_url": "https://images.leagueos.gg/teams/7npmvid99wrtxci1yexh5xbxi/648c987d09cdacdd5ee7cfca",
+   "clan_tag": "CPP",
+   "record": {
+    "wins": 1,
+    "losses": 2,
+    "game_wins": 2,
+    "game_losses": 5
+   },
+   "players": [
+    {
+     "name": "dreamster",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Fernwehh",
+     "ubisoft": [
+      "Fernweh._"
+     ],
+     "player": true
+    },
+    {
+     "name": "TPonce7",
+     "ubisoft": [
+      "TPonce7"
+     ],
+     "player": true
+    },
+    {
+     "name": "Lagrebr.SRB",
+     "ubisoft": [
+      "Lagrebr.SRB"
+     ],
+     "player": true
+    },
+    {
+     "name": "kae",
+     "ubisoft": [
+      "kajelnwerkln"
+     ],
+     "player": true
+    },
+    {
+     "name": "WhatCallOut",
+     "ubisoft": [
+      "WhatCallOut"
+     ],
+     "player": true
+    },
+    {
+     "name": "brandonv",
+     "ubisoft": [
+      "mighty9817"
+     ],
+     "player": true
+    },
+    {
+     "name": "popphoenix",
+     "ubisoft": [
+      "popphoenix"
+     ],
+     "player": true
+    },
+    {
+     "name": "lcnae",
+     "ubisoft": [
+      "lcnae"
+     ],
+     "player": true
+    },
+    {
+     "name": "Jin_njuice",
+     "ubisoft": [
+      "KIRKLANDRIBS"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "3u1c5jgk7sp2c0czorj6omk9n",
+   "team_id": "1m32aof3ev1sq9lellla46blm",
+   "name": "Butler Esports",
+   "school": "Butler University",
+   "school_short": "",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#13294B",
+   "color_alt": "#C8C7C7",
+   "logo_url": "https://images.leagueos.gg/teams/1m32aof3ev1sq9lellla46blm/648c98f0b9d6364f68e676e1",
+   "clan_tag": "BU",
+   "record": {
+    "wins": 0,
+    "losses": 1,
+    "game_wins": 0,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "NickDiamondz",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Jonsey",
+     "ubisoft": [
+      "JonesFiggins"
+     ],
+     "player": true
+    },
+    {
+     "name": "InfectedSpeed0",
+     "ubisoft": [
+      "Infectedseed0"
+     ],
+     "player": true
+    },
+    {
+     "name": "Romans262",
+     "ubisoft": [
+      "Romans262"
+     ],
+     "player": true
+    },
+    {
+     "name": "CBswim",
+     "ubisoft": [
+      "CBswim"
+     ],
+     "player": true
+    },
+    {
+     "name": "Drill",
+     "ubisoft": [
+      "DriIIfinger"
+     ],
+     "player": true
+    },
+    {
+     "name": "saggingnutz",
+     "ubisoft": [
+      "saggingnutz"
+     ],
+     "player": true
+    },
+    {
+     "name": "IntrepidCash",
+     "ubisoft": [],
+     "player": true
+    },
+    {
+     "name": "maddog.btlr",
+     "ubisoft": [
+      "Madd.og"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "d0pagapg1d038xmdsb46fclc8",
+   "team_id": "eols22calag2n4ynfc4dskgfm",
+   "name": "Cumberland Black",
+   "school": "Cumberland University",
+   "school_short": "",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#A70026",
+   "color_alt": "#C0C0C0",
+   "logo_url": "https://images.leagueos.gg/teams/eols22calag2n4ynfc4dskgfm/b0kb3ghl7p5oude5kdho6r9ey",
+   "clan_tag": "PHX",
+   "record": {
+    "wins": 2,
+    "losses": 0,
+    "game_wins": 4,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "The End of You",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "derk",
+     "ubisoft": [
+      "derk.cu"
+     ],
+     "player": true
+    },
+    {
+     "name": "RAT3L",
+     "ubisoft": [
+      "Mr.RAT3L"
+     ],
+     "player": true
+    },
+    {
+     "name": "CipherCantShoot",
+     "ubisoft": [
+      "CipherCantShoot"
+     ],
+     "player": true
+    },
+    {
+     "name": "jrazer67",
+     "ubisoft": [
+      "Jrazer.BNTH",
+      "Jrazer67.UofL"
+     ],
+     "player": true
+    },
+    {
+     "name": "Nxrway",
+     "ubisoft": [
+      "Nxrway"
+     ],
+     "player": true
+    },
+    {
+     "name": "Minnie",
+     "ubisoft": [
+      "MlNN1E"
+     ],
+     "player": true
+    },
+    {
+     "name": "Ashaman",
+     "ubisoft": [
+      "Ashaman.CU"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "ar95v03h1gzhytwlx7tymcoms",
+   "team_id": "2c7b0cw57ydm4kkws6sf02bxu",
+   "name": "Elon Gold",
+   "school": "Elon University",
+   "school_short": "",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#3F0909",
+   "color_alt": "#BB9A4A",
+   "logo_url": "https://images.leagueos.gg/teams/2c7b0cw57ydm4kkws6sf02bxu/7jif2kvcsiw7ziv0q7mrfdvyu",
+   "clan_tag": "Elon",
+   "record": {
+    "wins": 2,
+    "losses": 0,
+    "game_wins": 4,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "RockoTaco2000",
+     "ubisoft": [
+      "rocko.eln"
+     ],
+     "player": true
+    },
+    {
+     "name": "Revan",
+     "ubisoft": [
+      "Darth_Revan1263"
+     ],
+     "player": true
+    },
+    {
+     "name": "mystery.eln",
+     "ubisoft": [
+      "mysteryBBL"
+     ],
+     "player": true
+    },
+    {
+     "name": "ConMan201",
+     "ubisoft": [
+      "JoshPingPongELN"
+     ],
+     "player": true
+    },
+    {
+     "name": "otic.",
+     "ubisoft": [
+      "otic.ELN"
+     ],
+     "player": true
+    },
+    {
+     "name": "redgiga21",
+     "ubisoft": [
+      "RedGii.ELN"
+     ],
+     "player": true
+    },
+    {
+     "name": "barren",
+     "ubisoft": [
+      "BarrenBBL"
+     ],
+     "player": true
+    },
+    {
+     "name": "SneakyBubbles",
+     "ubisoft": [
+      "SneakyBubbles"
+     ],
+     "player": true
+    },
+    {
+     "name": "eliteCTtech7",
+     "ubisoft": [
+      "eliteCTtech7"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "6z7s6ps3jxi7l5a1o1qzto30a",
+   "team_id": "4iskl4p74he0fkcz5gb37dz3s",
+   "name": "GVSU Club",
+   "school": "Grand Valley State University",
+   "school_short": "",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#0032A0",
+   "color_alt": "#000000",
+   "logo_url": "https://images.leagueos.gg/teams/4iskl4p74he0fkcz5gb37dz3s/648cb0e4832b120a065cdfe3",
+   "clan_tag": "GVSU",
+   "record": {
+    "wins": 1,
+    "losses": 2,
+    "game_wins": 3,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "Andro",
+     "ubisoft": [
+      "Kei.Amane"
+     ],
+     "player": true
+    },
+    {
+     "name": "LagZZ",
+     "ubisoft": [
+      "LagZZ..."
+     ],
+     "player": true
+    },
+    {
+     "name": "Shumpert",
+     "ubisoft": [
+      "Shumpert.GVSU",
+      "Shumpert."
+     ],
+     "player": true
+    },
+    {
+     "name": "Evan Dean",
+     "ubisoft": [],
+     "player": true
+    },
+    {
+     "name": "Monaco",
+     "ubisoft": [
+      "Monaco.GVSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "vinny.om",
+     "ubisoft": [
+      "Vinny.OM.GVSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "wa6on.",
+     "ubisoft": [
+      "Wa6on.GVSU"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "b8gcltxluztnjufewl7lxym6m",
+   "team_id": "8uk0wvi90nrjug3uzwmd0bt11",
+   "name": "Hoosiers",
+   "school": "Indiana University",
+   "school_short": "IU",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#990000",
+   "color_alt": "#EDEBEB",
+   "logo_url": "https://images.leagueos.gg/teams/8uk0wvi90nrjug3uzwmd0bt11/64d2a6b244b7a6bf7e0ca613",
+   "clan_tag": "IU",
+   "record": {
+    "wins": 1,
+    "losses": 2,
+    "game_wins": 3,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "EnoxRule",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "zarloft",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "monkeman401",
+     "ubisoft": [
+      "MonkeMan.IU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Slim",
+     "ubisoft": [
+      "Slimzilla.UrNm"
+     ],
+     "player": true
+    },
+    {
+     "name": "mural",
+     "ubisoft": [
+      "MuraI.",
+      "KasaneTetoFan.."
+     ],
+     "player": true
+    },
+    {
+     "name": "icy.dice",
+     "ubisoft": [
+      "icy.dice",
+      "icy.dice.IU"
+     ],
+     "player": true
+    },
+    {
+     "name": "ballerbrady555",
+     "ubisoft": [
+      "Brady.IU",
+      "Stryxir"
+     ],
+     "player": true
+    },
+    {
+     "name": "Parzival",
+     "ubisoft": [
+      "ParzivalTTV"
+     ],
+     "player": true
+    },
+    {
+     "name": "Goose",
+     "ubisoft": [
+      "Goose.IU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Steele",
+     "ubisoft": [
+      "Steele.sQ"
+     ],
+     "player": true
+    },
+    {
+     "name": "Fooxy.IU",
+     "ubisoft": [
+      "fooxy.IU"
+     ],
+     "player": true
+    },
+    {
+     "name": "ahnoah",
+     "ubisoft": [
+      "ahnoah"
+     ],
+     "player": true
+    },
+    {
+     "name": "TheyLuvHudd",
+     "ubisoft": [
+      "Hudd.IU"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "0nzexje1pw2fenyhzqusy0be1",
+   "team_id": "dnh82rsgjcyr9olf59oltubpb",
+   "name": "Houston Black",
+   "school": "University of Houston",
+   "school_short": "",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#B91F36",
+   "color_alt": "#FFFFFF",
+   "logo_url": "https://images.leagueos.gg/teams/dnh82rsgjcyr9olf59oltubpb/6490b4a9f14cfcf90ebf45ca",
+   "clan_tag": "UH",
+   "record": {
+    "wins": 3,
+    "losses": 0,
+    "game_wins": 6,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "mmmstrawberry",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Emirgenci",
+     "ubisoft": [
+      "dug_The_Dog"
+     ],
+     "player": true
+    },
+    {
+     "name": "Vanz",
+     "ubisoft": [
+      "Vanz13"
+     ],
+     "player": true
+    },
+    {
+     "name": "DaWuffle",
+     "ubisoft": [],
+     "player": true
+    },
+    {
+     "name": "Iaconic.",
+     "ubisoft": [
+      "JangIFBB"
+     ],
+     "player": true
+    },
+    {
+     "name": "vipze",
+     "ubisoft": [
+      "vipze"
+     ],
+     "player": true
+    },
+    {
+     "name": "Kai",
+     "ubisoft": [
+      "l-Kai-"
+     ],
+     "player": true
+    },
+    {
+     "name": "Woo",
+     "ubisoft": [
+      "K1NGDOM"
+     ],
+     "player": true
+    },
+    {
+     "name": "techfan79",
+     "ubisoft": [
+      "techfan79"
+     ],
+     "player": true
+    },
+    {
+     "name": "LilDuke713",
+     "ubisoft": [
+      "LilDuke713"
+     ],
+     "player": true
+    },
+    {
+     "name": "JudgeUH",
+     "ubisoft": [
+      "kanye.enjoyer",
+      "Eth0B"
+     ],
+     "player": true
+    },
+    {
+     "name": "S1mple",
+     "ubisoft": [
+      "S1mple_WN"
+     ],
+     "player": true
+    },
+    {
+     "name": "Eth0B",
+     "ubisoft": [],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "d5yz8amuhsaujepfva53pxczh",
+   "team_id": "b2wlrgfod9x6idusg507y3nn2",
+   "name": "Illini Esports Orange",
+   "school": "University of Illinois Urbana-Champaign",
+   "school_short": "",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#13284B",
+   "color_alt": "#E55525",
+   "logo_url": "https://images.leagueos.gg/teams/b2wlrgfod9x6idusg507y3nn2/64b5c3abd7c29429a0f07792",
+   "clan_tag": "UIUC",
+   "record": {
+    "wins": 2,
+    "losses": 0,
+    "game_wins": 4,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "Skyla",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "SyF.Jojiahhh",
+     "ubisoft": [
+      "SyF.Jojiahhh",
+      "AeroFloats",
+      "Jonah.UIUC"
+     ],
+     "player": true
+    },
+    {
+     "name": "Caliperr",
+     "ubisoft": [
+      "Flicx.UIUC",
+      "Caliperr.VLT"
+     ],
+     "player": true
+    },
+    {
+     "name": "Rudy.UIUC",
+     "ubisoft": [
+      "Rudy.UIUC"
+     ],
+     "player": true
+    },
+    {
+     "name": "joseng",
+     "ubisoft": [
+      "Brags."
+     ],
+     "player": true
+    },
+    {
+     "name": "Ein.-",
+     "ubisoft": [
+      "Ein.-."
+     ],
+     "player": true
+    },
+    {
+     "name": "Toop",
+     "ubisoft": [
+      "Toop.UIUC"
+     ],
+     "player": true
+    },
+    {
+     "name": "guhnr",
+     "ubisoft": [
+      "guhnr_",
+      "Goza.9F"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "4j1i4n6wr8su0p19u6ulcd92t",
+   "team_id": "4te8cp3opse06o495ldn07p4o",
+   "name": "Kettering University",
+   "school": "Kettering University",
+   "school_short": "",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#0B223F",
+   "color_alt": "#F8BE13",
+   "logo_url": "https://images.leagueos.gg/teams/4te8cp3opse06o495ldn07p4o/648cc9fff14cfcf90ebf451c",
+   "clan_tag": "KU",
+   "record": {
+    "wins": 1,
+    "losses": 2,
+    "game_wins": 2,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "Lucas.KU",
+     "ubisoft": [
+      "Landmine_Larry"
+     ],
+     "player": false
+    },
+    {
+     "name": "Gunslinger_Gary",
+     "ubisoft": [
+      "Gunslinger_Gary"
+     ],
+     "player": false
+    },
+    {
+     "name": "Sleazky",
+     "ubisoft": [
+      "Sleazky.KU"
+     ],
+     "player": true
+    },
+    {
+     "name": "NK3D_SN4K3.KU",
+     "ubisoft": [
+      "NK3D_SN4K3.KU"
+     ],
+     "player": true
+    },
+    {
+     "name": "clex",
+     "ubisoft": [
+      "clex.KU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Arkbadman",
+     "ubisoft": [
+      "badman.SIL"
+     ],
+     "player": true
+    },
+    {
+     "name": "Tstrudel88",
+     "ubisoft": [
+      "Tstrudel88",
+      "Tstrudel88.KU"
+     ],
+     "player": true
+    },
+    {
+     "name": "cryn.KU",
+     "ubisoft": [
+      "cryn.SIL"
+     ],
+     "player": true
+    },
+    {
+     "name": "De Monkey Man",
+     "ubisoft": [
+      "DeMonkeyMan.KU"
+     ],
+     "player": true
+    },
+    {
+     "name": "AGrandOrange",
+     "ubisoft": [
+      "AGrandOrange"
+     ],
+     "player": true
+    },
+    {
+     "name": "Derp.KU",
+     "ubisoft": [
+      "Derp.KU"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "ab1mqx34unr193mtgk1h3nk59",
+   "team_id": "5ha6by646m2gx97m9e1ng6u8h",
+   "name": "Minnesota State Mavericks",
+   "school": "Minnesota State University, Mankato",
+   "school_short": "",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#480059",
+   "color_alt": "#F7E400",
+   "logo_url": "https://images.leagueos.gg/teams/5ha6by646m2gx97m9e1ng6u8h/8w9f40a0o3ai4ai2zsxcm53fa",
+   "clan_tag": "MSU",
+   "record": {
+    "wins": 1,
+    "losses": 2,
+    "game_wins": 3,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "Loopy",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Sho.MAV",
+     "ubisoft": [
+      "Sho.MAV"
+     ],
+     "player": false
+    },
+    {
+     "name": "Palmy.MAV",
+     "ubisoft": [
+      "Palmy.MAV"
+     ],
+     "player": true
+    },
+    {
+     "name": "tfauglid.MAV",
+     "ubisoft": [
+      "tfauglid.MAV"
+     ],
+     "player": true
+    },
+    {
+     "name": "Lxgacy.MAV",
+     "ubisoft": [
+      "Lxgacy.MAV"
+     ],
+     "player": true
+    },
+    {
+     "name": "ExtremeHorizon9",
+     "ubisoft": [
+      "ExtremeHorizon9"
+     ],
+     "player": true
+    },
+    {
+     "name": "ENTZY",
+     "ubisoft": [
+      "ENTZY-"
+     ],
+     "player": true
+    },
+    {
+     "name": "zGDropshoot",
+     "ubisoft": [
+      "Drop.MAV"
+     ],
+     "player": true
+    },
+    {
+     "name": "Moon",
+     "ubisoft": [
+      "MoonMoon4702"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "4pfrwsdb8x2uxsutvrur7okpn",
+   "team_id": "5qod7s3ugak35403vxwnhfdmn",
+   "name": "Niner Esports Green",
+   "school": "University of North Carolina at Charlotte",
+   "school_short": "",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#005035",
+   "color_alt": "#A49665",
+   "logo_url": "https://images.leagueos.gg/teams/5qod7s3ugak35403vxwnhfdmn/6490bf2af14cfcf90ebf45d9",
+   "clan_tag": "NE",
+   "record": {
+    "wins": 1,
+    "losses": 2,
+    "game_wins": 2,
+    "game_losses": 5
+   },
+   "players": [
+    {
+     "name": "Ruta",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Eggo.CLT",
+     "ubisoft": [
+      "Eggo.CLT"
+     ],
+     "player": true
+    },
+    {
+     "name": "Qu3",
+     "ubisoft": [
+      "Qu3_e"
+     ],
+     "player": true
+    },
+    {
+     "name": "lil_liesz",
+     "ubisoft": [
+      "lil_liesz"
+     ],
+     "player": true
+    },
+    {
+     "name": "KoalaDog",
+     "ubisoft": [
+      "Koala_dog"
+     ],
+     "player": true
+    },
+    {
+     "name": "Jabloni",
+     "ubisoft": [
+      "Jabloni1"
+     ],
+     "player": true
+    },
+    {
+     "name": "Entropic.CLT",
+     "ubisoft": [
+      "Entropic.CLT"
+     ],
+     "player": true
+    },
+    {
+     "name": "Bloberson.CLT",
+     "ubisoft": [
+      "Bloberson360",
+      "Bloberson.CLT"
+     ],
+     "player": true
+    },
+    {
+     "name": "Arrolyt",
+     "ubisoft": [
+      "ArroLyt.CLT"
+     ],
+     "player": true
+    },
+    {
+     "name": "jjjjaden",
+     "ubisoft": [
+      "jjjjaden"
+     ],
+     "player": true
+    },
+    {
+     "name": "Red.CLT",
+     "ubisoft": [
+      "v3Ivt",
+      "Red.CLT",
+      "RedFiasco"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "1ymno55gsz937jainq5dk0sf7",
+   "team_id": "cxlj8nj7zlnhszpa7geryclx8",
+   "name": "North Georgia Blue",
+   "school": "University of North Georgia",
+   "school_short": "North Georgia",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#002F87",
+   "color_alt": "#FFC627",
+   "logo_url": "https://images.leagueos.gg/teams/cxlj8nj7zlnhszpa7geryclx8/9ccfxdx3bzx9c4s3qyicpnamn",
+   "clan_tag": "UNG",
+   "record": {
+    "wins": 0,
+    "losses": 2,
+    "game_wins": 0,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "N8TheBeast",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "luke",
+     "ubisoft": [
+      "kedz-.UNG"
+     ],
+     "player": true
+    },
+    {
+     "name": "Toaster",
+     "ubisoft": [
+      "Toaster.GAU"
+     ],
+     "player": true
+    },
+    {
+     "name": "AFGM Killjoy",
+     "ubisoft": [
+      "KILLJOYYY."
+     ],
+     "player": true
+    },
+    {
+     "name": "teaspoon",
+     "ubisoft": [
+      "Cucharita-",
+      "Teaspoon.UNG"
+     ],
+     "player": true
+    },
+    {
+     "name": "Iunar.UNG",
+     "ubisoft": [
+      "Iunar.UNG"
+     ],
+     "player": true
+    },
+    {
+     "name": "iosefka.",
+     "ubisoft": [
+      "iosefka."
+     ],
+     "player": true
+    },
+    {
+     "name": "geek",
+     "ubisoft": [
+      "AllahGuidesMyAk"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "5lxhsbbb7ougl2yu3hmk4xoon",
+   "team_id": "8jnbh5z70q2jnr83m56b0enrx",
+   "name": "Oklahoma",
+   "school": "University of Oklahoma",
+   "school_short": "Oklahoma",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#841617",
+   "color_alt": "#323232",
+   "logo_url": "https://images.leagueos.gg/teams/8jnbh5z70q2jnr83m56b0enrx/64ed03179a3d81004c2cf2fb",
+   "clan_tag": "OU",
+   "record": {
+    "wins": 3,
+    "losses": 0,
+    "game_wins": 6,
+    "game_losses": 1
+   },
+   "players": [
+    {
+     "name": "Tercs",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Tow",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Neco",
+     "ubisoft": [
+      "Neco"
+     ],
+     "player": false
+    },
+    {
+     "name": "Thumper",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Lyuker",
+     "ubisoft": [
+      "Lyuker.OU"
+     ],
+     "player": false
+    },
+    {
+     "name": "BoomerDoom",
+     "ubisoft": [
+      "BoomerDoom.OU"
+     ],
+     "player": true
+    },
+    {
+     "name": "FamilyZack",
+     "ubisoft": [
+      "Familyzack.OU"
+     ],
+     "player": true
+    },
+    {
+     "name": "itsdylanjenkins",
+     "ubisoft": [
+      "Jenkins.OU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Mister-Tai",
+     "ubisoft": [
+      "Tai.OU"
+     ],
+     "player": true
+    },
+    {
+     "name": "ry9n",
+     "ubisoft": [
+      "Ry9n.OU"
+     ],
+     "player": true
+    },
+    {
+     "name": "zave",
+     "ubisoft": [
+      "zave.",
+      "zxve.OU"
+     ],
+     "player": true
+    },
+    {
+     "name": "booln",
+     "ubisoft": [
+      "boo1n",
+      "Booln.VLT"
+     ],
+     "player": true
+    },
+    {
+     "name": "Isa.OU",
+     "ubisoft": [
+      "Isa.OU"
+     ],
+     "player": true
+    },
+    {
+     "name": "stixtsu",
+     "ubisoft": [
+      "Stix.OU"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "8hzkwpuphdch5g7kgaifcu046",
+   "team_id": "bu2bwomtgsakdso4d9wuggbna",
+   "name": "Robert Morris University",
+   "school": "Robert Morris University",
+   "school_short": "",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#14234B",
+   "color_alt": "#E51937",
+   "logo_url": "https://images.leagueos.gg/teams/bu2bwomtgsakdso4d9wuggbna/648d19e9832b120a065ce024",
+   "clan_tag": "RMU",
+   "record": {
+    "wins": 3,
+    "losses": 0,
+    "game_wins": 5,
+    "game_losses": 1
+   },
+   "players": [
+    {
+     "name": "Knives_tcg",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "red.trash.panda",
+     "ubisoft": [],
+     "player": true
+    },
+    {
+     "name": "zen",
+     "ubisoft": [
+      "zen.RMU"
+     ],
+     "player": true
+    },
+    {
+     "name": "PvECHAD",
+     "ubisoft": [
+      "PvECHAD.RMU"
+     ],
+     "player": true
+    },
+    {
+     "name": "BQNES",
+     "ubisoft": [
+      "bqnes.RMU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Lukov.RMU",
+     "ubisoft": [
+      "Lukov.RMU"
+     ],
+     "player": true
+    },
+    {
+     "name": "devalancia",
+     "ubisoft": [
+      "devalancia"
+     ],
+     "player": true
+    },
+    {
+     "name": "Century",
+     "ubisoft": [
+      "Century.RMU"
+     ],
+     "player": true
+    },
+    {
+     "name": "vanya",
+     "ubisoft": [
+      "vanya.RMU"
+     ],
+     "player": true
+    },
+    {
+     "name": "DK",
+     "ubisoft": [
+      "DK_5881"
+     ],
+     "player": true
+    },
+    {
+     "name": "balmybuffalo1",
+     "ubisoft": [
+      "Buffalo.RMU",
+      "balmybuffa1o"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "9esb42q3ou4samfs6uevilbek",
+   "team_id": "7biy6ntmmkw2do9d3mhwe50dg",
+   "name": "SFU R6",
+   "school": "Simon Fraser University",
+   "school_short": "",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#A6192E",
+   "color_alt": "#000000",
+   "logo_url": "https://images.leagueos.gg/teams/7biy6ntmmkw2do9d3mhwe50dg/12lhvinqj5auqsx8occ9lshuu",
+   "clan_tag": "SFU",
+   "record": {
+    "wins": 0,
+    "losses": 2,
+    "game_wins": 2,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "8dragonland8",
+     "ubisoft": [
+      "TheDragonland"
+     ],
+     "player": false
+    },
+    {
+     "name": "Guts",
+     "ubisoft": [
+      "FisherOf.Men"
+     ],
+     "player": false
+    },
+    {
+     "name": "__max",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Salmon",
+     "ubisoft": [
+      "SalmonShredder"
+     ],
+     "player": false
+    },
+    {
+     "name": "Hot.Chocolatte",
+     "ubisoft": [
+      "Hot.Chocolatte"
+     ],
+     "player": true
+    },
+    {
+     "name": "baoanson",
+     "ubisoft": [
+      "Baozn."
+     ],
+     "player": true
+    },
+    {
+     "name": "swagtheftauto22",
+     "ubisoft": [
+      "swagtheftauto22"
+     ],
+     "player": true
+    },
+    {
+     "name": "Takeo",
+     "ubisoft": [
+      "Takeo.-"
+     ],
+     "player": true
+    },
+    {
+     "name": "Baron",
+     "ubisoft": [
+      "BARONwga"
+     ],
+     "player": true
+    },
+    {
+     "name": "Saffffrrrrooon",
+     "ubisoft": [
+      "SaffronSumo5260"
+     ],
+     "player": true
+    },
+    {
+     "name": "DaBoyDee",
+     "ubisoft": [
+      "DaBoyDee"
+     ],
+     "player": true
+    },
+    {
+     "name": "CCowZ",
+     "ubisoft": [
+      "CCowz",
+      "CCowZ."
+     ],
+     "player": true
+    },
+    {
+     "name": "qkni",
+     "ubisoft": [
+      "GERALDINHOOOOOO",
+      "DogoTCSGPogo"
+     ],
+     "player": true
+    },
+    {
+     "name": "Donnyu9660",
+     "ubisoft": [
+      "Ninjascoming11"
+     ],
+     "player": true
+    },
+    {
+     "name": "di_zhxng",
+     "ubisoft": [
+      "DONDIZ"
+     ],
+     "player": true
+    },
+    {
+     "name": "rnqzy",
+     "ubisoft": [
+      "rnqzy"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "8zigx8q6fgj80nagilcemdfd6",
+   "team_id": "ezye1jlc7cmipovpr7l2qqlso",
+   "name": "St. Ambrose Esports",
+   "school": "St. Ambrose University",
+   "school_short": "",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#00529B",
+   "color_alt": "#FFFFFF",
+   "logo_url": "https://images.leagueos.gg/teams/ezye1jlc7cmipovpr7l2qqlso/648d3390f14cfcf90ebf455d",
+   "clan_tag": "SAU",
+   "record": {
+    "wins": 2,
+    "losses": 1,
+    "game_wins": 4,
+    "game_losses": 3
+   },
+   "players": [
+    {
+     "name": "Dysfunktional",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Doubie",
+     "ubisoft": [
+      "Dihbilicious"
+     ],
+     "player": true
+    },
+    {
+     "name": "Ang3ltxar",
+     "ubisoft": [
+      "Angeltxar69"
+     ],
+     "player": true
+    },
+    {
+     "name": "KrankyGuy",
+     "ubisoft": [
+      "KrankyGuy"
+     ],
+     "player": true
+    },
+    {
+     "name": "Bornk",
+     "ubisoft": [
+      "Bornkk"
+     ],
+     "player": true
+    },
+    {
+     "name": "P14",
+     "ubisoft": [
+      "P14."
+     ],
+     "player": true
+    },
+    {
+     "name": "meef",
+     "ubisoft": [
+      "MeefMeefSahur",
+      "Meefinator"
+     ],
+     "player": true
+    },
+    {
+     "name": "B1GNUHTS",
+     "ubisoft": [
+      "B1GNUHTS"
+     ],
+     "player": true
+    },
+    {
+     "name": "BigBlock_427",
+     "ubisoft": [
+      "SAU_BigBlock427"
+     ],
+     "player": true
+    },
+    {
+     "name": "FunMomoking82",
+     "ubisoft": [
+      "FunMomoking82"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "35loxowha3n5hg7dwfwn8k9hd",
+   "team_id": "83vwd7dbaw6hlgv9kmajggu9j",
+   "name": "Tech Esports Red",
+   "school": "Texas Tech University",
+   "school_short": "",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#CC0000",
+   "color_alt": "#000000",
+   "logo_url": "https://images.leagueos.gg/teams/83vwd7dbaw6hlgv9kmajggu9j/64f3e49fa19f5877b5b8031d",
+   "clan_tag": "TTU",
+   "record": {
+    "wins": 2,
+    "losses": 1,
+    "game_wins": 3,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "K1ngKo8ra",
+     "ubisoft": [
+      "K1ngKo8ra"
+     ],
+     "player": false
+    },
+    {
+     "name": "WildZ",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Ekko.TTu",
+     "ubisoft": [
+      "Ekko.TTU"
+     ],
+     "player": false
+    },
+    {
+     "name": "Ozikros.TTU",
+     "ubisoft": [
+      "Ozikros.TTU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Gray.TTU",
+     "ubisoft": [
+      "Gray.TTU"
+     ],
+     "player": true
+    },
+    {
+     "name": "RuneBinderTTU",
+     "ubisoft": [
+      "Rune.TTU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Buzz_yktv",
+     "ubisoft": [
+      "Buzz.TTU",
+      "Buzz.VLT"
+     ],
+     "player": true
+    },
+    {
+     "name": "Herix.TTU",
+     "ubisoft": [
+      "Herix.TTU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Syko.TTU",
+     "ubisoft": [
+      "Syko.TTU"
+     ],
+     "player": true
+    },
+    {
+     "name": "GHOUSTZ",
+     "ubisoft": [
+      "GHOUSTZ"
+     ],
+     "player": true
+    },
+    {
+     "name": "Ksmoke.TTU",
+     "ubisoft": [
+      "Ksmoke.TTU"
+     ],
+     "player": true
+    },
+    {
+     "name": "R3CL41M.TTU",
+     "ubisoft": [
+      "Rec.VLT",
+      "R3CC.TTU"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "0bbgwc4skerft48k9teuzparw",
+   "team_id": "1e3le70bz6tmq4tdy68t4k1av",
+   "name": "Texas State University",
+   "school": "Texas State University",
+   "school_short": "",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#501214",
+   "color_alt": "#AC9155",
+   "logo_url": "https://images.leagueos.gg/teams/1e3le70bz6tmq4tdy68t4k1av/6585e32fa352b625a7f85a9e",
+   "clan_tag": "TXST",
+   "record": {
+    "wins": 1,
+    "losses": 1,
+    "game_wins": 2,
+    "game_losses": 3
+   },
+   "players": [
+    {
+     "name": "Just_RJ",
+     "ubisoft": [
+      "JustRJ."
+     ],
+     "player": true
+    },
+    {
+     "name": "Major",
+     "ubisoft": [
+      "M4jor-",
+      "M4jr"
+     ],
+     "player": true
+    },
+    {
+     "name": "Nickelwise287",
+     "ubisoft": [
+      "Nickelwise287"
+     ],
+     "player": true
+    },
+    {
+     "name": "nykli",
+     "ubisoft": [
+      "nyk1i"
+     ],
+     "player": true
+    },
+    {
+     "name": "shadowit",
+     "ubisoft": [
+      "Fridge-.",
+      "Fridge.txst"
+     ],
+     "player": true
+    },
+    {
+     "name": "Titin5123",
+     "ubisoft": [
+      "Titin5123"
+     ],
+     "player": true
+    },
+    {
+     "name": "YaBoiChaz",
+     "ubisoft": [
+      "YaBoiChaz"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "cwbch65r7godi4xcho44u32ge",
+   "team_id": "abg15583ysdftwc1yxr2e8quz",
+   "name": "UARK Crimson",
+   "school": "University of Arkansas",
+   "school_short": "UARK",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#9D2235",
+   "color_alt": "#000000",
+   "logo_url": "https://images.leagueos.gg/teams/abg15583ysdftwc1yxr2e8quz/6kghikc3221p31tsujcnl832s",
+   "clan_tag": "UARK",
+   "record": {
+    "wins": 0,
+    "losses": 3,
+    "game_wins": 0,
+    "game_losses": 6
+   },
+   "players": [
+    {
+     "name": "Chirv",
+     "ubisoft": [
+      "KhampN"
+     ],
+     "player": true
+    },
+    {
+     "name": "archerman64",
+     "ubisoft": [
+      "archerman64"
+     ],
+     "player": true
+    },
+    {
+     "name": "esqko",
+     "ubisoft": [
+      "Esqko"
+     ],
+     "player": true
+    },
+    {
+     "name": "pouldy",
+     "ubisoft": [
+      "Pouldy.InC",
+      "Pouldy-ROSO"
+     ],
+     "player": true
+    },
+    {
+     "name": "atkoch",
+     "ubisoft": [
+      "Koch.DH"
+     ],
+     "player": true
+    },
+    {
+     "name": "Anzio71",
+     "ubisoft": [
+      "Anzio71"
+     ],
+     "player": true
+    },
+    {
+     "name": "Crispy",
+     "ubisoft": [
+      "MrCrispyCookie"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "4dapyx2lr3m1lu58u6e80mkxl",
+   "team_id": "2i22yh6j3t9m6wu6c4jktfyd5",
+   "name": "UF Club Blue",
+   "school": "University of Florida",
+   "school_short": "",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#FA4616",
+   "color_alt": "#0021A5",
+   "logo_url": "https://images.leagueos.gg/teams/2i22yh6j3t9m6wu6c4jktfyd5/bc7f437jl6qecy5xhov2z1bcq",
+   "clan_tag": "UF",
+   "record": {
+    "wins": 2,
+    "losses": 0,
+    "game_wins": 4,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "Serandon",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Citizen.UF",
+     "ubisoft": [
+      "Citizen.UF"
+     ],
+     "player": false
+    },
+    {
+     "name": "Darentz Constant",
+     "ubisoft": [
+      "Constant.UF"
+     ],
+     "player": true
+    },
+    {
+     "name": "Surfy",
+     "ubisoft": [
+      "Surfy.UF"
+     ],
+     "player": true
+    },
+    {
+     "name": "Melt",
+     "ubisoft": [
+      "meltmeltmel",
+      "Mehllt"
+     ],
+     "player": true
+    },
+    {
+     "name": "Qikule",
+     "ubisoft": [
+      "MaxieTN.UF"
+     ],
+     "player": true
+    },
+    {
+     "name": "Prixy",
+     "ubisoft": [
+      "Prixy.UF"
+     ],
+     "player": true
+    },
+    {
+     "name": "Andersen",
+     "ubisoft": [
+      "Excel.UF"
+     ],
+     "player": false
+    },
+    {
+     "name": "Mysticxl",
+     "ubisoft": [
+      "Mysticxl"
+     ],
+     "player": true
+    },
+    {
+     "name": "Burb",
+     "ubisoft": [
+      "RobinIsBurb"
+     ],
+     "player": true
+    },
+    {
+     "name": "dark",
+     "ubisoft": [
+      "dark.UF"
+     ],
+     "player": true
+    },
+    {
+     "name": "nolighthouse",
+     "ubisoft": [
+      "nolighthouse.UF"
+     ],
+     "player": false
+    },
+    {
+     "name": "STR0KN",
+     "ubisoft": [
+      "STR0KN.UF",
+      "ak54356"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "47onbfv7xdh3vk4ufwoojjd53",
+   "team_id": "7wgurdpmmuodjj94vpm83nyj4",
+   "name": "UH Red",
+   "school": "University of Houston",
+   "school_short": "",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#B91F36",
+   "color_alt": "#FFFFFF",
+   "logo_url": "https://images.leagueos.gg/teams/7wgurdpmmuodjj94vpm83nyj4/6490b4a9f14cfcf90ebf45ca",
+   "clan_tag": "UH",
+   "record": {
+    "wins": 0,
+    "losses": 2,
+    "game_wins": 0,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "Emirgenci",
+     "ubisoft": [
+      "dug_The_Dog"
+     ],
+     "player": true
+    },
+    {
+     "name": "Vanz",
+     "ubisoft": [
+      "Vanz13"
+     ],
+     "player": true
+    },
+    {
+     "name": "Iaconic.",
+     "ubisoft": [
+      "JangIFBB"
+     ],
+     "player": true
+    },
+    {
+     "name": "turtletv",
+     "ubisoft": [
+      "turtletzz"
+     ],
+     "player": true
+    },
+    {
+     "name": "techfan79",
+     "ubisoft": [
+      "techfan79"
+     ],
+     "player": true
+    },
+    {
+     "name": "LilDuke713",
+     "ubisoft": [
+      "LilDuke713"
+     ],
+     "player": true
+    },
+    {
+     "name": "jacobr768",
+     "ubisoft": [
+      "Pookie1_23"
+     ],
+     "player": true
+    },
+    {
+     "name": "Pony",
+     "ubisoft": [
+      "pony.-"
+     ],
+     "player": true
+    },
+    {
+     "name": "SNARY",
+     "ubisoft": [
+      "SNARY07"
+     ],
+     "player": true
+    },
+    {
+     "name": "bttymon927",
+     "ubisoft": [
+      "bttymon927"
+     ],
+     "player": true
+    },
+    {
+     "name": "XnTrek",
+     "ubisoft": [
+      "XnTrek_Gaming"
+     ],
+     "player": true
+    },
+    {
+     "name": "JudgeUH",
+     "ubisoft": [
+      "kanye.enjoyer",
+      "Eth0B"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "79lh0ix8mw6ihhzioepxaisj3",
+   "team_id": "10x04agkprmjzgb2fo4gl5j3j",
+   "name": "UM-Flint",
+   "school": "University of Michigan - Flint",
+   "school_short": "",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#00274C",
+   "color_alt": "#FFCB05",
+   "logo_url": "https://images.leagueos.gg/teams/10x04agkprmjzgb2fo4gl5j3j/6490ba1d832b120a065ce0ac",
+   "clan_tag": "UMF",
+   "record": {
+    "wins": 2,
+    "losses": 1,
+    "game_wins": 4,
+    "game_losses": 3
+   },
+   "players": [
+    {
+     "name": "Azel",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Nate.UMF",
+     "ubisoft": [
+      "Nate.UMF",
+      "J0kr-_-"
+     ],
+     "player": true
+    },
+    {
+     "name": "Daiyn.",
+     "ubisoft": [
+      "Daiyn.umf"
+     ],
+     "player": true
+    },
+    {
+     "name": "Seido-_-",
+     "ubisoft": [
+      "Seido-_-",
+      "IHaveH3r"
+     ],
+     "player": true
+    },
+    {
+     "name": "Mr.WRXSTI43",
+     "ubisoft": [
+      "Mr.WRXSTI43"
+     ],
+     "player": true
+    },
+    {
+     "name": "RightCliick",
+     "ubisoft": [
+      "RightCliick.UMF"
+     ],
+     "player": true
+    },
+    {
+     "name": "maikhoi",
+     "ubisoft": [
+      "KyleJuszczyk"
+     ],
+     "player": true
+    },
+    {
+     "name": "LeftCliick",
+     "ubisoft": [
+      "LeftCliick_.UMF"
+     ],
+     "player": true
+    },
+    {
+     "name": "SoloCobra1",
+     "ubisoft": [],
+     "player": true
+    },
+    {
+     "name": "RadmanNX",
+     "ubisoft": [
+      "Radman2169"
+     ],
+     "player": true
+    },
+    {
+     "name": "Taylor",
+     "ubisoft": [
+      "JoeM0tha",
+      "whylemonjello"
+     ],
+     "player": true
+    },
+    {
+     "name": "Fhazii",
+     "ubisoft": [
+      "Fhazii.UMF"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "8fhjv2h2fn2ken444if4pc4eg",
+   "team_id": "2cux3kem9zm5c2jj0m8ogvucm",
+   "name": "UNIV. OF MICHIGAN",
+   "school": "University of Michigan",
+   "school_short": "Michigan",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#FFCB05",
+   "color_alt": "#00274C",
+   "logo_url": "https://images.leagueos.gg/teams/2cux3kem9zm5c2jj0m8ogvucm/eke8y2k8c84d8u7ln4vdwugop",
+   "clan_tag": "UMICH-R6-VAR",
+   "record": {
+    "wins": 1,
+    "losses": 2,
+    "game_wins": 2,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "NervyTitan40",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Michigan Esports",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "YellowSteam",
+     "ubisoft": [
+      "yurgh.UMich"
+     ],
+     "player": true
+    },
+    {
+     "name": "Bobtheawesome",
+     "ubisoft": [
+      "Bob.UMich"
+     ],
+     "player": true
+    },
+    {
+     "name": "briancatmaster",
+     "ubisoft": [
+      "TheMaster.UMich",
+      "briancatM.UMich"
+     ],
+     "player": true
+    },
+    {
+     "name": "Nickk",
+     "ubisoft": [
+      "Nickk.UMich"
+     ],
+     "player": true
+    },
+    {
+     "name": "kxspurr",
+     "ubisoft": [
+      "kxspurr.UMich"
+     ],
+     "player": true
+    },
+    {
+     "name": "ins1der",
+     "ubisoft": [
+      "ins1der.UMich"
+     ],
+     "player": true
+    },
+    {
+     "name": "Blessed",
+     "ubisoft": [
+      "thefatweenie99@gmail.com"
+     ],
+     "player": true
+    },
+    {
+     "name": "getspoopd",
+     "ubisoft": [
+      "najijunior"
+     ],
+     "player": true
+    },
+    {
+     "name": "Ophanbear",
+     "ubisoft": [
+      "Ophanbear.UMich"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "3ryvdd5hnki2tqyvg0od8wprk",
+   "team_id": "0g5eyo96hpreblgwgvg4qozbs",
+   "name": "University of New Haven Blue",
+   "school": "University of New Haven",
+   "school_short": "",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#004B8D",
+   "color_alt": "#FFC629",
+   "logo_url": "https://images.leagueos.gg/teams/0g5eyo96hpreblgwgvg4qozbs/648d6d19832b120a065ce05c",
+   "clan_tag": "UNH",
+   "record": {
+    "wins": 0,
+    "losses": 3,
+    "game_wins": 2,
+    "game_losses": 6
+   },
+   "players": [
+    {
+     "name": "speedrush64",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "generallystyxx",
+     "ubisoft": [
+      "generallystyxx"
+     ],
+     "player": false
+    },
+    {
+     "name": "UNewHaven Spectator",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Demon",
+     "ubisoft": [
+      "YooImDemon",
+      "Demon.UNH"
+     ],
+     "player": true
+    },
+    {
+     "name": "Vywrecks",
+     "ubisoft": [
+      "Bak1_Hanma",
+      "Vywrecks"
+     ],
+     "player": true
+    },
+    {
+     "name": "EducatedAxis5",
+     "ubisoft": [
+      "DreamyB.Thug"
+     ],
+     "player": true
+    },
+    {
+     "name": "Master..Oogway.",
+     "ubisoft": [
+      "Master..Oogway."
+     ],
+     "player": true
+    },
+    {
+     "name": "@hntr",
+     "ubisoft": [
+      "PennsyIvania",
+      "p"
+     ],
+     "player": true
+    },
+    {
+     "name": "dgins",
+     "ubisoft": [
+      "d.gins",
+      "dginsDOOM.YAMI"
+     ],
+     "player": true
+    },
+    {
+     "name": "xZerr6607",
+     "ubisoft": [
+      "xZerr6607"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "eelhxagbfvmmcby0e9bgoox3w",
+   "team_id": "9heyem5av3kjnuvcv1dtynd5c",
+   "name": "Weber State University",
+   "school": "Weber State University",
+   "school_short": "",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#492365",
+   "color_alt": "#4B4945",
+   "logo_url": "https://images.leagueos.gg/teams/9heyem5av3kjnuvcv1dtynd5c/6379p8rgt332x6uyq7qnk9cv1",
+   "clan_tag": "WSU",
+   "record": {
+    "wins": 1,
+    "losses": 2,
+    "game_wins": 3,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "MudyBiscuit.WSU",
+     "ubisoft": [
+      "MudyBiscuitsWSU",
+      "MudyBiscuit.WSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Necrolysis.WSU",
+     "ubisoft": [
+      "Necrolysis.WSU",
+      "NecroIysis.WSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "gnar",
+     "ubisoft": [
+      "semondemon23",
+      "gnar.WSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "streety.WSU",
+     "ubisoft": [
+      "yosen.WSU",
+      "streety.wsu"
+     ],
+     "player": true
+    },
+    {
+     "name": "Gravy",
+     "ubisoft": [
+      "Grav_i.WSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Kaboose",
+     "ubisoft": [
+      "Khan_Kabibi"
+     ],
+     "player": true
+    },
+    {
+     "name": "slayer",
+     "ubisoft": [
+      "Slayer-.-"
+     ],
+     "player": true
+    },
+    {
+     "name": "oOosighris",
+     "ubisoft": [
+      "wsu.oOosighris",
+      "oOosighris.WSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "TheSteve",
+     "ubisoft": [
+      "SneakySteve.RE",
+      "Steve-RVNG"
+     ],
+     "player": true
+    },
+    {
+     "name": "YOSEN",
+     "ubisoft": [],
+     "player": false
+    }
+   ]
+  },
+  {
+   "id": "6rdpkrzjv2jj92urhnalkjq5t",
+   "team_id": "ak0sn0n3fq4rn0pztg6joom8b",
+   "name": "Wright State Raiders",
+   "school": "Wright State University",
+   "school_short": "Wright State",
+   "division": "II",
+   "event_id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "group": "",
+   "color": "#046A38",
+   "color_alt": "#CBA052",
+   "logo_url": "https://images.leagueos.gg/teams/ak0sn0n3fq4rn0pztg6joom8b/65a4a79c9e286c6da98d8e63",
+   "clan_tag": "WSU",
+   "record": {
+    "wins": 1,
+    "losses": 1,
+    "game_wins": 2,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "wsuesports",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Soviet Sombrero",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Lazy",
+     "ubisoft": [
+      "Lazy.WSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "kira.",
+     "ubisoft": [
+      "kira...__"
+     ],
+     "player": true
+    },
+    {
+     "name": "Carl.WSU",
+     "ubisoft": [
+      "Carl.WSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Maddie",
+     "ubisoft": [
+      "Fox.WSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Fly.WSU",
+     "ubisoft": [
+      "Flylol",
+      "Fly.WSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Chosen.WSU",
+     "ubisoft": [
+      "Chosen.WSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Disconnect",
+     "ubisoft": [
+      "Disconnect.nT2",
+      "Disconnect.WSU"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "00bog4er1x7se2bkancaj5av1",
+   "team_id": "1v50x6euq3dvhmzxvgd9twrow",
+   "name": "AWPE Black",
+   "school": "Army West Point",
+   "school_short": "AWPE",
+   "division": "III",
+   "event_id": "aurd1w13854i88w2c03qh4ahh",
+   "group": "",
+   "color": "#D3BC8D",
+   "color_alt": "#2C2A29",
+   "logo_url": "https://images.leagueos.gg/teams/1v50x6euq3dvhmzxvgd9twrow/648c8fb209cdacdd5ee7cfbc",
+   "clan_tag": "AWPE",
+   "record": {
+    "wins": 0,
+    "losses": 1,
+    "game_wins": 0,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "Army West Point",
+     "ubisoft": [
+      "armywpesports"
+     ],
+     "player": false
+    },
+    {
+     "name": "iso.AWP",
+     "ubisoft": [
+      "iso.AWP",
+      "Faltz9"
+     ],
+     "player": true
+    },
+    {
+     "name": "dead.AWP",
+     "ubisoft": [
+      "deadofthewalk7"
+     ],
+     "player": true
+    },
+    {
+     "name": "braidedroll",
+     "ubisoft": [
+      "braidedroll"
+     ],
+     "player": true
+    },
+    {
+     "name": "Gargoyle9000",
+     "ubisoft": [
+      "Gargoyle9001"
+     ],
+     "player": true
+    },
+    {
+     "name": "McLovin_.99",
+     "ubisoft": [
+      "McLovin_.99"
+     ],
+     "player": true
+    },
+    {
+     "name": "kdiggitydog1000",
+     "ubisoft": [
+      "kdiggitydog1000"
+     ],
+     "player": true
+    },
+    {
+     "name": "Confusion",
+     "ubisoft": [
+      "Confusionwhat"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "09ibg1okic0tjb5anjnm06k5k",
+   "team_id": "9h4fuqd6mrka6rwmtrc450exz",
+   "name": "CSU Rams",
+   "school": "Colorado State University",
+   "school_short": "",
+   "division": "III",
+   "event_id": "aurd1w13854i88w2c03qh4ahh",
+   "group": "",
+   "color": "#1E4D2B",
+   "color_alt": "#C8C372",
+   "logo_url": "https://images.leagueos.gg/teams/9h4fuqd6mrka6rwmtrc450exz/8q9bv2tls7eq8vknmi064vi8r",
+   "clan_tag": "CSU",
+   "record": {
+    "wins": 2,
+    "losses": 1,
+    "game_wins": 5,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "Blitzjager",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Ben",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Lil Shine",
+     "ubisoft": [
+      "LilShineXD"
+     ],
+     "player": true
+    },
+    {
+     "name": "qwoko",
+     "ubisoft": [
+      "Qwoko"
+     ],
+     "player": true
+    },
+    {
+     "name": "RapidBanana",
+     "ubisoft": [
+      "RapidBanana"
+     ],
+     "player": true
+    },
+    {
+     "name": "CaboodleRVB",
+     "ubisoft": [
+      "CaboodleRVB",
+      "Caboodle_Halo"
+     ],
+     "player": true
+    },
+    {
+     "name": "Fletcher",
+     "ubisoft": [
+      "fletcher.-"
+     ],
+     "player": true
+    },
+    {
+     "name": "GRaf_Braven",
+     "ubisoft": [
+      "GRaf_Braven"
+     ],
+     "player": true
+    },
+    {
+     "name": "Bodavin",
+     "ubisoft": [
+      "Bodavin"
+     ],
+     "player": true
+    },
+    {
+     "name": "Melon",
+     "ubisoft": [
+      "FoxtrotUwU._."
+     ],
+     "player": true
+    },
+    {
+     "name": "AlleG4tor",
+     "ubisoft": [
+      "AlleG4tor"
+     ],
+     "player": true
+    },
+    {
+     "name": "KingJulien",
+     "ubisoft": [
+      "K1ngJul1en420"
+     ],
+     "player": true
+    },
+    {
+     "name": "CR0CUTA",
+     "ubisoft": [
+      "CR0CUTA"
+     ],
+     "player": true
+    },
+    {
+     "name": "slenderfvhh",
+     "ubisoft": [
+      "Slenderfvhh"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "efqyo760uyi2hiqyy98kfhzen",
+   "team_id": "age9fmq2s5d22be7515it1j3k",
+   "name": "Colorado School of Mines Varsity",
+   "school": "Colorado School of Mines",
+   "school_short": "MINES",
+   "division": "III",
+   "event_id": "aurd1w13854i88w2c03qh4ahh",
+   "group": "",
+   "color": "#21314D",
+   "color_alt": "#81848A",
+   "logo_url": "https://images.leagueos.gg/teams/age9fmq2s5d22be7515it1j3k/atpbrt1k4gy0601ai884eg7te",
+   "clan_tag": "CSM",
+   "record": {
+    "wins": 2,
+    "losses": 0,
+    "game_wins": 4,
+    "game_losses": 1
+   },
+   "players": [
+    {
+     "name": "Trail",
+     "ubisoft": [
+      "Trail."
+     ],
+     "player": true
+    },
+    {
+     "name": "Zimmy",
+     "ubisoft": [
+      "ZimmyNeutr0n",
+      "Zimmy-.-"
+     ],
+     "player": true
+    },
+    {
+     "name": "tacohayhay",
+     "ubisoft": [
+      "tacohayhay"
+     ],
+     "player": true
+    },
+    {
+     "name": "Jediwinner",
+     "ubisoft": [
+      "Jediwinner"
+     ],
+     "player": true
+    },
+    {
+     "name": "Wuzzleite",
+     "ubisoft": [
+      "Wuzzleite"
+     ],
+     "player": true
+    },
+    {
+     "name": "kromeo",
+     "ubisoft": [
+      "kromeo"
+     ],
+     "player": true
+    },
+    {
+     "name": "Acaye",
+     "ubisoft": [
+      "perfecttoastt"
+     ],
+     "player": true
+    },
+    {
+     "name": "Nova.CSM",
+     "ubisoft": [
+      "Nova.CSM"
+     ],
+     "player": true
+    },
+    {
+     "name": "Everesten",
+     "ubisoft": [
+      "Name_Everesten"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "bp8swn7j98okoyc6rk77t4fkr",
+   "team_id": "4d6up9mh3uh8v2k99awuy5sws",
+   "name": "K-State Varsity",
+   "school": "Kansas State University",
+   "school_short": "",
+   "division": "III",
+   "event_id": "aurd1w13854i88w2c03qh4ahh",
+   "group": "",
+   "color": "#512888",
+   "color_alt": "#DCDDDD",
+   "logo_url": "https://images.leagueos.gg/teams/4d6up9mh3uh8v2k99awuy5sws/648cbf66f14cfcf90ebf4510",
+   "clan_tag": "KSU",
+   "record": {
+    "wins": 1,
+    "losses": 1,
+    "game_wins": 2,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "KSU Nferno",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Zenxo",
+     "ubisoft": [
+      "Zenxo.-",
+      "Zenxo.KSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "greenmanxd",
+     "ubisoft": [
+      "MEOWWWWWWWW.KSU",
+      "MEOWWWWWWWWWW.-"
+     ],
+     "player": true
+    },
+    {
+     "name": "PoH",
+     "ubisoft": [
+      "PoH-LC",
+      "PoH-.-"
+     ],
+     "player": true
+    },
+    {
+     "name": "gwoods",
+     "ubisoft": [
+      "gwoods."
+     ],
+     "player": true
+    },
+    {
+     "name": "TrueCheonma",
+     "ubisoft": [
+      "TrueCheonma"
+     ],
+     "player": true
+    },
+    {
+     "name": "Kex",
+     "ubisoft": [
+      "Kex.KSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Ditty_KSU",
+     "ubisoft": [
+      "Prime.Ditty"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "8o8cpd9x8debnwvwo4qc2zgxv",
+   "team_id": "b8we0p8flmqodkq8dlzux7t47",
+   "name": "Knights Black",
+   "school": "University of Central Florida",
+   "school_short": "",
+   "division": "III",
+   "event_id": "aurd1w13854i88w2c03qh4ahh",
+   "group": "",
+   "color": "#000000",
+   "color_alt": "#B7A369",
+   "logo_url": "https://images.leagueos.gg/teams/b8we0p8flmqodkq8dlzux7t47/6490b15bf14cfcf90ebf45c3",
+   "clan_tag": "UCF",
+   "record": {
+    "wins": 0,
+    "losses": 2,
+    "game_wins": 0,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "ItsJover.UCF",
+     "ubisoft": [
+      "ItsJover.UCF",
+      "Its_Jover."
+     ],
+     "player": true
+    },
+    {
+     "name": "Osakhra",
+     "ubisoft": [
+      "osakhra"
+     ],
+     "player": true
+    },
+    {
+     "name": "QtDerek.UCF",
+     "ubisoft": [
+      "QtDerek.UCF"
+     ],
+     "player": true
+    },
+    {
+     "name": "ThatElephant",
+     "ubisoft": [
+      "ThatElephant"
+     ],
+     "player": true
+    },
+    {
+     "name": "Chugs.UCF",
+     "ubisoft": [
+      "Chugs_1"
+     ],
+     "player": true
+    },
+    {
+     "name": "wicked",
+     "ubisoft": [
+      "wicked.UCF",
+      "wickedsama"
+     ],
+     "player": false
+    },
+    {
+     "name": "Nano.UCF",
+     "ubisoft": [
+      "Nano.UCF"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "dzexujcdkepe46d3yvfxwod4a",
+   "team_id": "awmnvlbmtme5wms2ysd1ptjzx",
+   "name": "LSU",
+   "school": "Louisiana State University",
+   "school_short": "",
+   "division": "III",
+   "event_id": "aurd1w13854i88w2c03qh4ahh",
+   "group": "",
+   "color": "#461D7C",
+   "color_alt": "#FDD023",
+   "logo_url": "https://images.leagueos.gg/teams/awmnvlbmtme5wms2ysd1ptjzx/648cce75832b120a065cdff4",
+   "clan_tag": "LSU",
+   "record": {
+    "wins": 3,
+    "losses": 0,
+    "game_wins": 6,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "niqks",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Bricky",
+     "ubisoft": [
+      "Bricky.LSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "isplum",
+     "ubisoft": [
+      "isplum.LSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "scorpion.LSU",
+     "ubisoft": [
+      "scorpion.LSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Paradox.LSU",
+     "ubisoft": [
+      "Paradox.LSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Hiraka.LSU",
+     "ubisoft": [
+      "Hiraka.LSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Cherry.LSU",
+     "ubisoft": [
+      "CherryKnives"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "e6q9mg2vwn2wri2td62jeksiz",
+   "team_id": "3lci91zjn6ehwkejn998tpkpm",
+   "name": "Lackawanna College",
+   "school": "Lackawanna College",
+   "school_short": "LCE",
+   "division": "III",
+   "event_id": "aurd1w13854i88w2c03qh4ahh",
+   "group": "",
+   "color": "#0A3161",
+   "color_alt": "#999999",
+   "logo_url": "https://images.leagueos.gg/teams/3lci91zjn6ehwkejn998tpkpm/64f9eefe837604534eb84210",
+   "clan_tag": "LC",
+   "record": {
+    "wins": 1,
+    "losses": 1,
+    "game_wins": 3,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "Opid",
+     "ubisoft": [
+      "Opid.LC"
+     ],
+     "player": true
+    },
+    {
+     "name": "Ilithyia",
+     "ubisoft": [],
+     "player": true
+    },
+    {
+     "name": "Godless-sama",
+     "ubisoft": [
+      "Godless-Sama.LC",
+      "Godless-Sama"
+     ],
+     "player": true
+    },
+    {
+     "name": "Saptic",
+     "ubisoft": [
+      "Not_Saptic",
+      "saptic.LC",
+      "sapTic"
+     ],
+     "player": true
+    },
+    {
+     "name": "mrbox43",
+     "ubisoft": [],
+     "player": true
+    },
+    {
+     "name": "Xenia",
+     "ubisoft": [
+      "Xenia.LC"
+     ],
+     "player": true
+    },
+    {
+     "name": "slaamzzz",
+     "ubisoft": [
+      "slamz.LC"
+     ],
+     "player": true
+    },
+    {
+     "name": "Mac.-.",
+     "ubisoft": [
+      "Mac.LC",
+      "Therminator__",
+      "Mac.-."
+     ],
+     "player": true
+    },
+    {
+     "name": "Scar",
+     "ubisoft": [
+      "ScarSlovak"
+     ],
+     "player": true
+    },
+    {
+     "name": "Slaya",
+     "ubisoft": [
+      "Slaya1126"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "deunj46dwsix5s8hb8a5053mg",
+   "team_id": "eebg3rhl3z6cog7cwntwm2xcx",
+   "name": "MST Gold",
+   "school": "Missouri University of Science and Technology",
+   "school_short": "",
+   "division": "III",
+   "event_id": "aurd1w13854i88w2c03qh4ahh",
+   "group": "",
+   "color": "#007A33",
+   "color_alt": "#63666A",
+   "logo_url": "https://images.leagueos.gg/teams/eebg3rhl3z6cog7cwntwm2xcx/648cfcd9f14cfcf90ebf4538",
+   "clan_tag": "MST",
+   "record": {
+    "wins": 0,
+    "losses": 2,
+    "game_wins": 0,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "StaticDays",
+     "ubisoft": [
+      "StaticDays"
+     ],
+     "player": true
+    },
+    {
+     "name": "Aman_rules1",
+     "ubisoft": [
+      "Aman_rules1"
+     ],
+     "player": true
+    },
+    {
+     "name": "BOATER_STL",
+     "ubisoft": [
+      "BOATER_STL",
+      "BOATERSTL"
+     ],
+     "player": true
+    },
+    {
+     "name": "KBmunch2",
+     "ubisoft": [
+      "KBmunch2"
+     ],
+     "player": true
+    },
+    {
+     "name": "free2gamer1",
+     "ubisoft": [
+      "free2gamer1"
+     ],
+     "player": true
+    },
+    {
+     "name": "Svez.",
+     "ubisoft": [
+      "Svez."
+     ],
+     "player": true
+    },
+    {
+     "name": "EGGZY",
+     "ubisoft": [
+      "crystalyew555"
+     ],
+     "player": true
+    },
+    {
+     "name": "WelloHelloThere",
+     "ubisoft": [
+      "WelloHelloThere"
+     ],
+     "player": true
+    },
+    {
+     "name": "DiceFruit",
+     "ubisoft": [
+      "DiceFruit"
+     ],
+     "player": true
+    },
+    {
+     "name": "Deliora",
+     "ubisoft": [
+      "Technocrat"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "48udo6zsrdko88q7fjprqwrzl",
+   "team_id": "3yj93kj25w6ulzhinr0gni1pl",
+   "name": "Mizzou Club",
+   "school": "University of Missouri",
+   "school_short": "",
+   "division": "III",
+   "event_id": "aurd1w13854i88w2c03qh4ahh",
+   "group": "",
+   "color": "#ECAA1F",
+   "color_alt": "#231F20",
+   "logo_url": "https://images.leagueos.gg/teams/3yj93kj25w6ulzhinr0gni1pl/6490bab3832b120a065ce0ae",
+   "clan_tag": "MIZZ",
+   "record": {
+    "wins": 0,
+    "losses": 0,
+    "game_wins": 0,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "cpgraham5",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "xCh1cken",
+     "ubisoft": [
+      "Chicken.MIZ"
+     ],
+     "player": true
+    },
+    {
+     "name": "LeoSirNardo",
+     "ubisoft": [
+      "Leo.MIZ"
+     ],
+     "player": true
+    },
+    {
+     "name": "hangytangy",
+     "ubisoft": [
+      "hangytangy.MIZ"
+     ],
+     "player": true
+    },
+    {
+     "name": "Phaxki",
+     "ubisoft": [
+      "Phaxki.MIZ"
+     ],
+     "player": true
+    },
+    {
+     "name": "Chooomy",
+     "ubisoft": [
+      "CH000MY",
+      "CH000MY.MIZ"
+     ],
+     "player": true
+    },
+    {
+     "name": "Corkie._.",
+     "ubisoft": [
+      "Corkie.MIZ",
+      "Corkie.MIZZ"
+     ],
+     "player": true
+    },
+    {
+     "name": "Stick",
+     "ubisoft": [
+      "stickgawa",
+      "Stick.MIZ",
+      "st.ick",
+      "stick.MIZ"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "c3bzcbhuqx6be2197d0mvau40",
+   "team_id": "4dbi4jezybu2hmafifripsmvi",
+   "name": "SAU R6",
+   "school": "Southern Arkansas University",
+   "school_short": "",
+   "division": "III",
+   "event_id": "aurd1w13854i88w2c03qh4ahh",
+   "group": "",
+   "color": "#003DA5",
+   "color_alt": "#FFD200",
+   "logo_url": "https://images.leagueos.gg/teams/4dbi4jezybu2hmafifripsmvi/65a066047beeda02da34b203",
+   "clan_tag": "SAU",
+   "record": {
+    "wins": 1,
+    "losses": 1,
+    "game_wins": 3,
+    "game_losses": 3
+   },
+   "players": [
+    {
+     "name": "GBot04",
+     "ubisoft": [
+      "GBot04"
+     ],
+     "player": false
+    },
+    {
+     "name": "FrKxri",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "iSwingN.SAU",
+     "ubisoft": [],
+     "player": true
+    },
+    {
+     "name": "Froggiee",
+     "ubisoft": [
+      "Froggiee11"
+     ],
+     "player": true
+    },
+    {
+     "name": "Zeal",
+     "ubisoft": [
+      "Phixq"
+     ],
+     "player": true
+    },
+    {
+     "name": "Natsuki.SAU",
+     "ubisoft": [
+      "Natsuki.SAU"
+     ],
+     "player": true
+    },
+    {
+     "name": "shaggy.SAU",
+     "ubisoft": [],
+     "player": true
+    },
+    {
+     "name": "Yuri.SAU",
+     "ubisoft": [
+      "Yuri.SAU"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "9pwl6owmu396qyjo1a2lhl3gf",
+   "team_id": "2dg6wg8ewajghg5fj3dwlpkso",
+   "name": "UAH Charger Blue",
+   "school": "The University of Alabama in Huntsville",
+   "school_short": "",
+   "division": "III",
+   "event_id": "aurd1w13854i88w2c03qh4ahh",
+   "group": "",
+   "color": "#0077C8",
+   "color_alt": "#2C2A29",
+   "logo_url": "https://images.leagueos.gg/teams/2dg6wg8ewajghg5fj3dwlpkso/64f41250451d5c2e8cf6aefb",
+   "clan_tag": "UAH",
+   "record": {
+    "wins": 2,
+    "losses": 0,
+    "game_wins": 4,
+    "game_losses": 1
+   },
+   "players": [
+    {
+     "name": "tallman3.14",
+     "ubisoft": [
+      "Tallman3.14"
+     ],
+     "player": true
+    },
+    {
+     "name": "OhWowJay",
+     "ubisoft": [
+      "OhWowJay"
+     ],
+     "player": true
+    },
+    {
+     "name": "Lgon.",
+     "ubisoft": [
+      "Lgon."
+     ],
+     "player": true
+    },
+    {
+     "name": "DinoFireKing",
+     "ubisoft": [
+      "DinoFireKing"
+     ],
+     "player": true
+    },
+    {
+     "name": "daemon",
+     "ubisoft": [
+      "Daemon.UAH"
+     ],
+     "player": true
+    },
+    {
+     "name": "connorrose2",
+     "ubisoft": [
+      "AzoozNewzz"
+     ],
+     "player": true
+    },
+    {
+     "name": "EFRVN",
+     "ubisoft": [
+      "The_Dude_."
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "2lm0kka6nskkamarx1dcton5b",
+   "team_id": "a7u9vuo0e9mli23zl3udm9zqg",
+   "name": "UF Club Orange",
+   "school": "University of Florida",
+   "school_short": "",
+   "division": "III",
+   "event_id": "aurd1w13854i88w2c03qh4ahh",
+   "group": "",
+   "color": "#FA4616",
+   "color_alt": "#0021A5",
+   "logo_url": "https://images.leagueos.gg/teams/a7u9vuo0e9mli23zl3udm9zqg/bc7f437jl6qecy5xhov2z1bcq",
+   "clan_tag": "UF",
+   "record": {
+    "wins": 1,
+    "losses": 0,
+    "game_wins": 2,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "Citizen.UF",
+     "ubisoft": [
+      "Citizen.UF"
+     ],
+     "player": false
+    },
+    {
+     "name": "nolighthouse",
+     "ubisoft": [
+      "nolighthouse.UF"
+     ],
+     "player": false
+    },
+    {
+     "name": "Pqrks",
+     "ubisoft": [
+      "Pqrks.UF"
+     ],
+     "player": true
+    },
+    {
+     "name": "zbwt",
+     "ubisoft": [
+      "zbwt"
+     ],
+     "player": true
+    },
+    {
+     "name": "Fxdge.",
+     "ubisoft": [
+      "Fxdge."
+     ],
+     "player": true
+    },
+    {
+     "name": "Spherohero",
+     "ubisoft": [
+      "spherohero.UF"
+     ],
+     "player": true
+    },
+    {
+     "name": "Burb",
+     "ubisoft": [
+      "RobinIsBurb"
+     ],
+     "player": true
+    },
+    {
+     "name": "Darentz Constant",
+     "ubisoft": [
+      "Constant.UF"
+     ],
+     "player": true
+    },
+    {
+     "name": "Strjkers",
+     "ubisoft": [
+      "Lagway.UF",
+      "Strjkers.UF"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "d869jsbr08g2nmrk9yn47h33d",
+   "team_id": "cdq60sa14x6bkhqvxshluln2p",
+   "name": "UNIV. OF MICHIGAN JV1",
+   "school": "University of Michigan",
+   "school_short": "Michigan",
+   "division": "III",
+   "event_id": "aurd1w13854i88w2c03qh4ahh",
+   "group": "",
+   "color": "#00274C",
+   "color_alt": "#FFCB05",
+   "logo_url": "https://images.leagueos.gg/teams/cdq60sa14x6bkhqvxshluln2p/eke8y2k8c84d8u7ln4vdwugop",
+   "clan_tag": "UMICH-R6-JV1",
+   "record": {
+    "wins": 0,
+    "losses": 2,
+    "game_wins": 1,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "Ophanbear",
+     "ubisoft": [
+      "Ophanbear.UMich"
+     ],
+     "player": true
+    },
+    {
+     "name": "Bobtheawesome",
+     "ubisoft": [
+      "Bob.UMich"
+     ],
+     "player": true
+    },
+    {
+     "name": "ins1der",
+     "ubisoft": [
+      "ins1der.UMich"
+     ],
+     "player": false
+    },
+    {
+     "name": "briancatmaster",
+     "ubisoft": [
+      "TheMaster.UMich",
+      "briancatM.UMich"
+     ],
+     "player": true
+    },
+    {
+     "name": "getspoopd",
+     "ubisoft": [
+      "najijunior"
+     ],
+     "player": true
+    },
+    {
+     "name": "kendizzle.umich",
+     "ubisoft": [
+      "kendizzle.UMich"
+     ],
+     "player": true
+    },
+    {
+     "name": "Natedog.UMich",
+     "ubisoft": [
+      "Natedog6369"
+     ],
+     "player": true
+    },
+    {
+     "name": "ormeek",
+     "ubisoft": [
+      "ormeek"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "2w4zdmmy9ewbn69gngbogipav",
+   "team_id": "3fsecsszursdr16e83dmwx9t4",
+   "name": "University of Houston - Downtown",
+   "school": "University of Houston - Downtown",
+   "school_short": "",
+   "division": "III",
+   "event_id": "aurd1w13854i88w2c03qh4ahh",
+   "group": "",
+   "color": "#2B3B6A",
+   "color_alt": "#FFFFFF",
+   "logo_url": "https://images.leagueos.gg/teams/3fsecsszursdr16e83dmwx9t4/6490b4dcf14cfcf90ebf45cb",
+   "clan_tag": "UHD",
+   "record": {
+    "wins": 0,
+    "losses": 0,
+    "game_wins": 0,
+    "game_losses": 0
+   },
+   "players": []
+  },
+  {
+   "id": "8cgxlcustb2bo8vjzdbt16wu5",
+   "team_id": "749qzgn2lou119o26v8ul682v",
+   "name": "University of Houston - Downtown Varsity",
+   "school": "University of Houston - Downtown",
+   "school_short": "",
+   "division": "III",
+   "event_id": "aurd1w13854i88w2c03qh4ahh",
+   "group": "",
+   "color": "#2B3B6A",
+   "color_alt": "#FFFFFF",
+   "logo_url": "https://images.leagueos.gg/teams/749qzgn2lou119o26v8ul682v/6490b4dcf14cfcf90ebf45cb",
+   "clan_tag": "UHD",
+   "record": {
+    "wins": 0,
+    "losses": 1,
+    "game_wins": 0,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "[UHD] RICKY",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Koarse",
+     "ubisoft": [
+      "Koarse._."
+     ],
+     "player": true
+    },
+    {
+     "name": "Equable",
+     "ubisoft": [
+      "Equablenote"
+     ],
+     "player": true
+    },
+    {
+     "name": "Glor locket",
+     "ubisoft": [
+      "Glorlocket"
+     ],
+     "player": true
+    },
+    {
+     "name": "AP_lackin",
+     "ubisoft": [
+      "AP_lackin"
+     ],
+     "player": true
+    },
+    {
+     "name": "JellySandwich",
+     "ubisoft": [
+      "JeiiySanwich"
+     ],
+     "player": true
+    },
+    {
+     "name": "Wavid2x",
+     "ubisoft": [
+      "Wavid2x"
+     ],
+     "player": true
+    },
+    {
+     "name": "Ch1moki",
+     "ubisoft": [
+      "Ch1moki"
+     ],
+     "player": true
+    },
+    {
+     "name": "sneaJ",
+     "ubisoft": [
+      "k.zi"
+     ],
+     "player": true
+    },
+    {
+     "name": "Robn",
+     "ubisoft": [
+      "Robn_GG"
+     ],
+     "player": true
+    },
+    {
+     "name": "drei_three",
+     "ubisoft": [
+      "Ran945dom"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "7h2ktnfvcqs5yl5dm080zj37w",
+   "team_id": "5mrjhzt43h6cvdnlf18ytzhl6",
+   "name": "University of Manitoba",
+   "school": "University of Manitoba",
+   "school_short": "UManitoba",
+   "division": "III",
+   "event_id": "aurd1w13854i88w2c03qh4ahh",
+   "group": "",
+   "color": "#4F2C1D",
+   "color_alt": "#F2A900",
+   "logo_url": "https://images.leagueos.gg/teams/5mrjhzt43h6cvdnlf18ytzhl6/evfgqq7ou2aeduip4t5e13ei9",
+   "clan_tag": "UM",
+   "record": {
+    "wins": 0,
+    "losses": 1,
+    "game_wins": 1,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "clone",
+     "ubisoft": [
+      "clone101_",
+      "clone.UM",
+      "baguette...."
+     ],
+     "player": true
+    },
+    {
+     "name": "Mooseman",
+     "ubisoft": [
+      "Mooseman.."
+     ],
+     "player": true
+    },
+    {
+     "name": "Lex",
+     "ubisoft": [
+      "Deathknight8569"
+     ],
+     "player": true
+    },
+    {
+     "name": "CplStank",
+     "ubisoft": [
+      "CplStank",
+      "CplDank"
+     ],
+     "player": true
+    },
+    {
+     "name": "KingJeSuis",
+     "ubisoft": [
+      "King.AK."
+     ],
+     "player": true
+    },
+    {
+     "name": "Sewer",
+     "ubisoft": [
+      "SewerSaint."
+     ],
+     "player": true
+    },
+    {
+     "name": "boot",
+     "ubisoft": [
+      "booot."
+     ],
+     "player": true
+    },
+    {
+     "name": "Opukka",
+     "ubisoft": [],
+     "player": true
+    },
+    {
+     "name": "Ayan",
+     "ubisoft": [
+      "Ayan.BNTH",
+      "IlIIlIlIIIIII"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "ap82q2a5y62qee93yjnzxw96r",
+   "team_id": "cnasjkft6zdgarhbo9prgs7e9",
+   "name": "WashU Bears",
+   "school": "Washington University in St. Louis",
+   "school_short": "WashU",
+   "division": "III",
+   "event_id": "aurd1w13854i88w2c03qh4ahh",
+   "group": "",
+   "color": "#FFFFFF",
+   "color_alt": "#0D7160",
+   "logo_url": "https://images.leagueos.gg/teams/cnasjkft6zdgarhbo9prgs7e9/bg10p0d1wvzj8wjgkv5iea041",
+   "clan_tag": "WUSTL",
+   "record": {
+    "wins": 1,
+    "losses": 1,
+    "game_wins": 2,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "IAmARaven",
+     "ubisoft": [
+      "Raven-FACTOR"
+     ],
+     "player": true
+    },
+    {
+     "name": "toe_beanz",
+     "ubisoft": [
+      "Bangarangatan"
+     ],
+     "player": true
+    },
+    {
+     "name": "spheal",
+     "ubisoft": [
+      "Spheals"
+     ],
+     "player": true
+    },
+    {
+     "name": "richardlin378",
+     "ubisoft": [
+      "richardlin378"
+     ],
+     "player": true
+    },
+    {
+     "name": "Pnzher",
+     "ubisoft": [
+      "Pnzher"
+     ],
+     "player": true
+    },
+    {
+     "name": "CupCatsss",
+     "ubisoft": [
+      "CupCatsss"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "4wcogcas9y8hvvmpkhvhcjcrc",
+   "team_id": "1gkd4g2bmxl98fnp3c2jaj1eu",
+   "name": "AVL Varsity",
+   "school": "University of North Carolina Asheville",
+   "school_short": "UNC AVL",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#2254A4",
+   "color_alt": "#C8C9C7",
+   "logo_url": "https://images.leagueos.gg/teams/1gkd4g2bmxl98fnp3c2jaj1eu/648d6b10f14cfcf90ebf4586",
+   "clan_tag": "UNCA",
+   "record": {
+    "wins": 0,
+    "losses": 1,
+    "game_wins": 0,
+    "game_losses": 1
+   },
+   "players": [
+    {
+     "name": "crotedagoat",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "dumpst3r",
+     "ubisoft": [
+      "dumpst3r.AVL"
+     ],
+     "player": true
+    },
+    {
+     "name": "Smellglove",
+     "ubisoft": [
+      "ItsYeHippo"
+     ],
+     "player": true
+    },
+    {
+     "name": "Toasty_Trooper",
+     "ubisoft": [
+      "Toasty_Trooper"
+     ],
+     "player": true
+    },
+    {
+     "name": "catmasciojr",
+     "ubisoft": [
+      "Catmasciojr"
+     ],
+     "player": true
+    },
+    {
+     "name": "DannyOcean",
+     "ubisoft": [
+      "DB__Cooper"
+     ],
+     "player": true
+    },
+    {
+     "name": "Soviet_Mayo.AVL",
+     "ubisoft": [
+      "Soviet_Mayo.AVL"
+     ],
+     "player": true
+    },
+    {
+     "name": "SoakedGlobe",
+     "ubisoft": [
+      "SoakedGlobe9"
+     ],
+     "player": true
+    },
+    {
+     "name": "Griptic",
+     "ubisoft": [
+      "CrypticSpy48"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "3phguih0wolnnwcd7ranryxql",
+   "team_id": "ahha4sxkzcrxaonaergtpz665",
+   "name": "Ashland University",
+   "school": "Ashland University",
+   "school_short": "",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#522E91",
+   "color_alt": "#FFCC41",
+   "logo_url": "https://images.leagueos.gg/teams/ahha4sxkzcrxaonaergtpz665/648c902f09cdacdd5ee7cfbd",
+   "clan_tag": "AU",
+   "record": {
+    "wins": 1,
+    "losses": 0,
+    "game_wins": 2,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "Fisci25",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Exodus",
+     "ubisoft": [
+      "Exodus.AU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Splash",
+     "ubisoft": [
+      "Splash.AU."
+     ],
+     "player": true
+    },
+    {
+     "name": "piegod03",
+     "ubisoft": [
+      "piegod03"
+     ],
+     "player": true
+    },
+    {
+     "name": "IsaacOhYeah.AU",
+     "ubisoft": [
+      "IsaacOhYeah.AU"
+     ],
+     "player": true
+    },
+    {
+     "name": "riderav77",
+     "ubisoft": [
+      "riderav77"
+     ],
+     "player": true
+    },
+    {
+     "name": "Snkir.AU",
+     "ubisoft": [
+      "Snkir.AU"
+     ],
+     "player": true
+    },
+    {
+     "name": "SilentWolf",
+     "ubisoft": [
+      "SilentWolf.AU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Shady",
+     "ubisoft": [
+      "Shadyy.AU"
+     ],
+     "player": true
+    },
+    {
+     "name": "warddog",
+     "ubisoft": [
+      "warddog23.",
+      "Warddog.AU"
+     ],
+     "player": true
+    },
+    {
+     "name": "ItsFate",
+     "ubisoft": [
+      "Fate.AU"
+     ],
+     "player": true
+    },
+    {
+     "name": "R0mulus.AU",
+     "ubisoft": [
+      "R0mulus177"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "5sv1fsnwvi630wwkcbps4oyik",
+   "team_id": "en3oq86z99s2ygfmv3rlu8frv",
+   "name": "BGSU Orange",
+   "school": "Bowling Green State University",
+   "school_short": "BGSU",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#FD5000",
+   "color_alt": "#4F2C1D",
+   "logo_url": "https://images.leagueos.gg/teams/en3oq86z99s2ygfmv3rlu8frv/648c939fb9d6364f68e676da",
+   "clan_tag": "BGSU",
+   "record": {
+    "wins": 2,
+    "losses": 0,
+    "game_wins": 4,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "calebd2208",
+     "ubisoft": [
+      "TGS.Calebd2208"
+     ],
+     "player": false
+    },
+    {
+     "name": "ChaosFox.BGSU",
+     "ubisoft": [
+      "ChaosFox.BGSU"
+     ],
+     "player": false
+    },
+    {
+     "name": "Killersanta",
+     "ubisoft": [
+      "Killersanta"
+     ],
+     "player": true
+    },
+    {
+     "name": "Red dragon",
+     "ubisoft": [
+      "RedDragon.BGSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "SaiiK",
+     "ubisoft": [
+      "SaiiK.BGSU",
+      "SaiiK."
+     ],
+     "player": true
+    },
+    {
+     "name": "puop",
+     "ubisoft": [
+      "puop."
+     ],
+     "player": true
+    },
+    {
+     "name": "Slop.BGSU",
+     "ubisoft": [
+      "Slop.BGSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Poyotoy0",
+     "ubisoft": [
+      "PoyoToy0"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "6hp259wwir9tx4y3gfkb2bvs1",
+   "team_id": "e9efaxp4l7mylyvms7yutbgjo",
+   "name": "Bison Green",
+   "school": "North Dakota State University",
+   "school_short": "",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#005643",
+   "color_alt": "#FFC82E",
+   "logo_url": "https://images.leagueos.gg/teams/e9efaxp4l7mylyvms7yutbgjo/dgjlhxrc8oku8dp1bplv6x01v",
+   "clan_tag": "NDSU",
+   "record": {
+    "wins": 1,
+    "losses": 0,
+    "game_wins": 2,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "Wok135",
+     "ubisoft": [
+      "Wok135"
+     ],
+     "player": true
+    },
+    {
+     "name": "WrathHunter306",
+     "ubisoft": [
+      "WrathHunter306"
+     ],
+     "player": true
+    },
+    {
+     "name": "Estimate.M1",
+     "ubisoft": [
+      "ETA..",
+      "Estimate.M1"
+     ],
+     "player": true
+    },
+    {
+     "name": "Waffle_Z",
+     "ubisoft": [
+      "HrdStckBronze"
+     ],
+     "player": true
+    },
+    {
+     "name": "Orbyt",
+     "ubisoft": [
+      "Orb.sh"
+     ],
+     "player": true
+    },
+    {
+     "name": "Cody.NDSU",
+     "ubisoft": [
+      "Bingayden",
+      "Slinger1880",
+      "Cody.NDSU",
+      "Slinger"
+     ],
+     "player": true
+    },
+    {
+     "name": "parker.byrnes",
+     "ubisoft": [
+      "Turtle_Man1"
+     ],
+     "player": true
+    },
+    {
+     "name": "jbizon",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "PappaFrisky",
+     "ubisoft": [],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "9eg7rnoj8cbw48xzkhvatvak6",
+   "team_id": "5z1yy2cd9t6cb9wr6qgqji02k",
+   "name": "Bradley University",
+   "school": "Bradley University",
+   "school_short": "",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#A50000",
+   "color_alt": "#000000",
+   "logo_url": "https://images.leagueos.gg/teams/5z1yy2cd9t6cb9wr6qgqji02k/648c93ee09cdacdd5ee7cfc3",
+   "clan_tag": "BU",
+   "record": {
+    "wins": 0,
+    "losses": 2,
+    "game_wins": 0,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "bnt",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "HIkarutetsu",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "NameUnknown",
+     "ubisoft": [
+      "NameUnknown1101"
+     ],
+     "player": true
+    },
+    {
+     "name": "jkjk122",
+     "ubisoft": [
+      "jkjk1221"
+     ],
+     "player": true
+    },
+    {
+     "name": "DassuiGyo",
+     "ubisoft": [
+      "DassuiGyo"
+     ],
+     "player": true
+    },
+    {
+     "name": "sneakatk35",
+     "ubisoft": [
+      "Sneakatk35"
+     ],
+     "player": true
+    },
+    {
+     "name": "Jeafu",
+     "ubisoft": [
+      "Jeafu3"
+     ],
+     "player": true
+    },
+    {
+     "name": "DryRakami",
+     "ubisoft": [
+      "DryRakami"
+     ],
+     "player": true
+    },
+    {
+     "name": "Qu1zle",
+     "ubisoft": [
+      "Qu1zle"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "2kvdws1ib8o1guepik4mr0w46",
+   "team_id": "ddk4qianqllv4a5u3s4jqlnoi",
+   "name": "CU Black",
+   "school": "University of Colorado Boulder",
+   "school_short": "CU Boulder",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#CFB87C",
+   "color_alt": "#000000",
+   "logo_url": "https://images.leagueos.gg/teams/ddk4qianqllv4a5u3s4jqlnoi/6490b221f14cfcf90ebf45c4",
+   "clan_tag": "CU",
+   "record": {
+    "wins": 0,
+    "losses": 1,
+    "game_wins": 0,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "and3ruu",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "sxgittal.",
+     "ubisoft": [
+      "Sxgittal.CU"
+     ],
+     "player": false
+    },
+    {
+     "name": "Lunari",
+     "ubisoft": [
+      "Lunari.CU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Tax",
+     "ubisoft": [
+      "Tax.Cu"
+     ],
+     "player": true
+    },
+    {
+     "name": "Clossis",
+     "ubisoft": [
+      "Clossis.",
+      "Clossis.CU"
+     ],
+     "player": true
+    },
+    {
+     "name": "mowhawk",
+     "ubisoft": [
+      "Butter._.",
+      "Mowhawk.CU",
+      "mowhawk.CU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Infinite",
+     "ubisoft": [
+      "ItsInfiniite"
+     ],
+     "player": true
+    },
+    {
+     "name": "wuijle",
+     "ubisoft": [
+      "Buijle"
+     ],
+     "player": true
+    },
+    {
+     "name": "CJ",
+     "ubisoft": [
+      "Gladysgoesbang"
+     ],
+     "player": true
+    },
+    {
+     "name": "AustinReaves",
+     "ubisoft": [
+      "AustinReaves.CU",
+      "AustinReavesAR5"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "a2phe373hgk5hlprtk1ea4uv5",
+   "team_id": "0tkg7zd4p817o6pjdhlpbmy8e",
+   "name": "Endicott Gulls",
+   "school": "Endicott College",
+   "school_short": "Endicott",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#00325D",
+   "color_alt": "#007C57",
+   "logo_url": "https://images.leagueos.gg/teams/0tkg7zd4p817o6pjdhlpbmy8e/aflws31izq6631fl09zx0s0ip",
+   "clan_tag": "EC",
+   "record": {
+    "wins": 2,
+    "losses": 1,
+    "game_wins": 4,
+    "game_losses": 3
+   },
+   "players": [
+    {
+     "name": "bhall",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Ndaddy34",
+     "ubisoft": [
+      "Ndaddy34"
+     ],
+     "player": false
+    },
+    {
+     "name": "Thisadrienne",
+     "ubisoft": [
+      "ThisAdrie11"
+     ],
+     "player": false
+    },
+    {
+     "name": "Gweece",
+     "ubisoft": [
+      "greece..",
+      "Gweece.EC",
+      "Airjabing"
+     ],
+     "player": true
+    },
+    {
+     "name": "Ethan",
+     "ubisoft": [
+      "Ethannnnn.EC"
+     ],
+     "player": true
+    },
+    {
+     "name": "IceChee",
+     "ubisoft": [
+      "IceChee",
+      "Chee.EC"
+     ],
+     "player": true
+    },
+    {
+     "name": "MAGIC MEZA",
+     "ubisoft": [
+      "sokolbenji",
+      "Meza.EC"
+     ],
+     "player": true
+    },
+    {
+     "name": "samonsupport",
+     "ubisoft": [
+      "PulseRiser",
+      "Pulse.EC"
+     ],
+     "player": true
+    },
+    {
+     "name": "2pinto",
+     "ubisoft": [
+      "pinto9.EC",
+      "pintozera.EC",
+      "Pinto.EC",
+      "Pintosobased"
+     ],
+     "player": true
+    },
+    {
+     "name": "Kiko_K140",
+     "ubisoft": [],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "5sde9x4lk8vwfiodmcvelasgf",
+   "team_id": "4ksk90lk4zuwfqqxfbl9pt3wn",
+   "name": "FSU Maroon",
+   "school": "Florida State University",
+   "school_short": "",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#782F40",
+   "color_alt": "#CEB888",
+   "logo_url": "https://images.leagueos.gg/teams/4ksk90lk4zuwfqqxfbl9pt3wn/bz95dru5f0ygbdbw9zmwsohmp",
+   "clan_tag": "FSU",
+   "record": {
+    "wins": 2,
+    "losses": 0,
+    "game_wins": 4,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "EsportsAtFSU",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Andromeda",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "CODEX",
+     "ubisoft": [
+      "C0DEX."
+     ],
+     "player": false
+    },
+    {
+     "name": "Vaneh",
+     "ubisoft": [
+      "Vaneh.FSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "HarryIII",
+     "ubisoft": [
+      "HarryIII.FSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "poussson",
+     "ubisoft": [
+      "poussson"
+     ],
+     "player": true
+    },
+    {
+     "name": "MattGaz",
+     "ubisoft": [
+      "MattGaz",
+      "MattGaz.FSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Raincly",
+     "ubisoft": [
+      "Raincly"
+     ],
+     "player": true
+    },
+    {
+     "name": "PatMawini.FLJ",
+     "ubisoft": [
+      "PatMawini.FLJ",
+      "PatMawini.FSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Avner",
+     "ubisoft": [
+      "Avner.oL"
+     ],
+     "player": true
+    },
+    {
+     "name": "Tofu",
+     "ubisoft": [
+      "tofu.FSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "headhunter7189",
+     "ubisoft": [
+      "NightFlsh17.FSU"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "3xambnndt81brfmhuj5xhllsv",
+   "team_id": "eoajov7pcdbhls3l3exhfum4a",
+   "name": "Fuel Esports",
+   "school": "Fanshawe College",
+   "school_short": "",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#ED1C2A",
+   "color_alt": "#646469",
+   "logo_url": "https://images.leagueos.gg/teams/eoajov7pcdbhls3l3exhfum4a/emak4fw276z4wynybeelui5gc",
+   "clan_tag": "Fuel",
+   "record": {
+    "wins": 1,
+    "losses": 1,
+    "game_wins": 2,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "angelgrime",
+     "ubisoft": [
+      "angel.FUEL"
+     ],
+     "player": false
+    },
+    {
+     "name": "boyc3",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "ReLyT",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Dalrd",
+     "ubisoft": [
+      "DaLrd.FUEL"
+     ],
+     "player": true
+    },
+    {
+     "name": "Xazvu",
+     "ubisoft": [
+      "XAZVU.FUEL"
+     ],
+     "player": true
+    },
+    {
+     "name": "Diiccey",
+     "ubisoft": [
+      "Diiccey",
+      "Diiccey.FUEL"
+     ],
+     "player": true
+    },
+    {
+     "name": "Keysune",
+     "ubisoft": [
+      "Keysunee"
+     ],
+     "player": true
+    },
+    {
+     "name": "Temdi",
+     "ubisoft": [
+      "Temdi_"
+     ],
+     "player": true
+    },
+    {
+     "name": "DreFPS",
+     "ubisoft": [
+      "zDre."
+     ],
+     "player": true
+    },
+    {
+     "name": "Joyy",
+     "ubisoft": [
+      "Sakuraa_V_"
+     ],
+     "player": true
+    },
+    {
+     "name": "Toasty_777",
+     "ubisoft": [
+      "T04stErr0r"
+     ],
+     "player": true
+    },
+    {
+     "name": "Nate.GSGS",
+     "ubisoft": [
+      "Nate.GSGS"
+     ],
+     "player": true
+    },
+    {
+     "name": "makayIa",
+     "ubisoft": [
+      "makayIa"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "28z03t7cd0aa7a7ftrwpmw4ya",
+   "team_id": "cmcyfkj1gffd1rutmuov5q3r9",
+   "name": "Hoosiers Cream",
+   "school": "Indiana University",
+   "school_short": "IU",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#990000",
+   "color_alt": "#EDEBEB",
+   "logo_url": "https://images.leagueos.gg/teams/cmcyfkj1gffd1rutmuov5q3r9/64d2a6b244b7a6bf7e0ca613",
+   "clan_tag": "IU",
+   "record": {
+    "wins": 0,
+    "losses": 2,
+    "game_wins": 0,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "A.s.i.a.n",
+     "ubisoft": [
+      "A.s.i.a.n"
+     ],
+     "player": false
+    },
+    {
+     "name": "EnoxRule",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "IU_Robertomanj",
+     "ubisoft": [
+      "IU_Robertomanj"
+     ],
+     "player": true
+    },
+    {
+     "name": "ahnoah",
+     "ubisoft": [
+      "ahnoah"
+     ],
+     "player": true
+    },
+    {
+     "name": "ballerbrady555",
+     "ubisoft": [
+      "Brady.IU",
+      "Stryxir"
+     ],
+     "player": true
+    },
+    {
+     "name": "exile",
+     "ubisoft": [
+      "Exile.IU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Taco-.-",
+     "ubisoft": [
+      "Taco-.-"
+     ],
+     "player": true
+    },
+    {
+     "name": "TheyLuvHudd",
+     "ubisoft": [
+      "Hudd.IU"
+     ],
+     "player": true
+    },
+    {
+     "name": "i.wanna.smoke",
+     "ubisoft": [
+      "i.Wanna.Smoke"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "3siuxhjm9cib1xlh2uu95y83g",
+   "team_id": "6owh7ngzs9z3qq1blq3mwq6z1",
+   "name": "Jade Green",
+   "school": "Husson University",
+   "school_short": "Husson",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#004C42",
+   "color_alt": "#B79A5F",
+   "logo_url": "https://images.leagueos.gg/teams/6owh7ngzs9z3qq1blq3mwq6z1/7mg5ogch20hpg8k0y3tzgw2rz",
+   "clan_tag": "HU",
+   "record": {
+    "wins": 0,
+    "losses": 2,
+    "game_wins": 1,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "Beldia",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "jaima_hu",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "ScatterPlotz",
+     "ubisoft": [
+      "Scatter.HU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Alex",
+     "ubisoft": [
+      "Alexgunns.",
+      "AlexWave."
+     ],
+     "player": true
+    },
+    {
+     "name": "BigWitz",
+     "ubisoft": [
+      "KinglyNormal38"
+     ],
+     "player": true
+    },
+    {
+     "name": "CaptAmeriley",
+     "ubisoft": [
+      "CaptAmeriley"
+     ],
+     "player": true
+    },
+    {
+     "name": "Shonti",
+     "ubisoft": [
+      "P.o.o.o.p.a"
+     ],
+     "player": true
+    },
+    {
+     "name": "Nature23",
+     "ubisoft": [
+      "Nature23_"
+     ],
+     "player": true
+    },
+    {
+     "name": "Its_Refex",
+     "ubisoft": [
+      "Its_Refex"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "95a6npfv4aay33su7rps6fhei",
+   "team_id": "ex8mjfz5yygpaqc66m0qfjmbb",
+   "name": "Marietta College",
+   "school": "Marietta College",
+   "school_short": "Marietta",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#00205B",
+   "color_alt": "#FFFFFF",
+   "logo_url": "https://images.leagueos.gg/teams/ex8mjfz5yygpaqc66m0qfjmbb/d89ic8juz4ks1cer41anpyb5d",
+   "clan_tag": "MC",
+   "record": {
+    "wins": 2,
+    "losses": 0,
+    "game_wins": 4,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "GamesGrump",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "SpoonMC",
+     "ubisoft": [
+      "Spoon.MC"
+     ],
+     "player": false
+    },
+    {
+     "name": "nihil",
+     "ubisoft": [
+      "nihil.MC"
+     ],
+     "player": true
+    },
+    {
+     "name": "Pelican.MC",
+     "ubisoft": [
+      "Pelican.MC"
+     ],
+     "player": true
+    },
+    {
+     "name": "biyre",
+     "ubisoft": [
+      "Biyre.MC"
+     ],
+     "player": true
+    },
+    {
+     "name": "JFROsT.MC",
+     "ubisoft": [
+      "JFROsT.MC",
+      "MEOFF.MC"
+     ],
+     "player": true
+    },
+    {
+     "name": "OpKnees",
+     "ubisoft": [
+      "OpKnees.MC"
+     ],
+     "player": true
+    },
+    {
+     "name": "Bradyscott08.MC",
+     "ubisoft": [
+      "Bradyscott08"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "daolt2bs333zpva3axki53rga",
+   "team_id": "8nrulocfh7x69pwwjo036gsad",
+   "name": "Marshalltown Community College Blue",
+   "school": "Marshalltown Community College",
+   "school_short": "Marshalltown",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#003A70",
+   "color_alt": "#FDB827",
+   "logo_url": "https://images.leagueos.gg/teams/8nrulocfh7x69pwwjo036gsad/6520232397addde53ddf3a36",
+   "clan_tag": "MCC",
+   "record": {
+    "wins": 1,
+    "losses": 2,
+    "game_wins": 2,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "Clanin",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Rodeblock",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Mystical",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "youngsoul17",
+     "ubisoft": [
+      "Soul.MNRX",
+      "Soul.FM"
+     ],
+     "player": false
+    },
+    {
+     "name": "poptartt",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "VKrieg",
+     "ubisoft": [
+      "VKrieg",
+      "ToastedKrieg"
+     ],
+     "player": true
+    },
+    {
+     "name": "Anubis78DDB",
+     "ubisoft": [
+      "Anubis78DDB"
+     ],
+     "player": true
+    },
+    {
+     "name": "MoxieLuu",
+     "ubisoft": [
+      "MoxieLuu"
+     ],
+     "player": true
+    },
+    {
+     "name": "m0rrph.",
+     "ubisoft": [
+      "m0rrph."
+     ],
+     "player": true
+    },
+    {
+     "name": "Baarly",
+     "ubisoft": [
+      "baarly-"
+     ],
+     "player": true
+    },
+    {
+     "name": "Kunaiwolf.rar",
+     "ubisoft": [
+      "Kunaiwolf.rar"
+     ],
+     "player": true
+    },
+    {
+     "name": "Megalodon",
+     "ubisoft": [
+      "Themega1odon"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "cnmc2gm86v7pqzoiobdmar4xv",
+   "team_id": "8a4ha7woqfhn45j8unx3zhmzn",
+   "name": "Mizzou Club B",
+   "school": "University of Missouri",
+   "school_short": "",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#ECAA1F",
+   "color_alt": "#231F20",
+   "logo_url": "https://images.leagueos.gg/teams/8a4ha7woqfhn45j8unx3zhmzn/6490bab3832b120a065ce0ae",
+   "clan_tag": "MIZZ",
+   "record": {
+    "wins": 1,
+    "losses": 0,
+    "game_wins": 2,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "Corkie._.",
+     "ubisoft": [
+      "Corkie.MIZ",
+      "Corkie.MIZZ"
+     ],
+     "player": false
+    },
+    {
+     "name": "cpgraham5",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "sillyboy327",
+     "ubisoft": [
+      "sillyboy327",
+      "silyboy327.MIZ",
+      "Silyboy327.MIZ"
+     ],
+     "player": true
+    },
+    {
+     "name": "electr0bro.MIZ",
+     "ubisoft": [
+      "elecctr0bro.MIZ"
+     ],
+     "player": true
+    },
+    {
+     "name": "Double.MIZ",
+     "ubisoft": [
+      "Double.MIZ"
+     ],
+     "player": true
+    },
+    {
+     "name": "Fluffmaster2.0",
+     "ubisoft": [
+      "Fluff.MIZ"
+     ],
+     "player": true
+    },
+    {
+     "name": "hangytangy",
+     "ubisoft": [
+      "hangytangy.MIZ"
+     ],
+     "player": true
+    },
+    {
+     "name": "Stick",
+     "ubisoft": [
+      "stickgawa",
+      "Stick.MIZ",
+      "st.ick",
+      "stick.MIZ"
+     ],
+     "player": true
+    },
+    {
+     "name": "bro7ncos1.MIZ",
+     "ubisoft": [
+      "bro7ncos1.MIZ"
+     ],
+     "player": false
+    }
+   ]
+  },
+  {
+   "id": "87nn50brext85r3v6d5ph6v2n",
+   "team_id": "4rnmu0zsnz1qkh4k5n9arh8b8",
+   "name": "NC State Black",
+   "school": "North Carolina State University",
+   "school_short": "NCSU",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#000000",
+   "color_alt": "#FFFFFF",
+   "logo_url": "https://images.leagueos.gg/teams/4rnmu0zsnz1qkh4k5n9arh8b8/648cff50f14cfcf90ebf453a",
+   "clan_tag": "NCSU",
+   "record": {
+    "wins": 1,
+    "losses": 0,
+    "game_wins": 1,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "Fabled",
+     "ubisoft": [
+      "Fabled.NCSU"
+     ],
+     "player": false
+    },
+    {
+     "name": "Bubbi.NCSU",
+     "ubisoft": [
+      "Bubbi.NCSU",
+      "Bubbi.Bubbi",
+      "Buubbii_"
+     ],
+     "player": true
+    },
+    {
+     "name": "uHqte",
+     "ubisoft": [
+      "uhqte"
+     ],
+     "player": true
+    },
+    {
+     "name": "Quandvious_III",
+     "ubisoft": [
+      "Quandavious_III",
+      "Quandvious.NCSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "MaplePumpkin",
+     "ubisoft": [
+      "Map1ePumpk1n"
+     ],
+     "player": true
+    },
+    {
+     "name": "rennrenn_ghale",
+     "ubisoft": [
+      "RennRenn_Ghale"
+     ],
+     "player": true
+    },
+    {
+     "name": "trinton",
+     "ubisoft": [
+      "trinton."
+     ],
+     "player": true
+    },
+    {
+     "name": "Jimathin",
+     "ubisoft": [
+      "FRICKRONNIE2K"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "9efnnpvac41dzftp2c2gn9bgm",
+   "team_id": "4nuuuozwryqwu83p1aaiist4s",
+   "name": "Niner Esports Gold",
+   "school": "University of North Carolina at Charlotte",
+   "school_short": "",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#005035",
+   "color_alt": "#A49665",
+   "logo_url": "https://images.leagueos.gg/teams/4nuuuozwryqwu83p1aaiist4s/6490bf2af14cfcf90ebf45d9",
+   "clan_tag": "UNCC",
+   "record": {
+    "wins": 0,
+    "losses": 3,
+    "game_wins": 1,
+    "game_losses": 6
+   },
+   "players": [
+    {
+     "name": "Arrolyt",
+     "ubisoft": [
+      "ArroLyt.CLT"
+     ],
+     "player": false
+    },
+    {
+     "name": "Boom.CLT",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "nav",
+     "ubisoft": [
+      "Nav.CLT"
+     ],
+     "player": false
+    },
+    {
+     "name": "Red.CLT",
+     "ubisoft": [
+      "v3Ivt",
+      "Red.CLT",
+      "RedFiasco"
+     ],
+     "player": false
+    },
+    {
+     "name": "Ruta",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Just_Leif",
+     "ubisoft": [
+      "Just_Leif"
+     ],
+     "player": true
+    },
+    {
+     "name": "Ethynl_",
+     "ubisoft": [
+      "Ethynl_"
+     ],
+     "player": true
+    },
+    {
+     "name": "Gnashty Legend",
+     "ubisoft": [
+      "GnashtyLegend"
+     ],
+     "player": true
+    },
+    {
+     "name": "lil_liesz",
+     "ubisoft": [
+      "lil_liesz"
+     ],
+     "player": true
+    },
+    {
+     "name": "beasticide",
+     "ubisoft": [
+      "beasticide"
+     ],
+     "player": true
+    },
+    {
+     "name": "NotLuna",
+     "ubisoft": [
+      "NotLuna_"
+     ],
+     "player": true
+    },
+    {
+     "name": "li1boogie",
+     "ubisoft": [
+      "li1boogie"
+     ],
+     "player": true
+    },
+    {
+     "name": "nofreestyle3",
+     "ubisoft": [
+      "lilukwyldcatfan",
+      "nofreestyle3"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "32wc6hxpcq1v5ha4l3puc0z44",
+   "team_id": "2klm0ujajnaa0y7xfw0vfitdh",
+   "name": "Northeastern Black",
+   "school": "Northeastern University",
+   "school_short": "Northeastern",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#000000",
+   "color_alt": "#E31E36",
+   "logo_url": "https://images.leagueos.gg/teams/2klm0ujajnaa0y7xfw0vfitdh/648d04f3f14cfcf90ebf453c",
+   "clan_tag": "NU",
+   "record": {
+    "wins": 2,
+    "losses": 0,
+    "game_wins": 4,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "JTurbo",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "dieWafeln",
+     "ubisoft": [
+      "dieWafeln"
+     ],
+     "player": true
+    },
+    {
+     "name": "Norisk",
+     "ubisoft": [
+      "Norisk_"
+     ],
+     "player": true
+    },
+    {
+     "name": "BlackSoccerMom",
+     "ubisoft": [
+      "BlackSoccerMom"
+     ],
+     "player": true
+    },
+    {
+     "name": "Plan3t0id",
+     "ubisoft": [
+      "Plan3t0id"
+     ],
+     "player": true
+    },
+    {
+     "name": "Nicosonic",
+     "ubisoft": [
+      "Nicosonic123"
+     ],
+     "player": true
+    },
+    {
+     "name": "Bandaze",
+     "ubisoft": [
+      "Bandaze"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "5jgzwa531kacna1okrzr2xeov",
+   "team_id": "9af06nprfwoclre3g9q9onm5n",
+   "name": "SMU Huskies Maroon",
+   "school": "Saint Mary's University (Halifax)",
+   "school_short": "",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#612141",
+   "color_alt": "#FFFFFF",
+   "logo_url": "https://images.leagueos.gg/teams/9af06nprfwoclre3g9q9onm5n/648d1f86832b120a065ce02a",
+   "clan_tag": "SMU",
+   "record": {
+    "wins": 0,
+    "losses": 2,
+    "game_wins": 0,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "Greg SMU",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "michaelsky18",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "tadaa",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Watermelon",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "pmoneysnipr",
+     "ubisoft": [
+      "pmoneysnipr"
+     ],
+     "player": true
+    },
+    {
+     "name": "skyze09",
+     "ubisoft": [
+      "SkyzeSZN"
+     ],
+     "player": true
+    },
+    {
+     "name": "Noodlehero",
+     "ubisoft": [
+      "NoodIeHero"
+     ],
+     "player": true
+    },
+    {
+     "name": "SMRF",
+     "ubisoft": [
+      "S.M.R.F."
+     ],
+     "player": true
+    },
+    {
+     "name": "xeromani",
+     "ubisoft": [
+      "xeromani"
+     ],
+     "player": true
+    },
+    {
+     "name": "Positive",
+     "ubisoft": [
+      "M0MMYASMRLVR"
+     ],
+     "player": true
+    },
+    {
+     "name": "Soft.Ping",
+     "ubisoft": [
+      "Soft.Ping"
+     ],
+     "player": true
+    },
+    {
+     "name": "Sean",
+     "ubisoft": [
+      "BBGShawny"
+     ],
+     "player": true
+    },
+    {
+     "name": "Karya_24",
+     "ubisoft": [
+      "Karya_24"
+     ],
+     "player": true
+    },
+    {
+     "name": "Unique_Canadian",
+     "ubisoft": [
+      "Unique_Canadian",
+      "ScienceisAmazed"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "190r0zu8t80zcf8d3yg6tgbp6",
+   "team_id": "4utvq2rsnpkhksypq52wpd2uo",
+   "name": "Sam Houston State Orange",
+   "school": "Sam Houston State University",
+   "school_short": "Sam Houston State",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#F56423",
+   "color_alt": "#1e1e1e1e",
+   "logo_url": "https://images.leagueos.gg/teams/4utvq2rsnpkhksypq52wpd2uo/7xc3op7lm0p6nh5uqh9xqc9ua",
+   "clan_tag": "SHSU",
+   "record": {
+    "wins": 2,
+    "losses": 0,
+    "game_wins": 4,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "dropout",
+     "ubisoft": [
+      "dropoutasian"
+     ],
+     "player": false
+    },
+    {
+     "name": "Arctic.SHSU",
+     "ubisoft": [
+      "Arctic.SHSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "osmnx.SHSU",
+     "ubisoft": [
+      "osmnx.SHSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Average.SHSU",
+     "ubisoft": [
+      "a1average2guy3",
+      "Average.SHSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Stryfe.SHSU",
+     "ubisoft": [
+      "Stryfe.SHSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "ThatKidKirch",
+     "ubisoft": [
+      "ThatKidKirch"
+     ],
+     "player": true
+    },
+    {
+     "name": "Quartzz.SHSU",
+     "ubisoft": [
+      "Quartzz3",
+      "Quartzz.SHSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Blondbandit1",
+     "ubisoft": [
+      "Blondbandit1"
+     ],
+     "player": true
+    },
+    {
+     "name": "Malachi",
+     "ubisoft": [
+      "KxtmmYT",
+      "Malachi.SHSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "cptyuri",
+     "ubisoft": [
+      "CptYuri.SHSU"
+     ],
+     "player": false
+    }
+   ]
+  },
+  {
+   "id": "2w9aw2897px2bbi7wx1s2mc6r",
+   "team_id": "69wmsbkpbv8xq98ypqngscp9x",
+   "name": "Tarleton State Purple",
+   "school": "Tarleton State University",
+   "school_short": "",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#4F2D7F",
+   "color_alt": "#FFFFFF",
+   "logo_url": "https://images.leagueos.gg/teams/69wmsbkpbv8xq98ypqngscp9x/64cd89186739af90bbab1570",
+   "clan_tag": "Tarleton",
+   "record": {
+    "wins": 0,
+    "losses": 0,
+    "game_wins": 0,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "Dampishpenny",
+     "ubisoft": [
+      "DampishPenny3"
+     ],
+     "player": false
+    },
+    {
+     "name": "Schlitten",
+     "ubisoft": [
+      "Schlitten.TS"
+     ],
+     "player": true
+    },
+    {
+     "name": "Vedrolus",
+     "ubisoft": [
+      "Ved.TS"
+     ],
+     "player": true
+    },
+    {
+     "name": "PKE_ERA",
+     "ubisoft": [
+      "PKE.TS"
+     ],
+     "player": true
+    },
+    {
+     "name": "SynC",
+     "ubisoft": [
+      "SynC.0",
+      "SynC.TS"
+     ],
+     "player": true
+    },
+    {
+     "name": "bob",
+     "ubisoft": [
+      "bawbert.TS"
+     ],
+     "player": true
+    },
+    {
+     "name": "Byxis",
+     "ubisoft": [
+      "Byxis.TS"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "f1vnli264lr2qhzzd766k98sr",
+   "team_id": "a4kqzd8fgrfne2mslkghslgkj",
+   "name": "UAH Charger White",
+   "school": "The University of Alabama in Huntsville",
+   "school_short": "",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#0077C8",
+   "color_alt": "#2C2A29",
+   "logo_url": "https://images.leagueos.gg/teams/a4kqzd8fgrfne2mslkghslgkj/648d4c07f14cfcf90ebf456f",
+   "clan_tag": "UAH",
+   "record": {
+    "wins": 0,
+    "losses": 2,
+    "game_wins": 1,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "tallman3.14",
+     "ubisoft": [
+      "Tallman3.14"
+     ],
+     "player": false
+    },
+    {
+     "name": "daemon",
+     "ubisoft": [
+      "Daemon.UAH"
+     ],
+     "player": true
+    },
+    {
+     "name": "Jellyholic",
+     "ubisoft": [
+      "Jellyholic.UAH",
+      "Jellyholic."
+     ],
+     "player": true
+    },
+    {
+     "name": "Goob.",
+     "ubisoft": [
+      "Gloop..."
+     ],
+     "player": true
+    },
+    {
+     "name": "Flex.UAH",
+     "ubisoft": [
+      "Flex4600"
+     ],
+     "player": true
+    },
+    {
+     "name": "NachoFries",
+     "ubisoft": [
+      "NachoFries_08"
+     ],
+     "player": true
+    },
+    {
+     "name": "SAMiguess",
+     "ubisoft": [
+      "SAMiguess-_-"
+     ],
+     "player": true
+    },
+    {
+     "name": "CtrlAltDyleted",
+     "ubisoft": [
+      "CtrlAltDyleted"
+     ],
+     "player": true
+    },
+    {
+     "name": "EFRVN",
+     "ubisoft": [
+      "The_Dude_."
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "ac6d93f3ds5o0gu8tvlm4uf4j",
+   "team_id": "5hww3k35toklh8wjwyw0lj9gs",
+   "name": "UCSC Amber",
+   "school": "University of California, Santa Cruz",
+   "school_short": "",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#FFCB05",
+   "color_alt": "#00588F",
+   "logo_url": "https://images.leagueos.gg/teams/5hww3k35toklh8wjwyw0lj9gs/648d5196832b120a065ce048",
+   "clan_tag": "[UCSC]",
+   "record": {
+    "wins": 0,
+    "losses": 1,
+    "game_wins": 1,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "Paro.exe",
+     "ubisoft": [
+      "Paro--"
+     ],
+     "player": false
+    },
+    {
+     "name": "Nameless.197",
+     "ubisoft": [
+      "Nameless.197"
+     ],
+     "player": false
+    },
+    {
+     "name": "Slug Esports",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Felarix",
+     "ubisoft": [
+      "Felarix"
+     ],
+     "player": true
+    },
+    {
+     "name": "Meperinos",
+     "ubisoft": [
+      "His.Kitten",
+      "m.ep"
+     ],
+     "player": true
+    },
+    {
+     "name": "TheEvilUnocorn",
+     "ubisoft": [
+      "TheEvilUnocorn",
+      "TheEvilUnocorn2"
+     ],
+     "player": true
+    },
+    {
+     "name": "Vitalisized",
+     "ubisoft": [
+      "Vitalisized"
+     ],
+     "player": true
+    },
+    {
+     "name": "Instiii",
+     "ubisoft": [
+      "Instiii0032"
+     ],
+     "player": true
+    },
+    {
+     "name": "Maniax",
+     "ubisoft": [
+      "Maniax625"
+     ],
+     "player": true
+    },
+    {
+     "name": "UCSC ham",
+     "ubisoft": [
+      "hamUCSC"
+     ],
+     "player": true
+    },
+    {
+     "name": "SinUnhinged",
+     "ubisoft": [
+      "SinUnhinged"
+     ],
+     "player": true
+    },
+    {
+     "name": "big",
+     "ubisoft": [
+      "b1gq"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "4c5uk33cxb5mzek43axuxjvfa",
+   "team_id": "6sp44cawf3ik6pxq8vudancib",
+   "name": "UNIVERSITY OF NEW HAVEN CHARGERS GOLD",
+   "school": "University of New Haven",
+   "school_short": "",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#004B8D",
+   "color_alt": "#FFC629",
+   "logo_url": "https://images.leagueos.gg/teams/6sp44cawf3ik6pxq8vudancib/648d6d19832b120a065ce05c",
+   "clan_tag": "UNH",
+   "record": {
+    "wins": 0,
+    "losses": 1,
+    "game_wins": 1,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "generallystyxx",
+     "ubisoft": [
+      "generallystyxx"
+     ],
+     "player": false
+    },
+    {
+     "name": "speedrush64",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "UNewHaven Spectator",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Vywrecks",
+     "ubisoft": [
+      "Bak1_Hanma",
+      "Vywrecks"
+     ],
+     "player": false
+    },
+    {
+     "name": "xZerr6607",
+     "ubisoft": [
+      "xZerr6607"
+     ],
+     "player": true
+    },
+    {
+     "name": "EducatedAxis5",
+     "ubisoft": [
+      "DreamyB.Thug"
+     ],
+     "player": true
+    },
+    {
+     "name": "oelmer10",
+     "ubisoft": [
+      "oelmer10",
+      "DXR_10"
+     ],
+     "player": true
+    },
+    {
+     "name": "GameingGnome",
+     "ubisoft": [
+      "GameingGnome"
+     ],
+     "player": true
+    },
+    {
+     "name": "m4izh1y",
+     "ubisoft": [
+      "m4izh1y"
+     ],
+     "player": true
+    },
+    {
+     "name": "kbih-_-",
+     "ubisoft": [
+      "kbih-_-"
+     ],
+     "player": true
+    },
+    {
+     "name": "snoozydagoober",
+     "ubisoft": [
+      "mertdagoober",
+      "snoozydagoober"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "6qp76xna1lhp22kok0u40xgk9",
+   "team_id": "ediz664u4v7o7egtwlun2ffoz",
+   "name": "USU Blue",
+   "school": "Utah State University",
+   "school_short": "",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#31C4F1",
+   "color_alt": "#848484",
+   "logo_url": "https://images.leagueos.gg/teams/ediz664u4v7o7egtwlun2ffoz/64af0099006772381b3905c2",
+   "clan_tag": "USU",
+   "record": {
+    "wins": 2,
+    "losses": 0,
+    "game_wins": 4,
+    "game_losses": 1
+   },
+   "players": [
+    {
+     "name": "Bingus",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Leonardo",
+     "ubisoft": [
+      "Leonardo.unc"
+     ],
+     "player": false
+    },
+    {
+     "name": "Kenbot.USU",
+     "ubisoft": [
+      "Kenbot.USU",
+      "BSG-Kenbot"
+     ],
+     "player": true
+    },
+    {
+     "name": "hidebuff",
+     "ubisoft": [
+      "hidebuff.USU"
+     ],
+     "player": true
+    },
+    {
+     "name": "SwedeNess927",
+     "ubisoft": [
+      "SwedeNess927"
+     ],
+     "player": true
+    },
+    {
+     "name": "sneakyspiderman",
+     "ubisoft": [
+      "sneakyspiderman"
+     ],
+     "player": true
+    },
+    {
+     "name": "Snailonspeed.",
+     "ubisoft": [
+      "Snailonspeed."
+     ],
+     "player": true
+    },
+    {
+     "name": "banana.USU",
+     "ubisoft": [
+      "banana.USU"
+     ],
+     "player": true
+    },
+    {
+     "name": "MaliKitE.",
+     "ubisoft": [
+      "MaliKitE."
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "drdwb8ob429tjaxzmam0zln6m",
+   "team_id": "5mrjhzt43h6cvdnlf18ytzhl6",
+   "name": "University of Manitoba",
+   "school": "University of Manitoba",
+   "school_short": "UManitoba",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#4F2C1D",
+   "color_alt": "#F2A900",
+   "logo_url": "https://images.leagueos.gg/teams/5mrjhzt43h6cvdnlf18ytzhl6/evfgqq7ou2aeduip4t5e13ei9",
+   "clan_tag": "UM",
+   "record": {
+    "wins": 0,
+    "losses": 0,
+    "game_wins": 0,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "clone",
+     "ubisoft": [
+      "clone101_",
+      "clone.UM",
+      "baguette...."
+     ],
+     "player": true
+    },
+    {
+     "name": "Sewer",
+     "ubisoft": [
+      "SewerSaint."
+     ],
+     "player": true
+    },
+    {
+     "name": "CplStank",
+     "ubisoft": [
+      "CplStank",
+      "CplDank"
+     ],
+     "player": true
+    },
+    {
+     "name": "Ayan",
+     "ubisoft": [
+      "Ayan.BNTH",
+      "IlIIlIlIIIIII"
+     ],
+     "player": true
+    },
+    {
+     "name": "Mooseman",
+     "ubisoft": [
+      "Mooseman.."
+     ],
+     "player": true
+    },
+    {
+     "name": "KingJeSuis",
+     "ubisoft": [
+      "King.AK."
+     ],
+     "player": true
+    },
+    {
+     "name": "boot",
+     "ubisoft": [
+      "booot."
+     ],
+     "player": true
+    },
+    {
+     "name": "Lex",
+     "ubisoft": [
+      "Deathknight8569"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "59rinzbtha14ckupq1l8w3g1y",
+   "team_id": "5mjmo7z1oojsdfq5d5r90l41p",
+   "name": "WVU Tech",
+   "school": "WVU Tech",
+   "school_short": "",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#EAAA00",
+   "color_alt": "#002855",
+   "logo_url": "https://images.leagueos.gg/teams/5mjmo7z1oojsdfq5d5r90l41p/65132ea5a76ac0a080584e1e",
+   "clan_tag": "WVUT",
+   "record": {
+    "wins": 1,
+    "losses": 0,
+    "game_wins": 2,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "NukaBrad",
+     "ubisoft": [
+      "WVUTechEsports"
+     ],
+     "player": false
+    },
+    {
+     "name": "WVU Tech Esports",
+     "ubisoft": [
+      "WVUTechEsports"
+     ],
+     "player": false
+    },
+    {
+     "name": "Hilbert",
+     "ubisoft": [
+      "Hilbert225"
+     ],
+     "player": true
+    },
+    {
+     "name": "bizzy.biyombo",
+     "ubisoft": [
+      "bizzy.biyombo"
+     ],
+     "player": true
+    },
+    {
+     "name": "amgscythe",
+     "ubisoft": [
+      "amgscythe"
+     ],
+     "player": true
+    },
+    {
+     "name": "BockShiesty",
+     "ubisoft": [
+      "BockShiesty"
+     ],
+     "player": true
+    },
+    {
+     "name": "Salad",
+     "ubisoft": [
+      "salad81"
+     ],
+     "player": true
+    },
+    {
+     "name": "DaBeastLoL",
+     "ubisoft": [
+      "DaBeastLoL6988"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "6115srrtejd5ptae9qzld2r3y",
+   "team_id": "b73blq2ol1uhvbtv6csj0l9xi",
+   "name": "Widener University Gold",
+   "school": "Widener University",
+   "school_short": "",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#264F91",
+   "color_alt": "#F6C34A",
+   "logo_url": "https://images.leagueos.gg/teams/b73blq2ol1uhvbtv6csj0l9xi/6582626fbea52155b106ab72",
+   "clan_tag": "WU",
+   "record": {
+    "wins": 2,
+    "losses": 0,
+    "game_wins": 4,
+    "game_losses": 1
+   },
+   "players": [
+    {
+     "name": "Coach Phil",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "WU.PP",
+     "ubisoft": [
+      "PP_Pincher"
+     ],
+     "player": false
+    },
+    {
+     "name": "Kirrbo",
+     "ubisoft": [
+      "Kirrbo.WU",
+      "dinosaurcake452",
+      "The-_-MiIkman",
+      "The-_-Milkman"
+     ],
+     "player": true
+    },
+    {
+     "name": "Dark",
+     "ubisoft": [
+      "darkninjanight1",
+      "DarkNinja.WU"
+     ],
+     "player": true
+    },
+    {
+     "name": "rxspect_boogie",
+     "ubisoft": [
+      "Rxspect_boogie",
+      "Rxspect.WU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Coffee.R6",
+     "ubisoft": [
+      "R6Coffee",
+      "Coffee.WU"
+     ],
+     "player": true
+    },
+    {
+     "name": "MafiaToasterMan",
+     "ubisoft": [
+      "MafiaToasterMan",
+      "Toaster.WU"
+     ],
+     "player": true
+    },
+    {
+     "name": "helixgod",
+     "ubisoft": [
+      "MiniHelixGid872"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "0r0ztkniwxauvclndp8nkg17i",
+   "team_id": "a7xgcgys7rzj08fv2mzpo3p4t",
+   "name": "Yotes Blue",
+   "school": "California State University, San Bernardino",
+   "school_short": "CSUSB",
+   "division": "IV",
+   "event_id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "group": "",
+   "color": "#0065BD",
+   "color_alt": "#808284",
+   "logo_url": "https://images.leagueos.gg/teams/a7xgcgys7rzj08fv2mzpo3p4t/ced0s2kdod77ieuhi037pa73u",
+   "clan_tag": "CSUSB",
+   "record": {
+    "wins": 0,
+    "losses": 1,
+    "game_wins": 0,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "Rich | The Abbot",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "zamasuuu_",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Wjskas",
+     "ubisoft": [
+      "xwiskas"
+     ],
+     "player": true
+    },
+    {
+     "name": "Proto",
+     "ubisoft": [
+      "Proto.typer"
+     ],
+     "player": true
+    },
+    {
+     "name": "luzqi",
+     "ubisoft": [
+      "luzqi",
+      "IIGrimzyyII"
+     ],
+     "player": true
+    },
+    {
+     "name": "OetamXV",
+     "ubisoft": [
+      "FakeJew."
+     ],
+     "player": true
+    },
+    {
+     "name": "fishalert2026",
+     "ubisoft": [],
+     "player": true
+    },
+    {
+     "name": "datboogie.",
+     "ubisoft": [
+      "UsoOhio"
+     ],
+     "player": true
+    },
+    {
+     "name": "trevorsaurus",
+     "ubisoft": [
+      "trevorsaurus22"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "4eniuecqhbh880jjf252o0l0k",
+   "team_id": "b4gdb2i3dq9cdx1n549xxmp3e",
+   "name": "AWPE Gold",
+   "school": "Army West Point",
+   "school_short": "AWPE",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#D3BC8D",
+   "color_alt": "#2C2A29",
+   "logo_url": "https://images.leagueos.gg/teams/b4gdb2i3dq9cdx1n549xxmp3e/648c8fb209cdacdd5ee7cfbc",
+   "clan_tag": "AWPE",
+   "record": {
+    "wins": 0,
+    "losses": 1,
+    "game_wins": 0,
+    "game_losses": 1
+   },
+   "players": [
+    {
+     "name": "Army West Point",
+     "ubisoft": [
+      "armywpesports"
+     ],
+     "player": false
+    },
+    {
+     "name": "SergeantBean",
+     "ubisoft": [
+      "SergeantBean704"
+     ],
+     "player": true
+    },
+    {
+     "name": "thegoatwrld",
+     "ubisoft": [
+      "thegoatwrld40"
+     ],
+     "player": true
+    },
+    {
+     "name": "Iconic7256",
+     "ubisoft": [
+      "Iconic7256"
+     ],
+     "player": true
+    },
+    {
+     "name": "Keys-.",
+     "ubisoft": [
+      "Keys-."
+     ],
+     "player": true
+    },
+    {
+     "name": "Unorthodox",
+     "ubisoft": [
+      "Unorthodoxy_"
+     ],
+     "player": true
+    },
+    {
+     "name": "Gargoyle9000",
+     "ubisoft": [
+      "Gargoyle9001"
+     ],
+     "player": true
+    },
+    {
+     "name": "sully._",
+     "ubisoft": [
+      "suIIy._"
+     ],
+     "player": true
+    },
+    {
+     "name": "Arkham",
+     "ubisoft": [
+      "The_Arkham_Bat"
+     ],
+     "player": true
+    },
+    {
+     "name": "Skinach",
+     "ubisoft": [
+      "Skinach"
+     ],
+     "player": true
+    },
+    {
+     "name": "box3215",
+     "ubisoft": [
+      "box3215"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "4ej976akwmvqxjj3n702itukc",
+   "team_id": "ei9knuzcb2it1o4t5ufyya3t3",
+   "name": "Alaska Esports",
+   "school": "University of Alaska Fairbanks",
+   "school_short": "",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#236294",
+   "color_alt": "#FECE07",
+   "logo_url": "https://images.leagueos.gg/teams/ei9knuzcb2it1o4t5ufyya3t3/649c9b736aea1efa3a78b40f",
+   "clan_tag": "UAF",
+   "record": {
+    "wins": 0,
+    "losses": 2,
+    "game_wins": 0,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "NSXPuppet",
+     "ubisoft": [
+      "NSXPuppet"
+     ],
+     "player": true
+    },
+    {
+     "name": "Rheecez-_-",
+     "ubisoft": [
+      "Rheecez-_-"
+     ],
+     "player": true
+    },
+    {
+     "name": "MalakaiDaCoolest",
+     "ubisoft": [
+      "Jonnymcman15"
+     ],
+     "player": true
+    },
+    {
+     "name": "CallMeKainoa",
+     "ubisoft": [
+      "CallMeKainoa"
+     ],
+     "player": true
+    },
+    {
+     "name": "Aaluk_907",
+     "ubisoft": [
+      "Aaluk_907"
+     ],
+     "player": true
+    },
+    {
+     "name": "urchinx",
+     "ubisoft": [
+      "urchinx"
+     ],
+     "player": true
+    },
+    {
+     "name": "Sinuel",
+     "ubisoft": [],
+     "player": false
+    }
+   ]
+  },
+  {
+   "id": "5c9a77reeq93oleyzmyy6kf00",
+   "team_id": "5gid3ves5a2ja1m8bw32otcri",
+   "name": "Bentley Strike Red",
+   "school": "Bentley University",
+   "school_short": "Bentley",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#0075BE",
+   "color_alt": "#2B4566",
+   "logo_url": "https://images.leagueos.gg/teams/5gid3ves5a2ja1m8bw32otcri/boxwjcnz3ivcx00ltyehq0cve",
+   "clan_tag": "Bentley",
+   "record": {
+    "wins": 1,
+    "losses": 0,
+    "game_wins": 1,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "Insane",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Flinagus",
+     "ubisoft": [
+      "flinagus"
+     ],
+     "player": true
+    },
+    {
+     "name": "camisdafam",
+     "ubisoft": [
+      "camisdafam"
+     ],
+     "player": true
+    },
+    {
+     "name": "TheSovietUnion.",
+     "ubisoft": [
+      "TheSovietUnion."
+     ],
+     "player": true
+    },
+    {
+     "name": "xMudii",
+     "ubisoft": [
+      "xMudii"
+     ],
+     "player": true
+    },
+    {
+     "name": "GXShattering",
+     "ubisoft": [
+      "GX_Shatering"
+     ],
+     "player": true
+    },
+    {
+     "name": "not_raysist",
+     "ubisoft": [
+      "not_raysist"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "771zls1vxua1z07we0mzjkrle",
+   "team_id": "6guy10d3qadpa092x9c411oij",
+   "name": "Buena Vista",
+   "school": "Buena Vista University",
+   "school_short": "",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#13294B",
+   "color_alt": "#FEBA12",
+   "logo_url": "https://images.leagueos.gg/teams/6guy10d3qadpa092x9c411oij/648c9656b9d6364f68e676dd",
+   "clan_tag": "BVU",
+   "record": {
+    "wins": 1,
+    "losses": 1,
+    "game_wins": 3,
+    "game_losses": 3
+   },
+   "players": [
+    {
+     "name": "JVBandJV",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Trevor Berneking",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "FullyHectic7",
+     "ubisoft": [
+      "FullyHectic."
+     ],
+     "player": true
+    },
+    {
+     "name": "GuysPlace",
+     "ubisoft": [
+      "GuysPlace"
+     ],
+     "player": true
+    },
+    {
+     "name": "clnzr911",
+     "ubisoft": [
+      "Colonizer6911"
+     ],
+     "player": true
+    },
+    {
+     "name": "Kix",
+     "ubisoft": [
+      "jjawesome334"
+     ],
+     "player": true
+    },
+    {
+     "name": "Hammurai",
+     "ubisoft": [
+      "Hammurai07",
+      "Hammurai"
+     ],
+     "player": true
+    },
+    {
+     "name": "Zaastin",
+     "ubisoft": [
+      "Zaastin"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "eg8io068925ejdbwdwc60zxht",
+   "team_id": "88mlb7jmeuddhndus04mt59zk",
+   "name": "Carthage Firebirds",
+   "school": "Carthage College",
+   "school_short": "",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#CE0E2D",
+   "color_alt": "#000000",
+   "logo_url": "https://images.leagueos.gg/teams/88mlb7jmeuddhndus04mt59zk/ea3fgf2abzul9adzae6kltcj5",
+   "clan_tag": "CARTH",
+   "record": {
+    "wins": 2,
+    "losses": 0,
+    "game_wins": 4,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "Argonaut",
+     "ubisoft": [
+      "ValkyrieT-T"
+     ],
+     "player": false
+    },
+    {
+     "name": "coachrobert1",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Typhoon.FBRD",
+     "ubisoft": [
+      "Typhoon.FBRD"
+     ],
+     "player": true
+    },
+    {
+     "name": "Paltry",
+     "ubisoft": [
+      "Paltry.FBRD"
+     ],
+     "player": true
+    },
+    {
+     "name": "TurbidJuggler32",
+     "ubisoft": [
+      "TurbidJuggler32"
+     ],
+     "player": true
+    },
+    {
+     "name": "Sircat.FRBD",
+     "ubisoft": [
+      "Sircat.FRBD",
+      "Gamercat134"
+     ],
+     "player": true
+    },
+    {
+     "name": "TheEliteRanger",
+     "ubisoft": [
+      "TheEliteRanger"
+     ],
+     "player": true
+    },
+    {
+     "name": "iamshrimp12.",
+     "ubisoft": [
+      "IamShrimp27"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "bv0t445mrz4zq00v119lreku8",
+   "team_id": "3rh5os9c6rwq44sm3webw2vug",
+   "name": "Chico Red",
+   "school": "California State University, Chico",
+   "school_short": "Chico State",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#9D2235",
+   "color_alt": "#75787B",
+   "logo_url": "https://images.leagueos.gg/teams/3rh5os9c6rwq44sm3webw2vug/02xunkzrmth1p5rie5jx75xub",
+   "clan_tag": "CSUC",
+   "record": {
+    "wins": 0,
+    "losses": 1,
+    "game_wins": 0,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "Change",
+     "ubisoft": [
+      "TheChange24"
+     ],
+     "player": true
+    },
+    {
+     "name": "Alanator27",
+     "ubisoft": [
+      "Alanator27"
+     ],
+     "player": true
+    },
+    {
+     "name": "FNX44",
+     "ubisoft": [
+      "FNX44"
+     ],
+     "player": true
+    },
+    {
+     "name": "Angulo",
+     "ubisoft": [
+      "MusicDix"
+     ],
+     "player": true
+    },
+    {
+     "name": "beto784",
+     "ubisoft": [
+      "beto784"
+     ],
+     "player": true
+    },
+    {
+     "name": "JohnA-M",
+     "ubisoft": [
+      "JohnA-M"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "cu8rjhkkb2cdpnjss83wd3w98",
+   "team_id": "eols22calag2n4ynfc4dskgfm",
+   "name": "Cumberland Black",
+   "school": "Cumberland University",
+   "school_short": "",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#A70026",
+   "color_alt": "#C0C0C0",
+   "logo_url": "https://images.leagueos.gg/teams/eols22calag2n4ynfc4dskgfm/b0kb3ghl7p5oude5kdho6r9ey",
+   "clan_tag": "PHX",
+   "record": {
+    "wins": 0,
+    "losses": 0,
+    "game_wins": 0,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "The End of You",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Nxrway",
+     "ubisoft": [
+      "Nxrway"
+     ],
+     "player": true
+    },
+    {
+     "name": "jrazer67",
+     "ubisoft": [
+      "Jrazer.BNTH",
+      "Jrazer67.UofL"
+     ],
+     "player": true
+    },
+    {
+     "name": "Ashaman",
+     "ubisoft": [
+      "Ashaman.CU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Minnie",
+     "ubisoft": [
+      "MlNN1E"
+     ],
+     "player": true
+    },
+    {
+     "name": "RAT3L",
+     "ubisoft": [
+      "Mr.RAT3L"
+     ],
+     "player": true
+    },
+    {
+     "name": "CipherCantShoot",
+     "ubisoft": [
+      "CipherCantShoot"
+     ],
+     "player": true
+    },
+    {
+     "name": "derk",
+     "ubisoft": [
+      "derk.cu"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "6e0wn5ua0bfvvde9ule1t9vvq",
+   "team_id": "0y89fpvpah5t7949y86p2sqxz",
+   "name": "Dakota State Blue",
+   "school": "Dakota State University",
+   "school_short": "",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#004165",
+   "color_alt": "#00A9E0",
+   "logo_url": "https://images.leagueos.gg/teams/0y89fpvpah5t7949y86p2sqxz/65ca6f8c136f7d5107921667",
+   "clan_tag": "DSU",
+   "record": {
+    "wins": 1,
+    "losses": 1,
+    "game_wins": 2,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "Andy",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "LOG.DSU",
+     "ubisoft": [
+      "LOG.DSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Tissue.DSU",
+     "ubisoft": [
+      "Tissue.DSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Death.DSU",
+     "ubisoft": [
+      "Death.DSU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Jedikid1",
+     "ubisoft": [
+      "Jedikid1"
+     ],
+     "player": true
+    },
+    {
+     "name": "Grady Grande",
+     "ubisoft": [
+      "ZEESTY_JYNXZI"
+     ],
+     "player": true
+    },
+    {
+     "name": "patteonmute",
+     "ubisoft": [
+      "patteonmute"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "47wcnt2hxtpwq7g4w67ctswej",
+   "team_id": "52hgjsz3eha61m9ujqdvp9ny9",
+   "name": "Eagles Varsity",
+   "school": "Embry-Riddle Aeronautical University",
+   "school_short": "",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#00549A",
+   "color_alt": "#EFAC1C",
+   "logo_url": "https://images.leagueos.gg/teams/52hgjsz3eha61m9ujqdvp9ny9/648cac7f832b120a065cdfde",
+   "clan_tag": "ERAU",
+   "record": {
+    "wins": 2,
+    "losses": 0,
+    "game_wins": 4,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "Riptide",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "W4t3rm3l0nCR",
+     "ubisoft": [
+      "W4t3rm3l0nCR",
+      "W4t3rm3l0n.ERAU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Slepdt",
+     "ubisoft": [
+      "slepdt.ERAU"
+     ],
+     "player": true
+    },
+    {
+     "name": "TheGeneral",
+     "ubisoft": [
+      "TheGeneral.ERAU"
+     ],
+     "player": true
+    },
+    {
+     "name": "ItsBugzyz",
+     "ubisoft": [
+      "Bugzyz.ERAU"
+     ],
+     "player": true
+    },
+    {
+     "name": "jwolf730",
+     "ubisoft": [
+      "Jwolf_xD"
+     ],
+     "player": true
+    },
+    {
+     "name": "Krono",
+     "ubisoft": [
+      "Kro.ERAU"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "e5cvp60i84vla5fr3hj88ipm5",
+   "team_id": "a1ot1idtijy5ksbvvnjeo2jr0",
+   "name": "FLPoly Phoenixes",
+   "school": "Florida Polytechnic University",
+   "school_short": "",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#532D8E",
+   "color_alt": "#B1B3B5",
+   "logo_url": "https://images.leagueos.gg/teams/a1ot1idtijy5ksbvvnjeo2jr0/64b593af4039ba2f144e2a29",
+   "clan_tag": "FLPoly",
+   "record": {
+    "wins": 0,
+    "losses": 0,
+    "game_wins": 0,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "mishu",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "PrincessSharts",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "QuackMuffin",
+     "ubisoft": [
+      "QuackMuffin"
+     ],
+     "player": true
+    },
+    {
+     "name": "Temprug01031",
+     "ubisoft": [
+      "BBPanda."
+     ],
+     "player": true
+    },
+    {
+     "name": "BrunoTheOlive",
+     "ubisoft": [
+      "BrunoTheOlive"
+     ],
+     "player": true
+    },
+    {
+     "name": "DementiaDaniel",
+     "ubisoft": [
+      "DementiaDaniel"
+     ],
+     "player": true
+    },
+    {
+     "name": "JayHaw02",
+     "ubisoft": [
+      "JayHawk02"
+     ],
+     "player": true
+    },
+    {
+     "name": "daquavius746",
+     "ubisoft": [
+      "supersaiyankiwi"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "38gxpqmr06dkiri8lcfqsw7go",
+   "team_id": "6ozvrtts7pqlzy0i45okz4p7f",
+   "name": "Grims",
+   "school": "New England College",
+   "school_short": "",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#18468C",
+   "color_alt": "#CE3438",
+   "logo_url": "https://images.leagueos.gg/teams/6ozvrtts7pqlzy0i45okz4p7f/61ct68lp47rfz3zxu7nv3e7r2",
+   "clan_tag": "NEC",
+   "record": {
+    "wins": 1,
+    "losses": 1,
+    "game_wins": 2,
+    "game_losses": 3
+   },
+   "players": [
+    {
+     "name": "Josh [NEC]",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Booki",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Bsauce",
+     "ubisoft": [
+      "BsauceR6"
+     ],
+     "player": true
+    },
+    {
+     "name": "IT_The_Lightskin",
+     "ubisoft": [
+      "WalkemDownIT"
+     ],
+     "player": true
+    },
+    {
+     "name": "ShquishyDogg",
+     "ubisoft": [
+      "ShquishyDogg"
+     ],
+     "player": true
+    },
+    {
+     "name": "Hellen_Keller-_-",
+     "ubisoft": [
+      "HellenKeller_-_"
+     ],
+     "player": true
+    },
+    {
+     "name": "anthoknee",
+     "ubisoft": [
+      "iamAnthoknee"
+     ],
+     "player": true
+    },
+    {
+     "name": "Storm341",
+     "ubisoft": [
+      "Nightninja341"
+     ],
+     "player": true
+    },
+    {
+     "name": "caydenp7",
+     "ubisoft": [
+      "Syn-Stroking"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "eojov8pi9d2v4h44ldhxrtihv",
+   "team_id": "7q1s8mciqvhj5b86h5ev90p0w",
+   "name": "Kettering Academy",
+   "school": "Kettering University",
+   "school_short": "",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#F8BE13",
+   "color_alt": "#0B223F",
+   "logo_url": "https://images.leagueos.gg/teams/7q1s8mciqvhj5b86h5ev90p0w/648cc9fff14cfcf90ebf451c",
+   "clan_tag": "KU",
+   "record": {
+    "wins": 0,
+    "losses": 1,
+    "game_wins": 0,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "AGrandOrange",
+     "ubisoft": [
+      "AGrandOrange"
+     ],
+     "player": false
+    },
+    {
+     "name": "Derp.KU",
+     "ubisoft": [
+      "Derp.KU"
+     ],
+     "player": false
+    },
+    {
+     "name": "Gunslinger_Gary",
+     "ubisoft": [
+      "Gunslinger_Gary"
+     ],
+     "player": false
+    },
+    {
+     "name": "Lucas.KU",
+     "ubisoft": [
+      "Landmine_Larry"
+     ],
+     "player": false
+    },
+    {
+     "name": "Brayden.KU",
+     "ubisoft": [
+      "Brayden.KU"
+     ],
+     "player": true
+    },
+    {
+     "name": "PCKLDR.KU",
+     "ubisoft": [
+      "PCKLDR.KU",
+      "WarpedVortex.KU"
+     ],
+     "player": true
+    },
+    {
+     "name": "strawbread",
+     "ubisoft": [
+      "strawbread.KU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Dillpickle.KU",
+     "ubisoft": [
+      "Dillpickle.ku"
+     ],
+     "player": true
+    },
+    {
+     "name": "Andre5618.KU",
+     "ubisoft": [
+      "Andre5618"
+     ],
+     "player": true
+    },
+    {
+     "name": "Mr.NewVegas",
+     "ubisoft": [
+      "Mr.NewVegas.KU"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "5yeo7bgv73pvnrilx7m68zgn7",
+   "team_id": "f2cjmpi6p8g2n3bziaf3fonh0",
+   "name": "Knighthaven",
+   "school": "University of Central Florida",
+   "school_short": "",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#B7A369",
+   "color_alt": "#000000",
+   "logo_url": "https://images.leagueos.gg/teams/f2cjmpi6p8g2n3bziaf3fonh0/64fa8c12015acdfaed3a36a6",
+   "clan_tag": "KHVN",
+   "record": {
+    "wins": 0,
+    "losses": 1,
+    "game_wins": 0,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "GameOverMR",
+     "ubisoft": [
+      "GameOverMR.UCF"
+     ],
+     "player": true
+    },
+    {
+     "name": "PurpleDVD",
+     "ubisoft": [
+      "ChrisGallardo20"
+     ],
+     "player": true
+    },
+    {
+     "name": "Gunter",
+     "ubisoft": [
+      "Gunter-_-_-"
+     ],
+     "player": true
+    },
+    {
+     "name": "Phoenix9145",
+     "ubisoft": [
+      "Phoenix.UCF"
+     ],
+     "player": true
+    },
+    {
+     "name": "rain.UCF",
+     "ubisoft": [
+      "rain.UCF"
+     ],
+     "player": true
+    },
+    {
+     "name": "sOUpL0rD",
+     "ubisoft": [
+      "sOUpL0rD.UCF"
+     ],
+     "player": true
+    },
+    {
+     "name": "TeenageMercenary",
+     "ubisoft": [
+      "Gojets99",
+      "TeenageMerc"
+     ],
+     "player": true
+    },
+    {
+     "name": "wicked",
+     "ubisoft": [
+      "wicked.UCF",
+      "wickedsama"
+     ],
+     "player": true
+    },
+    {
+     "name": "ThatElephant",
+     "ubisoft": [
+      "ThatElephant"
+     ],
+     "player": false
+    }
+   ]
+  },
+  {
+   "id": "6qf5c4jm8u0ku617z1741a37u",
+   "team_id": "6oyllh19sn60tsud541fg6amq",
+   "name": "Knighthaven Black",
+   "school": "University of Central Florida",
+   "school_short": "",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#000000",
+   "color_alt": "#b7A369",
+   "logo_url": "https://images.leagueos.gg/teams/6oyllh19sn60tsud541fg6amq/3ttml2crqupaaukr14w033ssy",
+   "clan_tag": "KHVN",
+   "record": {
+    "wins": 0,
+    "losses": 0,
+    "game_wins": 0,
+    "game_losses": 0
+   },
+   "players": []
+  },
+  {
+   "id": "9vmewy2hkn3zql3s1w2606fh5",
+   "team_id": "3lci91zjn6ehwkejn998tpkpm",
+   "name": "Lackawanna College",
+   "school": "Lackawanna College",
+   "school_short": "LCE",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#0A3161",
+   "color_alt": "#999999",
+   "logo_url": "https://images.leagueos.gg/teams/3lci91zjn6ehwkejn998tpkpm/64f9eefe837604534eb84210",
+   "clan_tag": "LC",
+   "record": {
+    "wins": 0,
+    "losses": 0,
+    "game_wins": 0,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "Mac.-.",
+     "ubisoft": [
+      "Mac.LC",
+      "Therminator__",
+      "Mac.-."
+     ],
+     "player": false
+    },
+    {
+     "name": "Slaya",
+     "ubisoft": [
+      "Slaya1126"
+     ],
+     "player": false
+    },
+    {
+     "name": "Opid",
+     "ubisoft": [
+      "Opid.LC"
+     ],
+     "player": true
+    },
+    {
+     "name": "slaamzzz",
+     "ubisoft": [
+      "slamz.LC"
+     ],
+     "player": true
+    },
+    {
+     "name": "Godless-sama",
+     "ubisoft": [
+      "Godless-Sama.LC",
+      "Godless-Sama"
+     ],
+     "player": true
+    },
+    {
+     "name": "Saptic",
+     "ubisoft": [
+      "Not_Saptic",
+      "saptic.LC",
+      "sapTic"
+     ],
+     "player": true
+    },
+    {
+     "name": "Ilithyia",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "mrbox43",
+     "ubisoft": [],
+     "player": true
+    },
+    {
+     "name": "Xenia",
+     "ubisoft": [
+      "Xenia.LC"
+     ],
+     "player": true
+    },
+    {
+     "name": "Scar",
+     "ubisoft": [
+      "ScarSlovak"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "0vk8ye3wr5pfd6f7v4ni6ajxk",
+   "team_id": "35cquogyi8tvtlf224j28kvjx",
+   "name": "Marist Red",
+   "school": "Marist University",
+   "school_short": "Marist",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#F92B35",
+   "color_alt": "#FFFFFF",
+   "logo_url": "https://images.leagueos.gg/teams/35cquogyi8tvtlf224j28kvjx/3rk5cyyn4nd83p0af9mrckdy9",
+   "clan_tag": "MC",
+   "record": {
+    "wins": 1,
+    "losses": 0,
+    "game_wins": 2,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "SavageCabbag",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "bigboibob761",
+     "ubisoft": [
+      "bigboibob761"
+     ],
+     "player": true
+    },
+    {
+     "name": "KeenEyed",
+     "ubisoft": [
+      "KeenEyed"
+     ],
+     "player": true
+    },
+    {
+     "name": "AlbinoPanda",
+     "ubisoft": [
+      "ICANT.FX"
+     ],
+     "player": true
+    },
+    {
+     "name": "ChrisNotSoGodly",
+     "ubisoft": [
+      "ChrisNotSoGodly"
+     ],
+     "player": true
+    },
+    {
+     "name": "tahpeen",
+     "ubisoft": [
+      "Munstur"
+     ],
+     "player": true
+    },
+    {
+     "name": "whooshpewpew",
+     "ubisoft": [
+      "theobeserafsan"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "78b8josbhup72hzb3u53lq3gg",
+   "team_id": "409541o5o1zc5t7mr9hqzikrz",
+   "name": "Missouri State Maroon",
+   "school": "Missouri State University",
+   "school_short": "Mo State",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#5A0009",
+   "color_alt": "#000000",
+   "logo_url": "https://images.leagueos.gg/teams/409541o5o1zc5t7mr9hqzikrz/648cd8bd832b120a065ce001",
+   "clan_tag": "MSU",
+   "record": {
+    "wins": 0,
+    "losses": 2,
+    "game_wins": 1,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "Helios",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "RoseMoon",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "THEBOMBER135",
+     "ubisoft": [
+      "THEBOMBER135"
+     ],
+     "player": true
+    },
+    {
+     "name": "z3x0dx",
+     "ubisoft": [
+      "z3x0dx"
+     ],
+     "player": true
+    },
+    {
+     "name": "GoDz",
+     "ubisoft": [
+      "GoDz5042"
+     ],
+     "player": true
+    },
+    {
+     "name": "S3prXs0n7X",
+     "ubisoft": [],
+     "player": true
+    },
+    {
+     "name": "luckoftheirish",
+     "ubisoft": [
+      "Luckoftheirish"
+     ],
+     "player": true
+    },
+    {
+     "name": "Gooba",
+     "ubisoft": [
+      "Beanzzzaaaa"
+     ],
+     "player": true
+    },
+    {
+     "name": "Maundog78",
+     "ubisoft": [
+      "Proandruke"
+     ],
+     "player": true
+    },
+    {
+     "name": "MamaMeatyJFK",
+     "ubisoft": [
+      "pR.z-iose-pq2p"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "az1oz0lprywobuenpoabz85zo",
+   "team_id": "2l12tuulzwhc1cuvbqszsphsv",
+   "name": "Pittsburg State University",
+   "school": "Pittsburg State University",
+   "school_short": "",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#CC0C2F",
+   "color_alt": "#FCD116",
+   "logo_url": "https://images.leagueos.gg/teams/2l12tuulzwhc1cuvbqszsphsv/0msj4c2i7qlz66hig9sx8e7we",
+   "clan_tag": "PSU",
+   "record": {
+    "wins": 1,
+    "losses": 1,
+    "game_wins": 3,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "PSU Cozart",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "CozzmicNinja",
+     "ubisoft": [
+      "Ninjakid1921"
+     ],
+     "player": true
+    },
+    {
+     "name": "Hunt3r_797",
+     "ubisoft": [
+      "Hunt3r_797"
+     ],
+     "player": true
+    },
+    {
+     "name": "Zapper",
+     "ubisoft": [
+      "Zapper1205"
+     ],
+     "player": true
+    },
+    {
+     "name": "HGO12",
+     "ubisoft": [
+      "HGO12"
+     ],
+     "player": true
+    },
+    {
+     "name": "Ezspencez",
+     "ubisoft": [
+      "ezspencez"
+     ],
+     "player": true
+    },
+    {
+     "name": "bryannikolas",
+     "ubisoft": [
+      "bryannikolas"
+     ],
+     "player": true
+    },
+    {
+     "name": "willy",
+     "ubisoft": [
+      "Foid4"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "a7tptff1m95mbt06p411bgy6z",
+   "team_id": "a3poge5hnq5id6zogg5szjstw",
+   "name": "Sacred Heart University",
+   "school": "Sacred Heart University",
+   "school_short": "Sacred Heart",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#A70034",
+   "color_alt": "#8A8D8F",
+   "logo_url": "https://images.leagueos.gg/teams/a3poge5hnq5id6zogg5szjstw/a65t8qnb30v9at6w7d154dbsh",
+   "clan_tag": "SHU",
+   "record": {
+    "wins": 0,
+    "losses": 2,
+    "game_wins": 1,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "sschel",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "The Mega Man",
+     "ubisoft": [
+      "The_Mega_Man"
+     ],
+     "player": true
+    },
+    {
+     "name": "Wl1lnd",
+     "ubisoft": [
+      "Wl1lnd"
+     ],
+     "player": true
+    },
+    {
+     "name": "Shadow",
+     "ubisoft": [
+      "Brudawhatup"
+     ],
+     "player": true
+    },
+    {
+     "name": "clifstone617",
+     "ubisoft": [
+      "clifstone"
+     ],
+     "player": true
+    },
+    {
+     "name": "BJTaps",
+     "ubisoft": [
+      "BJTaps"
+     ],
+     "player": true
+    },
+    {
+     "name": "Kegx2",
+     "ubisoft": [
+      "Kegx2"
+     ],
+     "player": true
+    },
+    {
+     "name": "Man mrsheep",
+     "ubisoft": [],
+     "player": true
+    },
+    {
+     "name": "Grapes",
+     "ubisoft": [
+      "YoUrDsk"
+     ],
+     "player": true
+    },
+    {
+     "name": "Mizoto",
+     "ubisoft": [
+      "MizotoDGeto"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "5rif7vl94s8xo67y9xa3trg93",
+   "team_id": "3cxjtmfj2gvietnbtaekechj7",
+   "name": "TCU Esports",
+   "school": "Texas Christian University",
+   "school_short": "TCU",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#4D1979",
+   "color_alt": "#D80B41",
+   "logo_url": "https://images.leagueos.gg/teams/3cxjtmfj2gvietnbtaekechj7/648d4133832b120a065ce03b",
+   "clan_tag": "TCU",
+   "record": {
+    "wins": 3,
+    "losses": 0,
+    "game_wins": 6,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "wwwhitneyyy",
+     "ubisoft": [
+      "whitney99"
+     ],
+     "player": true
+    },
+    {
+     "name": "BenZFeX",
+     "ubisoft": [
+      "Bizznazzman83"
+     ],
+     "player": true
+    },
+    {
+     "name": "asianchrizz",
+     "ubisoft": [
+      "asianchrizz"
+     ],
+     "player": true
+    },
+    {
+     "name": "Reach_-",
+     "ubisoft": [
+      "Reach_-"
+     ],
+     "player": true
+    },
+    {
+     "name": "Tirsuper16",
+     "ubisoft": [
+      "Tirsuper16"
+     ],
+     "player": true
+    },
+    {
+     "name": "Flame",
+     "ubisoft": [
+      "Flamedip"
+     ],
+     "player": true
+    },
+    {
+     "name": "Sly",
+     "ubisoft": [
+      "Slyisjuice"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "05fqxn6h8p9dfde04h4vl8m8i",
+   "team_id": "7kngl4ahqc2rqx8e4888nmuf5",
+   "name": "Texas Tech Black",
+   "school": "Texas Tech University",
+   "school_short": "",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#000000",
+   "color_alt": "#CC0000",
+   "logo_url": "https://images.leagueos.gg/teams/7kngl4ahqc2rqx8e4888nmuf5/64f3e49fa19f5877b5b8031d",
+   "clan_tag": "TTU",
+   "record": {
+    "wins": 1,
+    "losses": 1,
+    "game_wins": 2,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "WildZ",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Ekko.TTu",
+     "ubisoft": [
+      "Ekko.TTU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Mat10ck.TTU",
+     "ubisoft": [
+      "Mat10ck.TTU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Si1ent.TTU",
+     "ubisoft": [
+      "Si1ent.TTU"
+     ],
+     "player": true
+    },
+    {
+     "name": "fairway.ttu",
+     "ubisoft": [
+      "Fairway.TTU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Yanderepk",
+     "ubisoft": [
+      "YanderePk.TTU"
+     ],
+     "player": true
+    },
+    {
+     "name": "RuneBinderTTU",
+     "ubisoft": [
+      "Rune.TTU"
+     ],
+     "player": true
+    },
+    {
+     "name": "Syko.TTU",
+     "ubisoft": [
+      "Syko.TTU"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "6c1eacmnmiae0k1ug7xp6mgba",
+   "team_id": "bwovg34biin9q5k198ebsqywi",
+   "name": "UNO Black",
+   "school": "University of Nebraska Omaha",
+   "school_short": "",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#000000",
+   "color_alt": "#DF1D25",
+   "logo_url": "https://images.leagueos.gg/teams/bwovg34biin9q5k198ebsqywi/648d6d67f14cfcf90ebf4588",
+   "clan_tag": "UNO",
+   "record": {
+    "wins": 0,
+    "losses": 1,
+    "game_wins": 1,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "1LastCaress",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "goatnitez",
+     "ubisoft": [
+      "goatnitez"
+     ],
+     "player": true
+    },
+    {
+     "name": "Snipeola88",
+     "ubisoft": [
+      "Snipeola88"
+     ],
+     "player": true
+    },
+    {
+     "name": "Phoxza",
+     "ubisoft": [
+      "Phoxza"
+     ],
+     "player": true
+    },
+    {
+     "name": "Fang696",
+     "ubisoft": [
+      "Fang696_1"
+     ],
+     "player": true
+    },
+    {
+     "name": "TheFatBurger",
+     "ubisoft": [
+      "TheFatBurger"
+     ],
+     "player": true
+    },
+    {
+     "name": "z.mxn",
+     "ubisoft": [
+      "z_mxn"
+     ],
+     "player": true
+    },
+    {
+     "name": "DarbyWigle",
+     "ubisoft": [
+      "DarbyWigle"
+     ],
+     "player": true
+    },
+    {
+     "name": "FCSL4Y3R",
+     "ubisoft": [
+      "FCSN1PER"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "aty5z60hwkbet1iobn98xbtm4",
+   "team_id": "4cdo2wsfmcn1jiuea537w07y9",
+   "name": "USM Huskies",
+   "school": "University of Southern Maine",
+   "school_short": "",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#002752",
+   "color_alt": "#F5A800",
+   "logo_url": "https://images.leagueos.gg/teams/4cdo2wsfmcn1jiuea537w07y9/65822646a352b625a7f859bc",
+   "clan_tag": "USM",
+   "record": {
+    "wins": 1,
+    "losses": 0,
+    "game_wins": 2,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "unknownbow33",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Evokeship",
+     "ubisoft": [],
+     "player": true
+    },
+    {
+     "name": "ahmad.habib06",
+     "ubisoft": [],
+     "player": true
+    },
+    {
+     "name": "Trubsinn",
+     "ubisoft": [
+      "HeyDatsPretyGud"
+     ],
+     "player": true
+    },
+    {
+     "name": "RealBigMike69",
+     "ubisoft": [
+      "RealBigMike69"
+     ],
+     "player": true
+    },
+    {
+     "name": "c8b0",
+     "ubisoft": [
+      "Kxyle"
+     ],
+     "player": true
+    },
+    {
+     "name": "K Jackbro012",
+     "ubisoft": [
+      "Jackbro012",
+      "Jackbro.USM"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "dodv5jurmh3hox2da8onnp1ty",
+   "team_id": "0fdtqfubvz0qjhkybt5oc1h00",
+   "name": "UdeS Acad",
+   "school": "Université de Sherbrooke",
+   "school_short": "Sherbrooke",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#018849",
+   "color_alt": "#3A3A3A",
+   "logo_url": "https://images.leagueos.gg/teams/0fdtqfubvz0qjhkybt5oc1h00/10voldx9vxf9pbzfjh1ee4uwo",
+   "clan_tag": "UdeS",
+   "record": {
+    "wins": 0,
+    "losses": 0,
+    "game_wins": 0,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "Lord_Beb.",
+     "ubisoft": [
+      "Lord_Beb."
+     ],
+     "player": true
+    },
+    {
+     "name": "SKISSUE",
+     "ubisoft": [
+      "Lachiassducoin",
+      "SKISSUE72"
+     ],
+     "player": true
+    },
+    {
+     "name": "RaphLG",
+     "ubisoft": [
+      "RaphLeGr4nd"
+     ],
+     "player": true
+    },
+    {
+     "name": "Ajarynn",
+     "ubisoft": [
+      "Ajarynn",
+      "Ajarynn2"
+     ],
+     "player": true
+    },
+    {
+     "name": "Uzou",
+     "ubisoft": [
+      "Uzou."
+     ],
+     "player": true
+    },
+    {
+     "name": "BabyBlyat",
+     "ubisoft": [
+      "BabyB.35z"
+     ],
+     "player": false
+    },
+    {
+     "name": "Laffy",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Osama_",
+     "ubisoft": [
+      "V8Tweeko.UdeS",
+      "V8Tweeko.clout"
+     ],
+     "player": true
+    },
+    {
+     "name": "KAIZN",
+     "ubisoft": [
+      "KAIZN.UDS"
+     ],
+     "player": false
+    },
+    {
+     "name": "UdeS NOVA",
+     "ubisoft": [
+      "Nova.VCT"
+     ],
+     "player": false
+    },
+    {
+     "name": "Recomagnesius",
+     "ubisoft": [],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "c1eixvd4qoxordiaswuycaclq",
+   "team_id": "4ruq1dacc5xq3c1p442sugo7k",
+   "name": "University of South Alabama",
+   "school": "University of South Alabama",
+   "school_short": "",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#00205B",
+   "color_alt": "#BF0D3E",
+   "logo_url": "https://images.leagueos.gg/teams/4ruq1dacc5xq3c1p442sugo7k/648d697ef14cfcf90ebf4584",
+   "clan_tag": "USA",
+   "record": {
+    "wins": 1,
+    "losses": 1,
+    "game_wins": 2,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "OKKAILYN",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "xela",
+     "ubisoft": [
+      "Xela.gg"
+     ],
+     "player": true
+    },
+    {
+     "name": "Rtgmax",
+     "ubisoft": [
+      "Scoringkoala652"
+     ],
+     "player": true
+    },
+    {
+     "name": "Keyzz..",
+     "ubisoft": [
+      "KEYZZ.."
+     ],
+     "player": true
+    },
+    {
+     "name": "Colonel Sandrew",
+     "ubisoft": [
+      "AndrewX1g"
+     ],
+     "player": true
+    },
+    {
+     "name": "Oitemmg",
+     "ubisoft": [
+      "Oitemmmg"
+     ],
+     "player": true
+    },
+    {
+     "name": "khoixdxd",
+     "ubisoft": [
+      "KOIXDXD"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "d4ormpud6encvv6w1e0cu70a6",
+   "team_id": "cq3ud6acvx48pffb4gxhk49qv",
+   "name": "Warner",
+   "school": "Warner University",
+   "school_short": "Warner",
+   "division": "V",
+   "event_id": "d2hr5hs9o8aaflz81z333jeh3",
+   "group": "",
+   "color": "#E6A724",
+   "color_alt": "#080F3F",
+   "logo_url": "https://images.leagueos.gg/teams/cq3ud6acvx48pffb4gxhk49qv/9xv17vj4450ae7moa9e9cq2ym",
+   "clan_tag": "WAR",
+   "record": {
+    "wins": 1,
+    "losses": 0,
+    "game_wins": 2,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "CoachJohno",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Criuh",
+     "ubisoft": [
+      "criuh."
+     ],
+     "player": true
+    },
+    {
+     "name": "iceboy-5125",
+     "ubisoft": [
+      "ICEBOY5125"
+     ],
+     "player": true
+    },
+    {
+     "name": "gadgeownsyou",
+     "ubisoft": [
+      "gadgeownsyou"
+     ],
+     "player": true
+    },
+    {
+     "name": "RipxItachi",
+     "ubisoft": [
+      "RipxItachi"
+     ],
+     "player": true
+    },
+    {
+     "name": "Youngr_j5",
+     "ubisoft": [
+      "Darkninja2053"
+     ],
+     "player": true
+    },
+    {
+     "name": "Ozagelvis",
+     "ubisoft": [
+      "SLAMEDDDDD.",
+      "SLAMMEDD.WAR"
+     ],
+     "player": true
+    },
+    {
+     "name": "LogoTheGig",
+     "ubisoft": [
+      "L0D0N",
+      "LODON."
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "7uawliur7cqn0siqc6y1ojsui",
+   "team_id": "5m6ck4r1iooh0gve1d6ncegon",
+   "name": "ACC Lumberjacks",
+   "school": "Alpena Community College",
+   "school_short": "Alpena CC",
+   "division": "VI",
+   "event_id": "2plygpcqzbvu3tk2jy3yncmv9",
+   "group": "",
+   "color": "#8C2438",
+   "color_alt": "#FFFFFF",
+   "logo_url": "https://images.leagueos.gg/teams/5m6ck4r1iooh0gve1d6ncegon/8ujc22ynsxutrtb9q74q9gc2i",
+   "clan_tag": "ACC",
+   "record": {
+    "wins": 1,
+    "losses": 0,
+    "game_wins": 2,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "Aaronguitar10",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "dan45the74man8",
+     "ubisoft": [
+      "Hellothere69727",
+      "Dan74the45man",
+      "DantheMAN451445"
+     ],
+     "player": true
+    },
+    {
+     "name": "Runic",
+     "ubisoft": [
+      "RRunic"
+     ],
+     "player": true
+    },
+    {
+     "name": "itzBooter",
+     "ubisoft": [
+      "itzBooter"
+     ],
+     "player": true
+    },
+    {
+     "name": "Cylako",
+     "ubisoft": [
+      "Cylako"
+     ],
+     "player": true
+    },
+    {
+     "name": "ScarFace",
+     "ubisoft": [
+      "X_ScarFace2025"
+     ],
+     "player": true
+    },
+    {
+     "name": "Twenzy-",
+     "ubisoft": [],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "29fo85ud75b7zzk2r86p0phyx",
+   "team_id": "7hc7wb3rtraxx4mjv21u9f890",
+   "name": "Bronco Esports Gold",
+   "school": "California State Polytechnic University, Pomona",
+   "school_short": "",
+   "division": "VI",
+   "event_id": "2plygpcqzbvu3tk2jy3yncmv9",
+   "group": "",
+   "color": "#098040",
+   "color_alt": "#E0A42C",
+   "logo_url": "https://images.leagueos.gg/teams/7hc7wb3rtraxx4mjv21u9f890/648c987d09cdacdd5ee7cfca",
+   "clan_tag": "CPP",
+   "record": {
+    "wins": 0,
+    "losses": 2,
+    "game_wins": 0,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "dreamster",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "KiteYGO",
+     "ubisoft": [
+      "KiteYGO"
+     ],
+     "player": true
+    },
+    {
+     "name": "dolonia",
+     "ubisoft": [
+      "dolonia_"
+     ],
+     "player": true
+    },
+    {
+     "name": "HotKappachino",
+     "ubisoft": [
+      "HotKappachino"
+     ],
+     "player": true
+    },
+    {
+     "name": "GambitSimp",
+     "ubisoft": [
+      "GambitSimp"
+     ],
+     "player": true
+    },
+    {
+     "name": "Pot8os4",
+     "ubisoft": [
+      "Pot8os4"
+     ],
+     "player": true
+    },
+    {
+     "name": "The_Mezorcist",
+     "ubisoft": [
+      "THE_MEZORCIST"
+     ],
+     "player": true
+    },
+    {
+     "name": "Murc3373",
+     "ubisoft": [
+      "Murc3373"
+     ],
+     "player": true
+    },
+    {
+     "name": "Raytheeboi",
+     "ubisoft": [
+      "RAYTHEEBOI"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "0znivqwfkck0i5b23klebgunz",
+   "team_id": "6jos5ovauayx9fq5by3jtx9cm",
+   "name": "Concordia- St. Paul",
+   "school": "Concordia University, St. Paul",
+   "school_short": "",
+   "division": "VI",
+   "event_id": "2plygpcqzbvu3tk2jy3yncmv9",
+   "group": "",
+   "color": "#003056",
+   "color_alt": "#D89805",
+   "logo_url": "https://images.leagueos.gg/teams/6jos5ovauayx9fq5by3jtx9cm/648ca018f14cfcf90ebf44ed",
+   "clan_tag": "CUSP",
+   "record": {
+    "wins": 2,
+    "losses": 0,
+    "game_wins": 4,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "Coach Pauly",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "AD2Sleepy",
+     "ubisoft": [
+      "WhyIsADsleep"
+     ],
+     "player": true
+    },
+    {
+     "name": "Smile",
+     "ubisoft": [
+      "allsmil3s",
+      "Smile.CSP"
+     ],
+     "player": true
+    },
+    {
+     "name": "Talus.CSP",
+     "ubisoft": [
+      "Talus.CSP"
+     ],
+     "player": true
+    },
+    {
+     "name": "TrippyTrashCan",
+     "ubisoft": [
+      "TrippyTrashCan"
+     ],
+     "player": true
+    },
+    {
+     "name": "larry",
+     "ubisoft": [
+      "FallMeerkat2378"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "6cyt7xlwb9zzptqejsysqdb57",
+   "team_id": "ag87ukbekbwsrgki20mus4lzd",
+   "name": "Drury University",
+   "school": "Drury University",
+   "school_short": "Drury",
+   "division": "VI",
+   "event_id": "2plygpcqzbvu3tk2jy3yncmv9",
+   "group": "",
+   "color": "#BA0C2F",
+   "color_alt": "#000000",
+   "logo_url": "https://images.leagueos.gg/teams/ag87ukbekbwsrgki20mus4lzd/47i9zpzdbxwzchp5bui8nhvpi",
+   "clan_tag": "DU",
+   "record": {
+    "wins": 2,
+    "losses": 0,
+    "game_wins": 4,
+    "game_losses": 1
+   },
+   "players": [
+    {
+     "name": "SanVIk",
+     "ubisoft": [
+      "SanVik123"
+     ],
+     "player": true
+    },
+    {
+     "name": "Silverwindx523",
+     "ubisoft": [
+      "Silverwindx523"
+     ],
+     "player": true
+    },
+    {
+     "name": "AzDoes",
+     "ubisoft": [
+      "Azazel440"
+     ],
+     "player": true
+    },
+    {
+     "name": "ThomasBobamus",
+     "ubisoft": [
+      "ThomasBobamus"
+     ],
+     "player": true
+    },
+    {
+     "name": "Blitz",
+     "ubisoft": [
+      "B1itz-"
+     ],
+     "player": true
+    },
+    {
+     "name": "Jxsnk",
+     "ubisoft": [
+      "Battle817"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "2q8rv0p30tkq8f1mjnm5uv35s",
+   "team_id": "eynv2sk3aptwob8oymmnlkczi",
+   "name": "ECU Tiger Lanoy",
+   "school": "East Central University",
+   "school_short": "East Central",
+   "division": "VI",
+   "event_id": "2plygpcqzbvu3tk2jy3yncmv9",
+   "group": "",
+   "color": "#FF5200",
+   "color_alt": "#000000",
+   "logo_url": "https://images.leagueos.gg/teams/eynv2sk3aptwob8oymmnlkczi/0p16tid7sy0j5dzt5ihywvp03",
+   "clan_tag": "ECU",
+   "record": {
+    "wins": 0,
+    "losses": 2,
+    "game_wins": 0,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "PirateEndwatch",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "MoneyMozingo",
+     "ubisoft": [
+      "Money_Mozingo"
+     ],
+     "player": true
+    },
+    {
+     "name": "officialTDawg",
+     "ubisoft": [
+      "Z3R0WZ1"
+     ],
+     "player": true
+    },
+    {
+     "name": "looppanther",
+     "ubisoft": [
+      "xfrox"
+     ],
+     "player": true
+    },
+    {
+     "name": "Juicyyfgb",
+     "ubisoft": [
+      "fortbattlepass4"
+     ],
+     "player": true
+    },
+    {
+     "name": "Slayerdawg34",
+     "ubisoft": [
+      "Slayerdawg33"
+     ],
+     "player": true
+    },
+    {
+     "name": "UtterPeak",
+     "ubisoft": [
+      "UtterPeak"
+     ],
+     "player": true
+    },
+    {
+     "name": "Tulpamancer",
+     "ubisoft": [
+      "Tulpamancer1911"
+     ],
+     "player": true
+    },
+    {
+     "name": "ThisIsCody",
+     "ubisoft": [],
+     "player": false
+    }
+   ]
+  },
+  {
+   "id": "8uhi83tldqsdxxrg5re68el7l",
+   "team_id": "2pz6ycc0m4hvch07qsmvwomla",
+   "name": "Edinboro University",
+   "school": "Pennsylvania Western University at Edinboro",
+   "school_short": "",
+   "division": "VI",
+   "event_id": "2plygpcqzbvu3tk2jy3yncmv9",
+   "group": "",
+   "color": "#000000",
+   "color_alt": "#8CC63E",
+   "logo_url": "https://images.leagueos.gg/teams/2pz6ycc0m4hvch07qsmvwomla/648d1454f14cfcf90ebf4545",
+   "clan_tag": "BORO",
+   "record": {
+    "wins": 1,
+    "losses": 0,
+    "game_wins": 2,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "JxstOni",
+     "ubisoft": [
+      "jxstoni"
+     ],
+     "player": true
+    },
+    {
+     "name": "SlightlyWashed0",
+     "ubisoft": [
+      "SlightlyWashed0"
+     ],
+     "player": true
+    },
+    {
+     "name": "AtlasPatrolling",
+     "ubisoft": [
+      "qAtlas"
+     ],
+     "player": true
+    },
+    {
+     "name": "Duke",
+     "ubisoft": [
+      "Great_Unc_Duke"
+     ],
+     "player": true
+    },
+    {
+     "name": "Stevington",
+     "ubisoft": [
+      "LilKarm.BORO"
+     ],
+     "player": true
+    },
+    {
+     "name": "squals",
+     "ubisoft": [
+      "squals3"
+     ],
+     "player": true
+    },
+    {
+     "name": "Yetz.BORO",
+     "ubisoft": [
+      "Yetz.BORO"
+     ],
+     "player": true
+    },
+    {
+     "name": "kirito",
+     "ubisoft": [
+      "KiritoOnJaw"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "9kw0nxlo4dwdzr56ibni7lx5a",
+   "team_id": "8qmsd0i4f61g3potwjuiiyohg",
+   "name": "King's College",
+   "school": "King's College",
+   "school_short": "",
+   "division": "VI",
+   "event_id": "2plygpcqzbvu3tk2jy3yncmv9",
+   "group": "",
+   "color": "#CC0033",
+   "color_alt": "#000000",
+   "logo_url": "https://images.leagueos.gg/teams/8qmsd0i4f61g3potwjuiiyohg/648ccb54f14cfcf90ebf451d",
+   "clan_tag": "KC",
+   "record": {
+    "wins": 0,
+    "losses": 2,
+    "game_wins": 0,
+    "game_losses": 4
+   },
+   "players": [
+    {
+     "name": "amysantayana",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "basicbekka",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "skyman_226",
+     "ubisoft": [
+      "skyman_226"
+     ],
+     "player": true
+    },
+    {
+     "name": "myxi-",
+     "ubisoft": [
+      "Myxi-"
+     ],
+     "player": true
+    },
+    {
+     "name": "kkms5",
+     "ubisoft": [
+      "Kkms5"
+     ],
+     "player": true
+    },
+    {
+     "name": "Eranite",
+     "ubisoft": [
+      "EEEEranite"
+     ],
+     "player": true
+    },
+    {
+     "name": "Atvras",
+     "ubisoft": [
+      "TurkishMindset"
+     ],
+     "player": true
+    },
+    {
+     "name": "ImFait",
+     "ubisoft": [
+      "Im_Fait"
+     ],
+     "player": true
+    },
+    {
+     "name": "zayyy9522",
+     "ubisoft": [
+      "icamacho246"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "0amzeq26kda59vjy1snefmxi2",
+   "team_id": "alm2yavxpmlise8bs9s3xbj7w",
+   "name": "MSSU Gold",
+   "school": "Missouri Southern State University",
+   "school_short": "MSSU",
+   "division": "VI",
+   "event_id": "2plygpcqzbvu3tk2jy3yncmv9",
+   "group": "",
+   "color": "#004000",
+   "color_alt": "#F6CF3C",
+   "logo_url": "https://images.leagueos.gg/teams/alm2yavxpmlise8bs9s3xbj7w/648d0f35832b120a065ce019",
+   "clan_tag": "MSSU",
+   "record": {
+    "wins": 3,
+    "losses": 0,
+    "game_wins": 6,
+    "game_losses": 1
+   },
+   "players": [
+    {
+     "name": "coachbrower",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Shockinq",
+     "ubisoft": [
+      "Shock.R6"
+     ],
+     "player": true
+    },
+    {
+     "name": "Log1c",
+     "ubisoft": [
+      "Log1c_-"
+     ],
+     "player": true
+    },
+    {
+     "name": "Chris Polamalu",
+     "ubisoft": [
+      "banbanrizzgod"
+     ],
+     "player": true
+    },
+    {
+     "name": "Me_nYou",
+     "ubisoft": [
+      "HCPT Shadow",
+      "HCPT_Shadow"
+     ],
+     "player": true
+    },
+    {
+     "name": "Haydehoo",
+     "ubisoft": [
+      "H43MBURGL4R"
+     ],
+     "player": true
+    },
+    {
+     "name": "nightraven07_",
+     "ubisoft": [
+      "NightRaven07_"
+     ],
+     "player": true
+    },
+    {
+     "name": "Embor12",
+     "ubisoft": [
+      "Embor12"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "dzq224zz4sspngggjikqvw1u6",
+   "team_id": "5kfz6ahpayhyemf0c24yvs7uc",
+   "name": "Niner Esports White",
+   "school": "University of North Carolina at Charlotte",
+   "school_short": "",
+   "division": "VI",
+   "event_id": "2plygpcqzbvu3tk2jy3yncmv9",
+   "group": "",
+   "color": "#005035",
+   "color_alt": "#A49665",
+   "logo_url": "https://images.leagueos.gg/teams/5kfz6ahpayhyemf0c24yvs7uc/99d2bouec0asdc1m3nedv8gly",
+   "clan_tag": "CLT",
+   "record": {
+    "wins": 1,
+    "losses": 0,
+    "game_wins": 2,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "Arrolyt",
+     "ubisoft": [
+      "ArroLyt.CLT"
+     ],
+     "player": false
+    },
+    {
+     "name": "Boom.CLT",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Red.CLT",
+     "ubisoft": [
+      "v3Ivt",
+      "Red.CLT",
+      "RedFiasco"
+     ],
+     "player": false
+    },
+    {
+     "name": "pullupgary",
+     "ubisoft": [
+      "PullUpGary.CLT",
+      "pullupgary"
+     ],
+     "player": true
+    },
+    {
+     "name": "Krentle",
+     "ubisoft": [
+      "Krentle"
+     ],
+     "player": true
+    },
+    {
+     "name": "lil_liesz",
+     "ubisoft": [
+      "lil_liesz"
+     ],
+     "player": true
+    },
+    {
+     "name": "DullPilot",
+     "ubisoft": [
+      "DullPilot"
+     ],
+     "player": true
+    },
+    {
+     "name": "NoahR0423",
+     "ubisoft": [
+      "NoahR0423"
+     ],
+     "player": true
+    },
+    {
+     "name": "nofreestyle3",
+     "ubisoft": [
+      "lilukwyldcatfan",
+      "nofreestyle3"
+     ],
+     "player": true
+    },
+    {
+     "name": "Shrimp.Fbld",
+     "ubisoft": [
+      "Shrimp.Fbld"
+     ],
+     "player": true
+    },
+    {
+     "name": "Criptic boss123",
+     "ubisoft": [
+      "AlphaSavage123"
+     ],
+     "player": true
+    },
+    {
+     "name": "NotLuna",
+     "ubisoft": [
+      "NotLuna_"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "7ok15pstz2ybjh8waksxxfagf",
+   "team_id": "4iup9f60q6il6pik9cjx3q1eo",
+   "name": "Royal Gold",
+   "school": "Husson University",
+   "school_short": "Husson",
+   "division": "VI",
+   "event_id": "2plygpcqzbvu3tk2jy3yncmv9",
+   "group": "",
+   "color": "#004C42",
+   "color_alt": "#B79A5F",
+   "logo_url": "https://images.leagueos.gg/teams/4iup9f60q6il6pik9cjx3q1eo/7mg5ogch20hpg8k0y3tzgw2rz",
+   "clan_tag": "HU",
+   "record": {
+    "wins": 0,
+    "losses": 0,
+    "game_wins": 0,
+    "game_losses": 0
+   },
+   "players": [
+    {
+     "name": "Beldia",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "jaima_hu",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Husson_Esports",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Nature23",
+     "ubisoft": [
+      "Nature23_"
+     ],
+     "player": true
+    },
+    {
+     "name": "Eric4042",
+     "ubisoft": [
+      "Loki_Crazy40",
+      "Saturn.GM"
+     ],
+     "player": true
+    },
+    {
+     "name": "Classlessbook97",
+     "ubisoft": [
+      "Classlessbook97"
+     ],
+     "player": true
+    },
+    {
+     "name": "The68lineman",
+     "ubisoft": [
+      "RareBlueman55"
+     ],
+     "player": true
+    },
+    {
+     "name": "K1yotAka",
+     "ubisoft": [
+      "K1yotAka_cote"
+     ],
+     "player": true
+    },
+    {
+     "name": "Pyre",
+     "ubisoft": [
+      "PyreKnyght"
+     ],
+     "player": true
+    },
+    {
+     "name": "Xyloski",
+     "ubisoft": [
+      "XyIoski"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "5jtsdib7ljfhz67wv4rs6mmov",
+   "team_id": "euplg5w6dyma4h7y1ewy0ewkt",
+   "name": "UAA Gold",
+   "school": "University of Alaska Anchorage",
+   "school_short": "Alaska Anchorage",
+   "division": "VI",
+   "event_id": "2plygpcqzbvu3tk2jy3yncmv9",
+   "group": "",
+   "color": "#00583D",
+   "color_alt": "#FFC425",
+   "logo_url": "https://images.leagueos.gg/teams/euplg5w6dyma4h7y1ewy0ewkt/35xngpqctu5p297x4hfmui0xe",
+   "clan_tag": "UOAA",
+   "record": {
+    "wins": 0,
+    "losses": 3,
+    "game_wins": 2,
+    "game_losses": 6
+   },
+   "players": [
+    {
+     "name": "UAA Admin",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "Pebbles",
+     "ubisoft": [
+      "Pubbies001",
+      "Pubbies001.UAA"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "aq98lpcluu8apok9djjh1flz5",
+   "team_id": "bflbe8502wqukvhlryo9wq0uw",
+   "name": "Widener University Blue",
+   "school": "Widener University",
+   "school_short": "",
+   "division": "VI",
+   "event_id": "2plygpcqzbvu3tk2jy3yncmv9",
+   "group": "",
+   "color": "#264F91",
+   "color_alt": "#F6C34A",
+   "logo_url": "https://images.leagueos.gg/teams/bflbe8502wqukvhlryo9wq0uw/6582626fbea52155b106ab72",
+   "clan_tag": "WU",
+   "record": {
+    "wins": 1,
+    "losses": 1,
+    "game_wins": 2,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "Coach Phil",
+     "ubisoft": [],
+     "player": false
+    },
+    {
+     "name": "WU.PP",
+     "ubisoft": [
+      "PP_Pincher"
+     ],
+     "player": false
+    },
+    {
+     "name": "CloudIsLucky",
+     "ubisoft": [
+      "luckytrain_32",
+      "LuckyCloud.WU"
+     ],
+     "player": true
+    },
+    {
+     "name": "jjman1645",
+     "ubisoft": [
+      "jjman1645"
+     ],
+     "player": true
+    },
+    {
+     "name": "helixgod",
+     "ubisoft": [
+      "MiniHelixGid872"
+     ],
+     "player": true
+    },
+    {
+     "name": "Shellshocker",
+     "ubisoft": [
+      "Shellshockerx"
+     ],
+     "player": true
+    },
+    {
+     "name": "SockAreHandGlove",
+     "ubisoft": [
+      "CallMeSocks"
+     ],
+     "player": true
+    },
+    {
+     "name": "iiSemo",
+     "ubisoft": [
+      "iiSem0"
+     ],
+     "player": true
+    }
+   ]
+  },
+  {
+   "id": "396t7p13urhbdo0amtadodh1u",
+   "team_id": "5c94gytwnas095y9tliiyiv5f",
+   "name": "York Spartans",
+   "school": "York College of Pennsylvania",
+   "school_short": "",
+   "division": "VI",
+   "event_id": "2plygpcqzbvu3tk2jy3yncmv9",
+   "group": "",
+   "color": "#009844",
+   "color_alt": "#FFFFFF",
+   "logo_url": "https://images.leagueos.gg/teams/5c94gytwnas095y9tliiyiv5f/64dbcce9e495ceffb78b0d38",
+   "clan_tag": "YCP",
+   "record": {
+    "wins": 0,
+    "losses": 1,
+    "game_wins": 0,
+    "game_losses": 2
+   },
+   "players": [
+    {
+     "name": "Hopoffplease",
+     "ubisoft": [
+      "Hopoffplease"
+     ],
+     "player": false
+    },
+    {
+     "name": "stinky",
+     "ubisoft": [
+      "tannersocute"
+     ],
+     "player": true
+    },
+    {
+     "name": "Hein",
+     "ubisoft": [
+      "itz_heinxp"
+     ],
+     "player": true
+    },
+    {
+     "name": "Cenpil",
+     "ubisoft": [
+      "Cenpil"
+     ],
+     "player": true
+    },
+    {
+     "name": "Apollo",
+     "ubisoft": [],
+     "player": true
+    },
+    {
+     "name": "hreyes1",
+     "ubisoft": [
+      "SlientSZN"
+     ],
+     "player": true
+    },
+    {
+     "name": "pl.tn",
+     "ubisoft": [
+      "PL.NET"
+     ],
+     "player": true
+    },
+    {
+     "name": "funsizeaintfun",
+     "ubisoft": [
+      "FunSizeAintFun"
+     ],
+     "player": false
+    },
+    {
+     "name": "SallyWacka87",
+     "ubisoft": [
+      "SallyWacka87"
+     ],
+     "player": true
+    }
+   ]
+  }
+ ]
+}

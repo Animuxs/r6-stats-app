@@ -18,7 +18,9 @@ from pathlib import Path
 
 import streamlit as st
 
+import rosters
 from app_info import APP_NAME, APP_VERSION, NOTICE, is_public_host, is_windows_app
+from branding import current_competition
 from metrics_engine import (
     PRO_LEAGUE_COLUMNS, SIDE_ICONS, SIDE_NAMES, compute_match_metrics, leaderboard_rows, pro_league_rows,
     round_player_rows, round_rows, rounds_text, rows_csv, running_scores, scoreboard_text, side_split, team_side,
@@ -30,7 +32,7 @@ from parser import (
 from season_stats import GENERIC_TEAM_NAMES, StatsError, StatsManager
 from sources import (
     can_read_local_files, folder_source, load_source, match_label, match_time, open_stats_db, parse,
-    start_workdir_sweeper,
+    save_replay_folder, saved_replay_folder, start_workdir_sweeper,
 )
 from stats_db import NotAdded
 from ui import md
@@ -150,6 +152,51 @@ def _team_name_key(match: dict, team: int) -> str:
     return f"confirm_team_name:{match['match_id']}:{team}"
 
 
+def _season_key(match: dict) -> str:
+    return f"confirm_season:{match['match_id']}"
+
+
+def my_team() -> tuple[str, dict[str, str], dict | None]:
+    """Your team as saved on League & Team: its name, its players ({any name they go by,
+    casefolded: the name tracked for them}) and its NECC roster entry, if it has one."""
+    competition = current_competition()
+    team = competition["team"]
+    if not team:
+        return "", {}, None
+    necc = rosters.mine(competition)
+    players = rosters.aliases(necc) if necc else {}
+    with open_stats_db() as db:  # the Team Analytics team made when it was saved (and any players added since)
+        saved = next((names for name, names in db.rosters().items() if name.casefold() == team.casefold()), [])
+    for key, name in rosters.roster_names(saved).items():
+        players.setdefault(key, name)
+    return team, players, necc
+
+
+def name_sides(match: dict, team: str, players: dict[str, str], necc: dict | None) -> tuple[dict, dict]:
+    """The match with its sides named after the teams playing, where the replay only says "YOUR
+    TEAM" and "ENEMY TEAM": your team where your players are, and any NECC team whose roster is on
+    a side. Returns it and {"mine": your side or None, "logos": {side: logo URL}}."""
+    names = list(match.get("team_names") or ["", ""]) + ["", ""]
+    sides: dict[int, list[str]] = {0: [], 1: []}
+    for p in match.get("players", []):
+        if p.get("team") in sides:
+            sides[p["team"]].append(p["name"])
+    counts = {side: len(rosters.on_roster(n, players)) for side, n in sides.items()}
+    mine = max(counts, key=counts.get) if players and max(counts.values()) >= rosters.MIN_SHARED else None
+    if mine is not None and counts[1 - mine] == counts[mine]:
+        mine = None  # a scrim among your own players: neither side is "yours"
+    found = rosters.identify(match)
+    if mine is not None:
+        found[mine] = necc or {"name": team, "logo_url": ""}
+    logos = {}
+    for side in (0, 1):
+        if side in found:
+            logos[side] = found[side].get("logo_url", "")
+            if names[side].strip().upper() in GENERIC_TEAM_NAMES:
+                names[side] = found[side]["name"]
+    return dict(match, team_names=names[:2]), {"mine": mine, "logos": logos, "found": found}
+
+
 def _add_match(source: str, match: dict, files: int) -> None:
     """Add the match to the stats database with the players picked for it and, when asked, save
     those same players' rounds to the season. Runs as the confirm button's callback."""
@@ -164,7 +211,7 @@ def _add_match(source: str, match: dict, files: int) -> None:
     notes = [f"Added to your stats, tracking {len(players)} player{'s' if len(players) != 1 else ''}: "
              f"{', '.join(players)}."]
     kind = "success"
-    if st.session_state.get("confirm_season") and not is_public_host():
+    if st.session_state.get(_season_key(match)) and not is_public_host():
         season = (st.session_state.get("r6_season_input") or "").strip() or "current"
         st.session_state["r6_season"] = season
         with StatsManager(season=season) as tracker:
@@ -188,10 +235,12 @@ def _add_match(source: str, match: dict, files: int) -> None:
     st.session_state["dashboard_note"] = (kind, " ".join(notes))
 
 
-def confirm_match(source: str, match: dict, files: int) -> None:
+def confirm_match(source: str, match: dict, files: int, team: str = "", roster: dict[str, str] | None = None,
+                  mine: int | None = None) -> None:
     """The step that adds a match to your stats: a person checks the match and picks exactly whose
-    stats to keep. Nothing is picked until they do."""
+    stats to keep. Your team's players (saved on League & Team) are picked for you; nobody else is."""
     team_names = match["team_names"]
+    roster = roster or {}
     st.subheader("Add to your stats")
     if note := st.session_state.pop("dashboard_note", None):
         getattr(st, note[0])(md(note[1]))
@@ -208,34 +257,59 @@ def confirm_match(source: str, match: dict, files: int) -> None:
     if match.get("match_type") in MATCHMADE:
         st.warning(f"This is a **{match['match_type']}** match: the game made the teams, so someone on your team may "
                    "not be one of your players. Pick only the players you track.", icon="⚠️")
-    picked = {}
-    for team, column in enumerate(st.columns(2)):
-        names = [p["name"] for p in match.get("players", []) if p.get("team") == team]
-        key = _picked_key(match, team)
-        # what's in the database for this match, or nobody: never a guess
-        st.session_state.setdefault(key, [n for n in (added or {}).get("players", []) if n in names])
-        picked[team] = column.multiselect(team_names[team], names, key=key, placeholder="Players to track")
+    picked, from_roster = {}, []
+    for side, column in enumerate(st.columns(2)):
+        names = [p["name"] for p in match.get("players", []) if p.get("team") == side]
+        key = _picked_key(match, side)
+        # what's in the database for this match, else your team's players: never a stranger
+        on_roster = rosters.on_roster(names, roster)
+        if key not in st.session_state:
+            st.session_state[key] = [n for n in (added or {}).get("players", []) if n in names] if added else on_roster
+            from_roster += [] if added else on_roster
+        picked[side] = column.multiselect(team_names[side], names, key=key, placeholder="Players to track")
+    if from_roster:
+        st.caption(f"Picked from **{md(team)}**'s roster: {md(', '.join(from_roster))}. Check them, then confirm.")
+    elif not team and not added:
+        st.caption("Tip: pick your team on **League & Team** and its players are picked here for you.")
 
-    season_on = st.checkbox("Also save it to the season tracker", key="confirm_season", disabled=is_public_host(),
+    # a custom game with your team in it (a scrim or a league match) is saved to the season too, unless you say not
+    ours = mine is not None and len(rosters.on_roster(
+        [p["name"] for p in match.get("players", []) if p.get("team") == mine], roster)) >= 3
+    st.session_state.setdefault(_season_key(match), bool(ours and not added and not is_public_host()
+                                                         and match.get("match_type") == "Custom game"))
+    season_on = st.checkbox("Also save it to the season tracker", key=_season_key(match), disabled=is_public_host(),
                             help="Adds these players' rounds to a season's totals. Only the players picked above are "
-                                 "saved, even if you track others who played in this match.")
+                                 "saved, even if you track others who played in this match. Ticked for you when "
+                                 "your team played a custom game (a scrim or a league match): untick practice.")
     if is_public_host():
         st.caption("Season tracking is off on the public website, to keep visitors' stats apart. Use the Windows "
                    "app or run the app on your own computer.")
     elif season_on:
         st.text_input("Season", value=st.session_state.get("r6_season", "current"), key="r6_season_input")
-        for team, column in enumerate(st.columns(2)):
-            if not picked[team]:
+        for side, column in enumerate(st.columns(2)):
+            if not picked[side]:
                 continue
-            generic = team_names[team].strip().upper() in GENERIC_TEAM_NAMES
+            generic = team_names[side].strip().upper() in GENERIC_TEAM_NAMES
             column.text_input(
-                f"Team or school name for {team_names[team]}", value="" if generic else team_names[team],
-                key=_team_name_key(match, team), placeholder="e.g. Varsity" if generic else None,
-                help=f'The replay only calls this team "{team_names[team]}", so enter its real name. Left blank, '
+                f"Team or school name for {team_names[side]}", value="" if generic else team_names[side],
+                key=_team_name_key(match, side), placeholder="e.g. Varsity" if generic else None,
+                help=f'The replay only calls this team "{team_names[side]}", so enter its real name. Left blank, '
                      "players keep the team they already have in the tracker." if generic else None,
             )
     st.button("Update players" if added else "Confirm match and players", type="primary",
               disabled=not (picked[0] or picked[1]), on_click=_add_match, args=(source, match, files))
+
+
+def _keep_replay_folder() -> None:
+    """The folder box's callback: keep a folder that's there for next time, on this PC."""
+    typed = (st.session_state.get("replay_folder") or "").strip().strip('"')
+    if typed and Path(typed).expanduser().exists():
+        save_replay_folder(Path(typed).expanduser())
+
+
+def _use_game_folder(auto: str) -> None:
+    st.session_state["replay_folder"] = auto
+    save_replay_folder(None)
 
 
 start_workdir_sweeper()
@@ -265,6 +339,7 @@ st.title("Dashboard")
 # ------------------------------------------------------------- input -------
 match = raw = None
 name, files = None, 0  # the replay's match folder and its round files; none for the demo match
+my_name, my_players, sides = "", {}, {"mine": None, "logos": {}, "found": {}}
 parse_warnings: list[str] = []
 
 if demo_mode:
@@ -294,16 +369,26 @@ else:
             state = load_source(sig, lambda td, sc, u=uploaded: save_uploads(u, td, sc))
     elif source == FOLDER:
         found = find_replay_folders()
-        # found automatically: the folder box stays out of the way; otherwise it's the first thing to fill in
-        box = st.expander("Replay folder", expanded=not found) if found else st.container()
+        auto = str(found[0]) if found else ""
+        if "replay_folder" not in st.session_state:  # first time on this page: the folder kept on this PC
+            saved = saved_replay_folder()
+            st.session_state["replay_folder"] = str(saved) if saved else auto
+        current = st.session_state["replay_folder"].strip().strip('"')
+        # a folder that's set: the box stays out of the way; otherwise it's the first thing to fill in
+        box = st.expander("Replay folder", expanded=not current) if current else st.container()
         with box:
             typed = st.text_input(
-                "Path to a match folder, a .zip, or your whole MatchReplay folder",
-                value=str(found[0]) if found else "",
+                "Path to a match folder, a .zip, or your whole MatchReplay folder", key="replay_folder",
+                on_change=_keep_replay_folder,
                 placeholder=r"C:\Program Files (x86)\Steam\steamapps\common\Tom Clancy's Rainbow Six Siege\MatchReplay",
             ).strip().strip('"')
-            if found and typed == str(found[0]):
+            if auto and typed == auto:
                 st.caption("Found your Siege replays folder automatically.")
+            elif typed:
+                st.caption("Your replay folder: it stays picked, here and on every page, until you change it.")
+                if auto:
+                    st.button("Use the folder Siege saves to", on_click=_use_game_folder, args=(auto,),
+                              type="tertiary")
         if typed:
             p = Path(typed).expanduser()
             if not p.exists():
@@ -349,6 +434,8 @@ else:
             st.stop()
         match, raw, parse_warnings = result
         files = len(state["groups"][name])
+        my_name, my_players, my_necc = my_team()
+        match, sides = name_sides(match, my_name, my_players, my_necc)
         for w in parse_warnings:
             st.warning(w, icon="⚠️")
         with st.sidebar:
@@ -382,13 +469,23 @@ snapshot_columns[2].metric("Top EPS", top_player.eps)
 snapshot_columns[3].metric("Top performer", top_player.name)
 
 # ------------------------------------------------------------ scorecard ---
+def _side_html(side: int, align: str) -> str:
+    logo = sides["logos"].get(side)
+    img = f'<img class="sc-logo" src="{html.escape(logo, quote=True)}" alt="">' if logo else ""
+    you = '<span class="sc-you">YOUR TEAM</span>' if sides["mine"] == side and my_name else ""
+    inner = f'{img}<div><div class="team-name">{html.escape(team_names[side])}</div>{you}</div>'
+    mirrored = "flex-direction:row-reverse;text-align:right;" if align == "flex-end" else ""
+    return f'<div class="sc-side" style="{mirrored}">{inner}</div>'
+
+
 st.markdown(
     f'<div class="scorecard">'
-    f'<div class="team-name">{html.escape(team_names[0])}</div>'
+    f'{_side_html(0, "flex-start")}'
     f'<div style="text-align:center"><span class="score-big">{score[0]}</span>'
     f'<span style="color:#8b949e;font-size:1.6rem"> : </span><span class="score-big">{score[1]}</span><br>'
-    f'<span class="map-pill">{html.escape(match["map"])} · {len(match["rounds"])} round{"s" if len(match["rounds"]) != 1 else ""}</span></div>'
-    f'<div class="team-name" style="text-align:right">{html.escape(team_names[1])}</div>'
+    f'<span class="map-pill">{html.escape(match["map"])} · {len(match["rounds"])} round{"s" if len(match["rounds"]) != 1 else ""}'
+    f'{" · " + html.escape(match["match_type"]) if match.get("match_type") else ""}</span></div>'
+    f'{_side_html(1, "flex-end")}'
     f'</div>', unsafe_allow_html=True)
 
 # ------------------------------------------------------------ scoreboards -
@@ -399,7 +496,7 @@ for team_idx, team_name in enumerate(team_names[:2]):
         st.markdown(scoreboard_html(team_name, won, team_rows), unsafe_allow_html=True)
 
 if name is not None:
-    confirm_match(name, match, files)
+    confirm_match(name, match, files, my_name, my_players, sides["mine"])
 else:
     st.caption("The demo match is only for trying the app, so it can't be added to your stats.")
 

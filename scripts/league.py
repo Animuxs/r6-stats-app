@@ -1,7 +1,13 @@
 """The League & Team page: say which league or tournament your team plays in, and which team is
 yours. Pick a Liquipedia event (S- to D-Tier), a NECC division, or name a league that isn't
 listed. It's saved on this PC: the banner on every page shows it, and the season tracker can be
-named after it. NECC's school directory (school colors and logos, rosters) is here too."""
+named after it.
+
+Saving your team sets the app up for it, with nothing typed: a NECC team comes with its roster
+(rosters.py: every player's Ubisoft name, as replays show them), so its players are tracked in
+the season tracker, become a Team Analytics team that Ask knows by name, and the team's colors and
+logo go on the app. Any other team's players are found in your custom games. Find a team looks up
+any NECC team, yours or an opponent's. NECC's school directory is here too."""
 
 from __future__ import annotations
 
@@ -15,19 +21,29 @@ from datetime import date
 import streamlit as st
 
 import events
+import rosters
+from team_ui import roster_html, team_card, team_css
 from app_info import is_public_host
 from branding import DEFAULT_COMPETITION, DEFAULT_THEME, apply_competition, apply_theme, current_competition
 from necc_data import MAX_CATALOG_BYTES, bundled_school_catalog, fetch_school_catalog, normalize_school_catalog
 from season_stats import StatsError, StatsManager
+from sources import current_source, open_stats_db, parse
 from ui import md
 
 LIQUIPEDIA, NECC, CUSTOM = "Liquipedia event (S–D Tier)", "NECC", "My league isn't listed"
 SOURCES = {LIQUIPEDIA: "liquipedia", NECC: "necc", CUSTOM: "custom"}
 NOT_LISTED = "My team isn't listed…"
+FOUND_KEY = "league_players_found"  # the players picked from your replays, for a team without a roster
 ALL_REGIONS = "All regions"
 TIER_HELP = ("Liquipedia's tiers: S is the top international events (Majors, the Six Invitational), A the "
              "regional leagues, B and C the main third-party and challenger circuits, D community and amateur "
              "events.")
+
+
+def _default(key: str, index: int) -> int | None:
+    """A widget's starting choice, unless "This is my team" has already set it (Streamlit warns
+    when a widget gets both)."""
+    return None if key in st.session_state else index
 
 
 def _dates(event: dict) -> str:
@@ -110,12 +126,16 @@ def pick_necc(saved: dict) -> dict | None:
     today = date.today()
     for e in listed:
         e["status"] = events.status(e, today)
+        for team in rosters.teams():  # a team on a division's roster but not in its snapshot
+            if f"necc:{team['event_id']}" == e["id"] and team["name"] not in e["teams"]:
+                e["teams"].append(team["name"])
+                e["schools"][team["name"]] = team["school"]
     ids = [e["id"] for e in listed]
     by_id = {e["id"]: e for e in listed}
     divisions = [i for i in ids if by_id[i]["division"]]
     default = saved["id"] if saved["id"] in ids else (divisions[0] if divisions else ids[0])
     event = by_id[st.selectbox("Division", ids, format_func=lambda i: _label(by_id[i]), key="league_necc_event",
-                               index=ids.index(default))]
+                               index=_default("league_necc_event", ids.index(default)))]
     st.caption(f"NECC's Rainbow Six season as of {events.necc_captured_at()}: Divisions I–VI and the placement "
                "event that sorted teams into them.")
     event_card(event)
@@ -147,8 +167,11 @@ def pick_team(event: dict, saved: dict) -> str:
         def label(team: str) -> str:
             school = schools.get(team)
             return f"{team} · {school}" if school and school.casefold() not in team.casefold() else team
-        team = st.selectbox(f"Your team ({len(teams)} listed)", options, index=index, format_func=label,
-                            key=f"league_team:{_team_key(event)}")
+        key = f"league_team:{_team_key(event)}"
+        if st.session_state.get(key) not in (None, *options):
+            del st.session_state[key]  # a team that isn't in this list (anymore)
+        team = st.selectbox(f"Your team ({len(teams)} listed)", options, index=_default(key, index), format_func=label,
+                            key=key)
         if team != NOT_LISTED:
             return team
     return st.text_input("Your team's name", value=current if current not in teams else "", max_chars=180,
@@ -178,32 +201,110 @@ def save(event: dict) -> None:
     except OSError as error:
         state["league_note"] = ("error", f"Couldn't save it: {error}")
         return
-    state["league_note"] = ("success", f"Saved: {team + ' in ' if team else ''}{event['name']}."
-                            + (" The season tracker now uses it as the season." if name_season else ""))
-
-
-def track_players(team: str) -> None:
-    st.subheader("Track your players")
-    st.caption("Add your players' exact in-game usernames to the season tracker under this team, so their "
-               "replays count toward its season stats.")
-    with st.form("league_players"):
-        usernames = st.text_area("Siege usernames", placeholder="One exact in-game username per line")
-        saved = st.form_submit_button("Track these players", disabled=is_public_host() or not team)
-    if is_public_host():
-        st.caption("Roster tracking is off on the public website. Use the Windows app or run the app yourself.")
-    if saved:
-        names = list(dict.fromkeys(n.strip() for n in usernames.splitlines() if n.strip()))
-        if not names:
-            st.warning("Enter at least one Siege username.")
-            return
-        season = st.session_state.get("r6_season", "current")
+    notes = [f"Saved: {team + ' in ' if team else ''}{event['name']}."
+             + (" The season tracker now uses it as the season." if name_season else "")]
+    roster_team = rosters.find(team, event.get("division", "")) if event["source"] == "necc" and team else None
+    players = rosters.in_game_names(roster_team) if roster_team else list(state.get(FOUND_KEY) or [])
+    players = list(dict.fromkeys(players + _extra_players()))
+    if team and players and state.get("league_track", True):
+        notes.append(_track(team, players, value["season"] or state.get("r6_season") or "current"))
+    if roster_team and state.get("league_theme", True):
         try:
-            with StatsManager(season=season) as manager:
-                manager.add_players(names, team=team)
-        except (OSError, ValueError, StatsError, sqlite3.Error) as error:
-            st.error(f"Couldn't save the roster: {error}")
-            return
-        st.success(f"Tracking {len(names)} player{'s' if len(names) != 1 else ''} for {md(team)} in {md(season)}.")
+            apply_theme(rosters.theme_of(roster_team))
+            notes.append("Your team's colors and logo are on the app.")
+        except OSError as error:
+            notes.append(f"Couldn't save your team's colors: {error}")
+    state["league_note"] = ("success", " ".join(notes))
+
+
+def _extra_players() -> list[str]:
+    """Players typed under "Add players who aren't listed" (a sub, a new signing)."""
+    raw = st.session_state.get("league_extra_players") or ""
+    return [n.strip() for n in re.split(r"[\n,]", raw) if n.strip()][:20]
+
+
+def _track(team: str, players: list[str], season: str) -> str:
+    """Make `players` your team: a Team Analytics team Ask knows by name and, in the Windows app, the
+    season tracker's players for `team`. Returns what was done, in words."""
+    with open_stats_db() as db:
+        db.save_roster(team, players)
+    done = f"{len(players)} players are your team in Team Analytics and Ask"
+    if is_public_host():
+        return done + " (season tracking is off on the public website)."
+    try:
+        with StatsManager(season=season) as manager:
+            manager.add_players(players, team=team)
+    except (OSError, ValueError, StatsError, sqlite3.Error) as error:
+        return done + f", but the season tracker couldn't be updated: {error}."
+    return done + f", and tracked for {season}: their matches are picked for you on the Dashboard."
+
+
+def roster_from_replays(team: str) -> None:
+    """For a team without a roster here: its players, found in your custom games."""
+    st.markdown("**Your players**")
+    state = current_source()
+    groups = (state or {}).get("groups") or {}
+    scan = st.session_state.get("league_replay_scan")
+    if not groups:
+        st.caption("Open your replay folder on the **Dashboard** and come back: the app finds your players in "
+                   "your custom games (your scrims and league matches), so you don't type their names.")
+    elif scan is None:
+        st.caption("The app reads your newest custom games and lists who played on your side.")
+        if st.button("Find my players in my replays", type="primary", key="league_scan"):
+            bar = st.progress(0.0, text="Reading your custom games…")
+            with open_stats_db() as db:
+                me = db.me()
+            found = rosters.from_replays(groups, lambda name: parse(state, name), me,
+                                         progress=lambda done, total: bar.progress(min(done / max(total, 1), 1.0)))
+            bar.empty()
+            st.session_state["league_replay_scan"] = found
+            st.rerun()
+    else:
+        if not scan:
+            st.info("No custom games with you in them yet. Play a scrim, or add your players below.")
+        else:
+            looked = scan[0][2]
+            regulars = [name for name, n, _ in scan if n >= max(2, looked // 2)]
+            st.session_state.setdefault(FOUND_KEY, regulars)
+            st.multiselect(f"Played on your side in your last {looked} custom game{'s' if looked != 1 else ''}",
+                           [name for name, _, _ in scan], key=FOUND_KEY,
+                           format_func=lambda name: f"{name} ({next(n for x, n, _ in scan if x == name)} games)",
+                           help=f"Picked: everyone who played in at least half of them. These become {team}'s "
+                                "players when you save.")
+        if st.button("Look again", type="tertiary", key="league_rescan"):
+            st.session_state.pop("league_replay_scan", None)
+            st.session_state.pop(FOUND_KEY, None)
+            st.rerun()
+
+
+def _choose(team: dict) -> None:
+    """Find a team's "This is my team": pick its division and team above."""
+    st.session_state["league_source"] = NECC
+    st.session_state["league_necc_event"] = f"necc:{team['event_id']}"
+    st.session_state[f"league_team:necc:{team['event_id']}"] = team["name"]
+    st.session_state["league_note"] = ("info", f"Picked {team['name']}: check it below and save.")
+
+
+def find_a_team() -> None:
+    st.subheader("Find a team")
+    snapshot_day = rosters.captured_at()
+    st.caption("Any NECC team, yours or the one you play next: its roster with the in-game names replays show, "
+               f"its division and its record (as of {snapshot_day or 'the snapshot'}). The Windows app picks up "
+               "newer rosters when it starts.")
+    query = st.text_input("Search teams, schools or players", key="team_search",
+                          placeholder="e.g. Akron, Knights Gold, Divine.UA")
+    if not query.strip():
+        return
+    found = rosters.search(query)
+    if not found:
+        st.info("No NECC team matches. Try the school's name, or a player's in-game name.")
+        return
+    st.caption(f"{len(found)} team{'s' if len(found) != 1 else ''}" + (", the first 8 shown" if len(found) > 8 else ""))
+    for team in found[:8]:
+        st.markdown(team_card(team), unsafe_allow_html=True)
+        with st.expander(f"{team['name']}'s roster ({sum(p['player'] for p in team['players'])} players)"):
+            st.markdown(roster_html(team) or "No players listed yet.", unsafe_allow_html=True)
+            st.button("This is my team", key=f"choose:{rosters.team_key(team)}", on_click=_choose, args=(team,))
 
 
 def refresh_liquipedia() -> None:
@@ -332,6 +433,7 @@ st.markdown("""<style>
 .lg-fact b { color:var(--text); font-weight:600; font-size:.92rem; }
 </style>""", unsafe_allow_html=True)
 
+team_css()
 st.caption("LEAGUES & TOURNAMENTS")
 st.title("League & Team")
 st.write("Tell the app where your team competes: any Liquipedia event from S- to D-Tier, a NECC division, or a "
@@ -345,29 +447,51 @@ if saved["name"]:
 
 source_names = list(SOURCES)
 default_source = next((n for n, s in SOURCES.items() if s == saved["source"]), LIQUIPEDIA)
-source = st.radio("Where do you compete?", source_names, index=source_names.index(default_source),
-                  horizontal=True, key="league_source")
+source = st.radio("Where do you compete?", source_names,
+                  index=_default("league_source", source_names.index(default_source)), horizontal=True,
+                  key="league_source")
 picked = {LIQUIPEDIA: pick_liquipedia, NECC: pick_necc, CUSTOM: pick_custom}[source](saved)
 
 team = ""
 if picked:
     team = pick_team(picked, saved)
+    roster_team = rosters.find(team, picked.get("division", "")) if picked["source"] == "necc" and team else None
+    if roster_team:
+        st.markdown(team_card(roster_team, mine=True) + roster_html(roster_team), unsafe_allow_html=True)
+        unlinked = [p["name"] for p in roster_team["players"] if not p["ubisoft"]]
+        st.caption(f"{len(rosters.in_game_names(roster_team))} players from NECC's roster (as of "
+                   f"{rosters.captured_at()}): nothing to type."
+                   + (f" {', '.join(unlinked)} haven't linked a Ubisoft name, so they're tracked by their NECC name."
+                      if unlinked else ""))
+    elif team:
+        roster_from_replays(team)
+    if team:
+        with st.expander("Add players who aren't listed"):
+            st.text_area("In-game names", key="league_extra_players", placeholder="One per line: a sub, a new player",
+                         help="Their exact Siege usernames, as replays show them.")
+        st.checkbox("Track my team's players", value=True, key="league_track",
+                    help="Your players become a team in Team Analytics and Ask, and the season tracker's players "
+                         "for your team; the Dashboard then picks them in each match for you.")
+        if roster_team and (roster_team["color"] or roster_team["logo_url"]):
+            st.checkbox("Use my team's colors and logo", value=True, key="league_theme",
+                        help="Every page, the banner, the docked panel and the launch screen take your team's "
+                             "colors and logo. Change them any time on Team Theme.")
     st.checkbox("Name my season after it", value=bool(saved["season"]) and saved["id"] == picked["id"],
                               key="league_name_season",
                               help="The season tracker counts this league's matches under its name instead of "
                                    "\"current\". You can still type another season name on any page.")
-    st.button("Save as my league", type="primary", on_click=save, args=(picked,),
+    st.button("Save my team" if team else "Save as my league", type="primary", on_click=save, args=(picked,),
               key="league_save")
 if source == LIQUIPEDIA:
     refresh_liquipedia()
 
 st.divider()
-track_players(team or saved["team"])
+find_a_team()
 if source == NECC:
     st.divider()
-    st.subheader("NECC school directory")
-    st.caption("Every Rainbow Six registration in NECC's LeagueOS season, with each school's colors and logo.")
-    st.link_button("Open NECC on LeagueOS", "https://necc.v1.leagueos.gg/")
-    necc_directory()
+    with st.expander("NECC school directory (sign-ups, school colors and logos)"):
+        st.caption("Every Rainbow Six registration in NECC's LeagueOS season, with each school's colors and logo.")
+        st.link_button("Open NECC on LeagueOS", "https://necc.v1.leagueos.gg/")
+        necc_directory()
 st.caption("League, tournament and school names and marks belong to their owners. This independent app isn't "
            "endorsed by Liquipedia, NECC or Ubisoft.")

@@ -10,6 +10,7 @@ import re
 import streamlit as st
 
 from app_info import is_public_host
+from branding import current_competition
 from ask_engine import eps_by_player, rate, team_report, team_summary
 from metrics_engine import pro_league_row, round_eps, rows_csv
 from season_stats import StatsError, StatsManager
@@ -17,7 +18,8 @@ from sources import current_source, match_label, no_matches_yet, open_stats_db, 
 from stats_db import nice_time
 from ui import md
 
-ROSTER_SIZE = 5
+ROSTER_SIZE = 5   # players on the field
+MAX_ROSTER = 10   # a team's whole roster, subs and all
 NEW = "New team"
 
 
@@ -67,7 +69,7 @@ def _team_stats(summary: dict) -> None:
 def _names(choice: str) -> list[str]:
     """The player names typed into the form for `choice`, without blanks or repeats (any case)."""
     seen: dict[str, str] = {}
-    for i in range(ROSTER_SIZE):
+    for i in range(st.session_state.get(f"roster_size_{choice}", ROSTER_SIZE)):
         name = st.session_state.get(f"roster_{choice}_{i}", "").strip()
         if name and name.casefold() not in seen:
             seen[name.casefold()] = name
@@ -169,7 +171,7 @@ build_tab, season_tab = st.tabs(["Build a team", "Season teams"])
 
 # ------------------------------------------------------------ build a team --
 with build_tab:
-    st.caption("Pick up to five players. Every match you've added with enough of them tracked on the same side is "
+    st.caption("Pick your players (up to ten, subs included). Every match you've added with enough of them tracked on the same side is "
                "found: you see how they do as a team, and each player's own stats. Teams you build are saved, and "
                "**Ask** understands their names.")
     with open_stats_db() as db:
@@ -182,16 +184,23 @@ with build_tab:
 
     if has_matches:
         if st.session_state.get("team_choice") not in [NEW, *teams]:
-            st.session_state["team_choice"] = NEW
+            # your team (saved on League & Team) to start with, else a new one
+            mine = current_competition()["team"].casefold()
+            st.session_state["team_choice"] = next((t for t in teams if t.casefold() == mine), NEW)
         choice = st.selectbox("Team", [NEW, *teams], key="team_choice") if teams else NEW
         # a new team starts as you and the players you've played with most
         name, players = ("", [me, *mates] if me else []) if choice == NEW else (choice, teams[choice])
-        players = (players + [""] * ROSTER_SIZE)[:ROSTER_SIZE]
+        # the whole roster, subs and all, and a spare box for one more
+        size = min(MAX_ROSTER, max(ROSTER_SIZE, len(players) + (choice != NEW)))
+        st.session_state[f"roster_size_{choice}"] = size
+        players = (players + [""] * size)[:size]
         with st.form(f"roster_form_{choice}"):
             st.text_input("Team name", value=name, placeholder="e.g. Varsity", key=f"team_name_{choice}")
-            columns = st.columns(ROSTER_SIZE)
-            for i, col in enumerate(columns):
-                col.text_input(f"Player {i + 1}", value=players[i], placeholder="Username", key=f"roster_{choice}_{i}")
+            for row in range(0, size, ROSTER_SIZE):
+                for i, col in enumerate(st.columns(ROSTER_SIZE), row):
+                    if i < size:
+                        col.text_input(f"Player {i + 1}", value=players[i], placeholder="Username",
+                                       key=f"roster_{choice}_{i}")
             st.slider("Count a match when at least this many of them were on the same side", 1, ROSTER_SIZE, 3,
                       key=f"roster_min_{choice}")
             st.form_submit_button("Show team stats", type="primary", on_click=_save_team, args=(choice,))

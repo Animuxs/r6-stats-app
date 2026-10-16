@@ -29,6 +29,8 @@ _PATCHES = [
     mock.patch.object(season_stats, "DEFAULT_DB_PATH", Path(_DB_FOLDER) / "stats.db"),
     # and no replay folder is found on this PC, so nothing's parsed unless a test asks for it
     mock.patch.object(replay_parser, "find_replay_folders", return_value=[]),
+    # nor are newer rosters looked for online
+    mock.patch("rosters.update_on_launch"),
 ]
 
 
@@ -505,6 +507,7 @@ class TestAddingMatches(unittest.TestCase):
             mock.patch.object(season_stats, "DEFAULT_DB_PATH", Path(tempfile.mkdtemp(dir=_DB_FOLDER)) / "stats.db"),
             mock.patch.object(replay_parser, "find_replay_folders", return_value=[self.folder]),
             mock.patch.object(app_info, "is_loopback", return_value=True),  # on this PC for every run, not just the first
+            mock.patch("branding.is_loopback", return_value=True),  # (branding keeps its own reference)
             mock.patch("sources.collect_rec_files", side_effect=lambda path, workdir, scanner: [
                 str(path / name / f"{name}-R01.rec") for name in self.matches]),
             mock.patch("sources.parse_match",
@@ -583,7 +586,7 @@ class TestAddingMatches(unittest.TestCase):
             tracker.add_players(TEAM0 + TEAM1[:1], team="Varsity")
         at = run_app()
         self.picker(at, 0).set_value(TEAM0[:3]).run()
-        at.checkbox(key="confirm_season").check().run()
+        at.checkbox(key="confirm_season:demo-1").check().run()
         at.text_input(key="r6_season_input").set_value("S1").run()
         at = self.confirm(at).click().run()
         self.assertFalse(at.exception)
@@ -600,10 +603,74 @@ class TestAddingMatches(unittest.TestCase):
                         for name, match in self.matches.items()}
         at = run_app()
         self.picker(at, 0).set_value(TEAM0[:1]).run()
-        at.checkbox(key="confirm_season").check().run()
+        at.checkbox(key="confirm_season:demo-1").check().run()
         self.assertFalse(at.exception)
         self.assertEqual(at.text_input(key="confirm_team_name:demo-1:0").value, "")  # asks for the real name
         self.assertNotIn("confirm_team_name:demo-1:1", [t.key for t in at.text_input])  # nobody picked there
+
+
+    def save_team(self, team: str, players: list[str]) -> None:
+        """Your team, as League & Team saves it: the league, and the team's players."""
+        import branding
+        from stats_db import StatsDB
+
+        patch = mock.patch.object(branding, "DEFAULT_DB_PATH", season_stats.DEFAULT_DB_PATH)
+        patch.start()
+        self.addCleanup(patch.stop)
+        branding.save_competition(dict(branding.DEFAULT_COMPETITION, source="custom", name="Scrim League", team=team))
+        with StatsDB() as db:
+            db.save_roster(team, players)
+
+    def test_your_teams_players_are_picked_and_its_side_named(self):
+        from sample_data import TEAM0
+
+        self.matches = {name: dict(match, team_names=["YOUR TEAM", "ENEMY TEAM"], match_type="Custom game")
+                        for name, match in self.matches.items()}
+        self.save_team("Lakeside", [p.upper() for p in TEAM0[:4]])  # any case
+        at = run_app()
+        self.assertFalse(at.exception)
+        self.assertEqual(self.picker(at, 0).value, TEAM0[:4])
+        self.assertEqual(self.picker(at, 1).value, [])  # never anyone else
+        self.assertEqual(self.picker(at, 0).label, "Lakeside")  # not "YOUR TEAM"
+        self.assertTrue(any("Picked from **Lakeside**'s roster" in c.value for c in at.caption))
+        scorecard = next(m.value for m in at.markdown if 'class="scorecard"' in m.value)
+        self.assertIn("Lakeside", scorecard)
+        self.assertIn('class="sc-you"', scorecard)
+        self.assertTrue(at.checkbox(key="confirm_season:demo-1").value)  # your team's custom game: the season too
+        at = self.confirm(at).click().run()
+        self.assertFalse(at.exception)
+        self.assertEqual(self.stats(), {"demo-1": sorted(TEAM0[:4], key=str.casefold)})
+        self.assertIn("player-rounds to current", at.success[0].value)
+
+    def test_a_ranked_match_isnt_saved_to_the_season_for_you(self):
+        from sample_data import TEAM0
+
+        self.save_team("Lakeside", TEAM0[:4])
+        at = run_app()
+        self.assertEqual(self.picker(at, 0).value, TEAM0[:4])
+        self.assertFalse(at.checkbox(key="confirm_season:demo-1").value)
+        self.assertTrue(any("**Ranked** match" in w.value for w in at.warning))
+        self.assertEqual(self.stats(), {})  # and still nothing until it's confirmed
+
+    def test_the_replay_folder_you_pick_stays(self):
+        other = Path(tempfile.mkdtemp(dir=_DB_FOLDER))
+        at = run_app()
+        self.assertEqual(at.text_input(key="replay_folder").value, str(self.folder))  # the game's, found
+        at.text_input(key="replay_folder").set_value(str(other)).run()
+        at.switch_page("history.py").run()
+        at.switch_page("report.py").run()
+        self.assertFalse(at.exception)
+        self.assertEqual(at.text_input(key="replay_folder").value, str(other))  # not back to the game's folder
+        self.assertEqual(run_app().text_input(key="replay_folder").value, str(other))  # nor after a restart
+        at = next(b for b in at.button if b.label == "Use the folder Siege saves to").click().run()
+        self.assertEqual(at.text_input(key="replay_folder").value, str(self.folder))
+        self.assertEqual(run_app().text_input(key="replay_folder").value, str(self.folder))
+
+    def test_a_folder_that_isnt_there_isnt_kept(self):
+        at = run_app()
+        at.text_input(key="replay_folder").set_value(str(self.folder / "nope")).run()
+        self.assertTrue(any("Not found" in e.value for e in at.error))
+        self.assertEqual(run_app().text_input(key="replay_folder").value, str(self.folder))
 
 
 class TestCheckingEarlierMatches(unittest.TestCase):
