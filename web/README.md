@@ -23,6 +23,7 @@ do not expose it to an untrusted network.
 The client parses replay uploads with the existing replay scanner, saves the
 players you pick from each match into a season (nobody is picked until you do,
 and the API logs only those players), and exports season reports as JSON. School
-catalogs can be imported in the School Selection module. An authorized HTTPS
+catalogs can be imported in the School Selection module. `GET /api/v1/events` lists
+the Liquipedia events and NECC divisions the Streamlit app's League & Team page offers. An authorized HTTPS
 feed can be configured for the API with `NECC_R6_DATA_URL`; the payload contract
 is described in [scripts/README.md](../scripts/README.md#necc-school-data).

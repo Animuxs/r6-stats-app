@@ -10,11 +10,12 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi import FastAPI, File, HTTPException, Query, Request, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+import events
 from necc_data import MAX_CATALOG_BYTES, bundled_school_catalog, fetch_school_catalog, normalize_school_catalog
 from file_guard import ReplayScanner
 from parser import ReplayParseError, collect_rec_files, group_by_match, parse_match, r6_dissect_available, save_uploads
@@ -172,6 +173,23 @@ def log_match(season: str, payload: MatchLogRequest) -> dict[str, Any]:
             "untracked_players": sorted(result.untracked_players),
             "warnings": result.warnings,
         }
+
+
+@app.get("/api/v1/events")
+def list_events(tier: list[str] = Query(default=[]), region: str = "", q: str = "") -> dict[str, Any]:
+    """The leagues and tournaments a team can play in: Liquipedia's S- to D-Tier events that are on
+    now, coming up or ended in the last six months (filtered by `tier`, `region`, and `q` against
+    names, organizers and teams), and NECC's Rainbow Six divisions."""
+    catalog = events.current_catalog()
+    tiers = {t.strip().upper() for t in tier if t.strip()}
+    query = q.strip().casefold()
+    found = [e for e in events.current_events(catalog)
+             if (not tiers or e["tier"] in tiers) and (not region or e["region"].casefold() == region.strip().casefold())
+             and (not query or query in e["name"].casefold() or query in e["organizer"].casefold()
+                  or any(query in team.casefold() for team in e["teams"]))]
+    return {"events": found, "necc": events.necc_events(), "captured_at": catalog.get("captured_at", ""),
+            "necc_captured_at": events.necc_captured_at(), "attribution": events.ATTRIBUTION,
+            "license_url": events.LICENSE_URL}
 
 
 @app.get("/api/v1/schools")

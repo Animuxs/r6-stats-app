@@ -231,9 +231,9 @@ DEFAULT_ACCENT = "#52d5f2"  # branding.DEFAULT_THEME's primary color
 
 
 def saved_theme() -> dict:
-    """The school theme saved on the School Theme page (branding.save_theme), read without
+    """The team theme saved on the Team Theme page (branding.save_theme), read without
     loading Streamlit so the launch screen can show it straight away: its color and name.
-    The default Siege / NECC theme when nothing (valid) is saved."""
+    The default theme when nothing (valid) is saved."""
     theme = {"primary": DEFAULT_ACCENT, "name": ""}
     try:
         saved = json.loads((DATA_DIR / "appearance.json").read_text(encoding="utf-8"))
@@ -242,7 +242,7 @@ def saved_theme() -> dict:
     if isinstance(saved, dict):
         if re.fullmatch(r"#[0-9a-fA-F]{6}", str(saved.get("primary", ""))):
             theme["primary"] = saved["primary"]
-        if isinstance(saved.get("name"), str) and saved["name"] != "Siege / NECC":
+        if isinstance(saved.get("name"), str) and saved["name"] not in ("R6 Match Stats", "Siege / NECC"):  # the default's, now and before 1.6.0
             theme["name"] = saved["name"].strip()[:80]
     return theme
 

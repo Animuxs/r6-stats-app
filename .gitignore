@@ -46,3 +46,8 @@ __pycache__/
 # Windows app build (desktop/build.ps1)
 /build/
 /dist/
+
+# the browser edition's build output (python browser/build.py)
+/browser/dist/
+/browser/r6-dissect.wasm
+/browser/wasm_exec.js

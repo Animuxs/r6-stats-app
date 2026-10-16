@@ -1,5 +1,6 @@
 # Builds the Windows app: dist\R6MatchStats (the app), dist\R6MatchStats-Setup.exe
-# (the installer) and dist\R6MatchStats-Windows.zip (the portable version).
+# (the installer), dist\R6MatchStats-Windows.zip (the portable version) and
+# dist\R6MatchStats-Browser.html (the browser edition).
 # Run from anywhere:  powershell -ExecutionPolicy Bypass -File desktop\build.ps1
 # Needs Python 3.12+ (uses .venv if present) and Go 1.23+.
 # Inno Setup 6 is installed for the installer with winget or choco if missing.
@@ -101,8 +102,13 @@ if ($sign) {
     Set-Content -Path dist\SIGNATURE.txt -Encoding utf8 -Value "Signed by: $name", "Thumbprint: $($signer.Thumbprint)"
 }
 
+# the browser edition (browser/build.py): the app as one HTML page that reads replays in the browser
+& $python browser\build.py --out build\browser --version $version
+if ($LASTEXITCODE) { throw "building the browser edition failed" }
+Copy-Item build\browser\R6MatchStats.html dist\R6MatchStats-Browser.html
+
 # checksums people can compare their download against (Get-FileHash shows the same value)
-$sums = foreach ($file in "R6MatchStats-Setup.exe", "R6MatchStats-Windows.zip") {
+$sums = foreach ($file in "R6MatchStats-Setup.exe", "R6MatchStats-Windows.zip", "R6MatchStats-Browser.html") {
     "$((Get-FileHash "dist\$file" -Algorithm SHA256).Hash.ToLower())  $file"
 }
 Set-Content -Path dist\SHA256SUMS.txt -Value $sums -Encoding ascii
@@ -110,5 +116,6 @@ Set-Content -Path dist\SHA256SUMS.txt -Value $sums -Encoding ascii
 Write-Host "Built R6 Match Stats $version`:"
 Write-Host "  dist\R6MatchStats-Setup.exe   (installer)"
 Write-Host "  dist\R6MatchStats-Windows.zip (portable)"
-Write-Host "  dist\SHA256SUMS.txt           (checksums of both)"
+Write-Host "  dist\R6MatchStats-Browser.html (browser edition)"
+Write-Host "  dist\SHA256SUMS.txt           (checksums of all three)"
 if ($sign) { Write-Host "  dist\SIGNATURE.txt           (signed by $name)" } else { Write-Host "  (not code-signed)" }

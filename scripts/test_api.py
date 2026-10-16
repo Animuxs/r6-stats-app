@@ -41,6 +41,17 @@ class TestApi(unittest.TestCase):
         schools = response.json()["schools"]
         self.assertEqual(sum(len(school["teams"]) for school in schools), 123)
 
+    def test_leagues_and_tournaments(self):
+        with mock.patch.object(season_stats, "DEFAULT_DB_PATH", api.DEFAULT_DB_PATH):  # no catalog fetched here
+            body = self.client.get("/api/v1/events").json()
+            s_tier = self.client.get("/api/v1/events", params={"tier": "s"}).json()["events"]
+            collegiate = self.client.get("/api/v1/events", params={"q": "collegiater6"}).json()["events"]
+        self.assertGreater(len(body["events"]), len(s_tier))
+        self.assertTrue(s_tier and all(e["tier"] == "S" for e in s_tier))
+        self.assertTrue(collegiate and all("collegiater6" in (e["name"] + e["organizer"]).casefold() for e in collegiate))
+        self.assertEqual([e["division"] for e in body["necc"] if e["division"]], ["I", "II", "III", "IV", "V", "VI"])
+        self.assertIn("Liquipedia", body["attribution"])
+
     def test_health_and_bad_season(self):
         self.assertEqual(self.client.get("/api/v1/health").json()["status"], "ok")
         self.assertEqual(self.client.get("/api/v1/seasons/bad!season/summary").status_code, 400)

@@ -30,11 +30,12 @@ HOW_IT_WORKS = ("It only reads match replay files the game has already saved. It
                 "and gives no advantage in a match.")
 # the Windows build stamps the release's version (its tag without the "v") next to this file
 _stamped_version = _HERE / "version.txt"
-APP_VERSION = (_stamped_version.read_text().strip() if _stamped_version.is_file() else "") or "1.5.0"
+APP_VERSION = (_stamped_version.read_text().strip() if _stamped_version.is_file() else "") or "1.6.0"
 
 # the Windows app, as attached to each GitHub release by .github/workflows/windows-app.yaml
 WINDOWS_INSTALLER = "R6MatchStats-Setup.exe"
 WINDOWS_ZIP = "R6MatchStats-Windows.zip"  # the portable version: no install, run from any folder
+BROWSER_EDITION = "R6MatchStats-Browser.html"  # the app as one page that reads replays in the browser (browser/)
 CHECKSUMS = "SHA256SUMS.txt"  # SHA-256 of both, written by desktop/build.ps1
 SIGNATURE = "SIGNATURE.txt"  # who code-signed them, written by desktop/build.ps1 when it signs
 DEFAULT_REPO = "julio208920/r6-dissect"
@@ -63,6 +64,7 @@ GITHUB_REPO = github_repo()
 RELEASES_URL = f"https://github.com/{GITHUB_REPO}/releases/latest"
 WINDOWS_DOWNLOAD_URL = f"{RELEASES_URL}/download/{WINDOWS_INSTALLER}"
 WINDOWS_ZIP_URL = f"{RELEASES_URL}/download/{WINDOWS_ZIP}"
+BROWSER_EDITION_URL = f"{RELEASES_URL}/download/{BROWSER_EDITION}"
 
 
 def _get(url: str, accept: str = "application/vnd.github+json"):
@@ -78,8 +80,8 @@ def release_version(tag: str) -> str:
 
 def latest_release(repo: str = GITHUB_REPO) -> dict | None:
     """The newest published release that carries the Windows app, from the GitHub API:
-    {"version", "url", "installer", "zip", "sha256", "signer"} ("zip", the installer's
-    "sha256" and "signer", {"name", "thumbprint"} of its code signature, may be None). None if
+    {"version", "url", "installer", "zip", "browser", "sha256", "signer"} ("zip", "browser", the
+    installer's "sha256" and "signer", {"name", "thumbprint"} of its code signature, may be None). None if
     the repo has no such release yet. Raises OSError if GitHub can't be reached."""
     with _get(f"https://api.github.com/repos/{repo}/releases?per_page=20") as response:
         releases = json.load(response)
@@ -90,6 +92,7 @@ def latest_release(repo: str = GITHUB_REPO) -> dict | None:
         if WINDOWS_INSTALLER in assets:
             return {"version": release_version(release["tag_name"]), "url": release["html_url"],
                     "installer": assets[WINDOWS_INSTALLER], "zip": assets.get(WINDOWS_ZIP),
+                    "browser": assets.get(BROWSER_EDITION),
                     "sha256": _published_sha256(assets.get(CHECKSUMS), WINDOWS_INSTALLER),
                     "signer": _published_signer(assets.get(SIGNATURE))}
     return None

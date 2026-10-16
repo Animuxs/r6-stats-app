@@ -36,6 +36,15 @@ func NewMatchReader(in *os.File) (m *MatchReader, err error) {
 	return
 }
 
+// NewMatchReaderFromRounds makes a MatchReader of rounds that have already been read, one
+// per round in play order, for callers without a match folder on disk (the WebAssembly build).
+func NewMatchReaderFromRounds(rounds []*Reader) *MatchReader {
+	return &MatchReader{
+		paths:  make([]string, len(rounds)),
+		rounds: rounds,
+	}
+}
+
 // Listen registers a callback to be run during round Read whenever
 // the pattern is found.
 func (m *MatchReader) Listen(pattern []byte, callback func(r *Reader) error) {

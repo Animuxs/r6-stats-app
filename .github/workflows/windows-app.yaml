@@ -2,7 +2,8 @@ name: Windows app
 
 # Builds the Windows app with desktop/build.ps1, tests the installer on a real
 # Windows machine (install, open the app window, uninstall), and attaches
-# R6MatchStats-Setup.exe, R6MatchStats-Windows.zip and their SHA256SUMS.txt to each
+# R6MatchStats-Setup.exe, R6MatchStats-Windows.zip, the browser edition (R6MatchStats-Browser.html)
+# and their SHA256SUMS.txt to each
 # published release, after a Microsoft Defender scan.
 # The website's download button points at the newest release that has them.
 on:
@@ -15,9 +16,11 @@ on:
       - "dissect/**"
       - "go.mod"
       - "go.sum"
+      - "browser/**"
+      - "wasm/**"
       - "main.go"
       - "scripts/*.py"
-      - "scripts/necc_season.json"
+      - "scripts/*.json"
       - "scripts/requirements.txt"
       - ".github/workflows/windows-app.yaml"
 
@@ -183,6 +186,7 @@ jobs:
           path: |
             dist/R6MatchStats-Setup.exe
             dist/R6MatchStats-Windows.zip
+            dist/R6MatchStats-Browser.html
             dist/SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         if: always()
@@ -200,7 +204,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $files = "dist/R6MatchStats-Setup.exe", "dist/R6MatchStats-Windows.zip", "dist/SHA256SUMS.txt"
+          $files = "dist/R6MatchStats-Setup.exe", "dist/R6MatchStats-Windows.zip", "dist/R6MatchStats-Browser.html", "dist/SHA256SUMS.txt"
           if (Test-Path dist/SIGNATURE.txt) { $files += "dist/SIGNATURE.txt" }  # who signed it, when it's signed
           gh release upload "${{ github.event.release.tag_name }}" @files --clobber
 

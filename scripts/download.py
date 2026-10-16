@@ -1,8 +1,8 @@
 """
 download.py
 ===========
-The "Get the Windows app" page: download link, install steps, updates, and
-where Siege keeps its replays.
+The "Get the Windows app" page: download link, install steps, updates, the browser
+edition, and where Siege keeps its replays.
 """
 
 from __future__ import annotations
@@ -29,6 +29,8 @@ release = latest_release()
 installer_url = release["installer"] if isinstance(release, dict) else app_info.WINDOWS_DOWNLOAD_URL
 zip_url = (release.get("zip") or app_info.WINDOWS_ZIP_URL) if isinstance(release, dict) else app_info.WINDOWS_ZIP_URL
 notes_url = release["url"] if isinstance(release, dict) else RELEASES_URL
+# releases before 1.6.0 don't have the browser edition
+browser_url = release.get("browser") if isinstance(release, dict) else app_info.BROWSER_EDITION_URL
 
 st.title("Get the Windows app")
 
@@ -102,6 +104,16 @@ else:
         st.code(signer["thumbprint"], language=None)
     st.caption("Every time it opens, the app also checks that none of its own files were changed, added "
                "or removed since it was installed, and refuses to run if they were.")
+
+if browser_url:
+    st.subheader("Use it in your browser")
+    st.write("Not on Windows, or can't install apps? The browser edition is the app as one web page: download it, "
+             "open it in any browser, and drop a match's replay files on it. Your replays are read right in the "
+             "browser tab and never uploaded. It has the scoreboards, the round-by-round breakdown and League & "
+             "Team, but not match history, Ask or the season tracker.")
+    st.link_button("⬇ Download the browser edition", browser_url)
+    st.caption(f"{app_info.BROWSER_EDITION} · about 13 MB · any modern browser. The first replay you open needs "
+               "an internet connection, to load Python into the page once.")
 
 st.subheader("Where are my replays?")
 st.markdown(
