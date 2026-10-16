@@ -346,4 +346,3 @@ with season_tab:
             } for m in saved], hide_index=True)
     st.download_button("Export season report", json.dumps(snapshot, indent=2).encode("utf-8"),
                        file_name=f"{season}_team_report.json", mime="application/json")
-

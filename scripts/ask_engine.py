@@ -1621,4 +1621,3 @@ def suggestions(vocab: Vocab, db: StatsDB, count: int = 8) -> list[str]:
            "Which operators do I play most?", *mine, "Attack vs defense win rate", "My record this week",
            "Top 5 players by EPS"]
     return out[:count]
-

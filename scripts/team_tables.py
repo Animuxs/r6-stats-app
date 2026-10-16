@@ -44,4 +44,3 @@ def season_player_table(db, manager, team: str) -> list[dict]:
     for row in table:
         row["EPS"] = str(row["EPS"])
     return table
-

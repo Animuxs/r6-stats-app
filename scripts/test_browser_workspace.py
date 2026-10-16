@@ -83,3 +83,11 @@ class TestBrowserWorkspace(unittest.TestCase):
         self.state["teams"].clear()
         self.assertTrue(self.run_engine("season", season="Fall")["tables"]["Test team"])
 
+    def test_restored_season_team_stays_empty_until_matches_are_picked(self):
+        self.state["seasonTeamMatches"] = {"Fall": {"Test team": []}}
+        season = self.run_engine("season", season="Fall")
+        self.assertIn("Test team", season["rosters"])
+        self.assertEqual(season["rounds_logged"], 0)
+        self.assertGreater(self.run_engine("season", season="Practice")["rounds_logged"], 0)
+        self.state["seasonTeamMatches"]["Fall"]["Test team"] = [self.entry["data"]["match_id"]]
+        self.assertGreater(self.run_engine("season", season="Fall")["rounds_logged"], 0)

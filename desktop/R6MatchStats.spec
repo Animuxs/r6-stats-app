@@ -76,4 +76,3 @@ exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name="R6MatchStats",
           console=False,  # a normal app window, no black console window
           icon=str(ICON), version=version)
 coll = COLLECT(exe, a.binaries, a.datas, name="R6MatchStats")
-

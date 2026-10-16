@@ -637,4 +637,3 @@ class StatsManager:
             (self.season, *(names or [])),
         )
         return [dict(row) for row in rows]
-

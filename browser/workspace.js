@@ -2,7 +2,7 @@
 (() => {
   "use strict";
   const ui = window.R6UI, R6 = window.R6, $ = id => document.getElementById(id), esc = ui.esc;
-  const empty = () => ({version: 1, matches: [], teams: {}, seasonTeams: {}, removedSeasonTeams: {}});
+  const empty = () => ({version: 1, matches: [], teams: {}, seasonTeams: {}, removedSeasonTeams: {}, seasonTeamMatches: {}});
   let real = empty(), sample = null, activeTab = "report", ready = false, revision = 0;
   let currentReport = ui.current(), currentMeta = window.R6ReportMeta;
   const state = () => sample || real;
@@ -25,7 +25,13 @@
     if (!seasonTeams || typeof seasonTeams !== "object" || !removedSeasonTeams || typeof removedSeasonTeams !== "object") throw Error("Invalid season teams.");
     for (const players of Object.values(seasonTeams)) if (!Array.isArray(players) || players.some(p=>typeof p!=="string")) throw Error("Invalid season roster.");
     for (const names of Object.values(removedSeasonTeams)) if (!Array.isArray(names) || names.some(n=>typeof n!=="string")) throw Error("Invalid deleted season team list.");
-    return {version: 1, matches: value.matches, teams: value.teams, seasonTeams, removedSeasonTeams};
+    const seasonTeamMatches=value.seasonTeamMatches ?? {};
+    if(!seasonTeamMatches || typeof seasonTeamMatches!=="object")throw Error("Invalid season match choices.");
+    for(const teams of Object.values(seasonTeamMatches)){
+      if(!teams || typeof teams!=="object")throw Error("Invalid season match choices.");
+      for(const ids of Object.values(teams))if(!Array.isArray(ids)||ids.some(id=>typeof id!=="string"))throw Error("Invalid season match list.");
+    }
+    return {version: 1, matches: value.matches, teams: value.teams, seasonTeams, removedSeasonTeams, seasonTeamMatches};
   }
   const storage = new Promise((resolve, reject) => {
     const request = indexedDB.open("r6-match-stats", 1);
@@ -193,6 +199,8 @@
     let snapshot=null;
     const renderTeam=()=>{
       chosenSeasonTeam=$("season-team")?.value || "";
+      const chosen=real.seasonTeamMatches[chosenSeason]?.[chosenSeasonTeam];
+      $("season-matches").innerHTML=real.matches.map((m,i)=>`<label class="saved-match"><input type="checkbox" data-season-match="${i}" ${(chosen ? chosen.includes(m.data.match_id) : (m.seasons || [m.season]).includes(chosenSeason))?"checked":""}>${esc(m.key)} · ${esc(m.data.map)}</label>`).join("");
       const rows=snapshot.tables[chosenSeasonTeam] || [];
       const summary=snapshot.summaries[chosenSeasonTeam];
       const metrics=summary ? Object.entries(summary).map(([Metric,Value])=>({Metric:Metric.replaceAll("_"," "),Value})) : [];
@@ -207,13 +215,14 @@
       $("season-team").onchange=renderTeam;
       $("season-delete-team").onclick=()=>safely(async()=>{
         const name=$("season-team").value;if(!name||!confirm(`Delete ${name} and its counted results from ${chosenSeason}? Built teams and other seasons are kept.`))return;
+        real.seasonTeamMatches[chosenSeason] ||= {};real.seasonTeamMatches[chosenSeason][name]=[];
         real.removedSeasonTeams[chosenSeason]=[...new Set([...(real.removedSeasonTeams[chosenSeason]||[]),name])];await save();await show();
       });
       $("season-matches").innerHTML=real.matches.map((m,i)=>`<label class="saved-match"><input type="checkbox" data-season-match="${i}" ${(m.seasons || [m.season]).includes(chosenSeason)?"checked":""}>${esc(m.key)} · ${esc(m.data.map)}</label>`).join("");
       renderTeam();
     });
     $("season-show").onclick=show;$("season-name").onchange=show;
-    $("season-save").onclick=()=>safely(async()=>{$("season-matches").querySelectorAll("[data-season-match]").forEach(c=>{const m=real.matches[Number(c.dataset.seasonMatch)];m.seasons=(m.seasons||(m.season?[m.season]:[])).filter(n=>n!==chosenSeason);if(c.checked)m.seasons.push(chosenSeason);delete m.season;});await save();await show();});
+    $("season-save").onclick=()=>safely(async()=>{if(!chosenSeasonTeam)throw Error("Track a season team first.");real.seasonTeamMatches[chosenSeason] ||= {};real.seasonTeamMatches[chosenSeason][chosenSeasonTeam]=[];$("season-matches").querySelectorAll("[data-season-match]").forEach(c=>{const m=real.matches[Number(c.dataset.seasonMatch)];m.seasons=m.seasons||(m.season?[m.season]:[]);if(c.checked){if(!m.seasons.includes(chosenSeason))m.seasons.push(chosenSeason);real.seasonTeamMatches[chosenSeason][chosenSeasonTeam].push(m.data.match_id);}delete m.season;});await save();await show();});
     $("season-export").onclick=()=>snapshot&&download("r6-season.json",JSON.stringify(snapshot,null,2));await show();
   }
   const defaultTheme={name:"R6 Match Stats",team:"",primary:"#52d5f2",secondary:"#f6be4f",logo:""};
@@ -275,4 +284,3 @@
     activeTab=ui.store.get("r6web.tab","report");if(pages[activeTab])safely(pages[activeTab]);
   });
 })();
-

@@ -99,10 +99,15 @@ def workspace(payload: str, action: str = "overview", argument: str = "{}") -> s
                 with StatsManager(path, season=season) as manager:
                     for name, players in state.get("seasonTeams", teams).items():
                         manager.add_players(players, team=name)
+                    rosters = state.get("seasonTeams", teams)
+                    choices = state.get("seasonTeamMatches", {}).get(season, {})
                     if not state.get("demo"):
                         for entry in entries:
                             if season in entry.get("seasons", [entry.get("season")]) and entry.get("players"):
-                                manager.log_match(entry["data"], players=entry["players"])
+                                match_id = entry["data"].get("match_id")
+                                allowed = {p.casefold() for name, roster in rosters.items()
+                                           if name not in choices or match_id in choices[name] for p in roster}
+                                manager.log_match(entry["data"], players=[p for p in entry["players"] if p.casefold() in allowed])
                     for name in state.get("removedSeasonTeams", {}).get(season, []):
                         manager.delete_team(name)
                     result = manager.export_json()
@@ -116,4 +121,3 @@ def workspace(payload: str, action: str = "overview", argument: str = "{}") -> s
                           "matches": db.match_list(db.me()), "teams": db.rosters(),
                           "tracked": db.players_by_match()}
         return json.dumps(result, ensure_ascii=False, allow_nan=False)
-
