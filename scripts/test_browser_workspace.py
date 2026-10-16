@@ -60,3 +60,26 @@ class TestBrowserWorkspace(unittest.TestCase):
         self.assertEqual(result["team"], "Test team")
         self.assertEqual({p["name"] for p in result["players"]}, set(self.entry["players"]))
         self.assertTrue(self.run_engine("ask", question="Top 5 players by EPS")["ok"])
+
+    def test_built_and_season_players_have_identical_detailed_columns(self):
+        built = self.run_engine("team", team="Test team", minimum=1)["table"]
+        season = self.run_engine("season", season="Fall")["tables"]["Test team"]
+        required = ["Player", "Matches", "EPS", "All-time EPS", "KD (+/-)", "Entry", "KOST", "KPR",
+                    "HS", "SRV", "Clutches", "Multikills", "Objectives", "Dead for trade kill", "Trade kills"]
+        self.assertEqual(list(built[0])[:len(required)], required)
+        self.assertEqual(list(built[0]), list(season[0]))
+        for row in season:
+            counterpart = next(r for r in built if r["Player"] == row["Player"])
+            self.assertEqual({k: str(v) for k, v in row.items()}, {k: str(v) for k, v in counterpart.items()})
+
+    def test_deleted_season_team_does_not_delete_built_team_or_other_seasons(self):
+        self.state["removedSeasonTeams"] = {"Fall": ["Test team"]}
+        self.assertEqual(self.run_engine("season", season="Fall")["tables"], {})
+        self.assertTrue(self.run_engine("season", season="Practice")["tables"]["Test team"])
+        self.assertTrue(self.run_engine("team", team="Test team", minimum=1)["table"])
+
+    def test_deleted_built_team_keeps_independent_season_roster(self):
+        self.state["seasonTeams"] = copy.deepcopy(self.state["teams"])
+        self.state["teams"].clear()
+        self.assertTrue(self.run_engine("season", season="Fall")["tables"]["Test team"])
+

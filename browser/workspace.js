@@ -2,7 +2,7 @@
 (() => {
   "use strict";
   const ui = window.R6UI, R6 = window.R6, $ = id => document.getElementById(id), esc = ui.esc;
-  const empty = () => ({version: 1, matches: [], teams: {}});
+  const empty = () => ({version: 1, matches: [], teams: {}, seasonTeams: {}, removedSeasonTeams: {}});
   let real = empty(), sample = null, activeTab = "report", ready = false, revision = 0;
   let currentReport = ui.current(), currentMeta = window.R6ReportMeta;
   const state = () => sample || real;
@@ -20,7 +20,12 @@
     }
     for (const [name, players] of Object.entries(value.teams))
       if (!name.trim() || !Array.isArray(players) || players.some(p => typeof p !== "string")) throw Error("A saved team is incomplete.");
-    return {version: 1, matches: value.matches, teams: value.teams};
+    const seasonTeams = value.seasonTeams ?? structuredClone(value.teams);
+    const removedSeasonTeams = value.removedSeasonTeams ?? {};
+    if (!seasonTeams || typeof seasonTeams !== "object" || !removedSeasonTeams || typeof removedSeasonTeams !== "object") throw Error("Invalid season teams.");
+    for (const players of Object.values(seasonTeams)) if (!Array.isArray(players) || players.some(p=>typeof p!=="string")) throw Error("Invalid season roster.");
+    for (const names of Object.values(removedSeasonTeams)) if (!Array.isArray(names) || names.some(n=>typeof n!=="string")) throw Error("Invalid deleted season team list.");
+    return {version: 1, matches: value.matches, teams: value.teams, seasonTeams, removedSeasonTeams};
   }
   const storage = new Promise((resolve, reject) => {
     const request = indexedDB.open("r6-match-stats", 1);
@@ -67,15 +72,16 @@
     if (!rows?.length) return '<p class="dim">No matches meet these selections yet.</p>';
     columns ||= Object.keys(rows[0]);
     const val = v => typeof v === "number" && !Number.isInteger(v) ? Number(v.toFixed(2)) : v ?? "—";
-    return `<div class="table-wrap"><table><thead><tr>${columns.map(c => `<th scope="col">${esc(c.replaceAll("_"," ").replace(/\b[a-z]/g,l=>l.toUpperCase()))}</th>`).join("")}</tr></thead><tbody>${rows.map(r => `<tr>${columns.map(c => `<td>${esc(val(r[c]))}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+    return `<div class="table-wrap"><table><thead><tr>${columns.map(c => `<th scope="col">${esc(c.includes("_")?c.replaceAll("_"," ").replace(/\b[a-z]/g,l=>l.toUpperCase()):c)}</th>`).join("")}</tr></thead><tbody>${rows.map(r => `<tr>${columns.map(c => `<td>${esc(val(r[c]))}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
   }
   function chart(answer) {
     if (!answer.chart || answer.rows.length < 2) return "";
     const {x, y, kind} = answer.chart, data = answer.rows.filter(r => Number.isFinite(r[y])).slice(0, 40);
     if (!data.length) return "";
-    const max = Math.max(1, ...data.map(r => Math.abs(r[y]))), width = 800, dx = 740 / data.length;
-    const points = data.map((r, i) => [40 + dx * (i + .5), 185 - 155 * r[y] / max]);
-    return `<svg class="workspace-chart" viewBox="0 0 ${width} 235" role="img" aria-label="${esc(y)} by ${esc(x)}"><line x1="30" y1="185" x2="790" y2="185"/>${kind === "line" ? `<polyline points="${points.map(p => p.join(",")).join(" ")}"/>` : ""}${data.map((r,i) => `${kind === "line" ? `<circle cx="${points[i][0]}" cy="${points[i][1]}" r="4"/>` : `<rect x="${40+dx*i}" y="${points[i][1]}" width="${Math.max(2,dx-6)}" height="${Math.max(1,185-points[i][1])}"/>`}<text x="${points[i][0]}" y="205" text-anchor="middle">${esc(String(r[x]).slice(0,12))}</text><title>${esc(r[x])}: ${esc(r[y])}</title>`).join("")}</svg>`;
+    const low=Math.min(0,...data.map(r=>r[y])), high=Math.max(1,...data.map(r=>r[y])), width=800,dx=740/data.length;
+    const position=v=>185-155*(v-low)/(high-low),baseline=position(0);
+    const points=data.map((r,i)=>[40+dx*(i+.5),position(r[y])]);
+    return `<svg class="workspace-chart" viewBox="0 0 ${width} 235" role="img" aria-label="${esc(y)} by ${esc(x)}"><line x1="30" y1="${baseline}" x2="790" y2="${baseline}"/>${kind === "line" ? `<polyline points="${points.map(p => p.join(",")).join(" ")}"/>` : ""}${data.map((r,i) => `${kind === "line" ? `<circle cx="${points[i][0]}" cy="${points[i][1]}" r="4"/>` : `<rect x="${40+dx*i}" y="${Math.min(baseline,points[i][1])}" width="${Math.max(2,dx-6)}" height="${Math.max(1,Math.abs(baseline-points[i][1]))}"/>`}<text x="${points[i][0]}" y="205" text-anchor="middle">${esc(String(r[x]).slice(0,12))}</text><title>${esc(r[x])}: ${esc(r[y])}</title>`).join("")}</svg>`;
   }
   let pythonQueue = Promise.resolve();
   function engine(action, args = {}) {
@@ -152,7 +158,7 @@
   }
   async function teamsPage() {
     const info = await engine("overview"), names = Object.keys(state().teams);
-    $("teams-content").innerHTML = `<p class="dim">Build a team from the players whose stats you track.</p><form id="team-form"><label>Team name<input id="team-name-save" maxlength="180" required></label><label>Players, one per line<textarea id="team-players" required></textarea></label><button class="btn primary">Save team</button></form><div class="workspace-form"><label>Saved team<select id="analytics-team">${names.map(n=>`<option>${esc(n)}</option>`).join("")}</select></label><label>Minimum roster players in a match<input id="team-min" type="number" min="1" max="5" value="3"></label><button class="btn" id="team-stats">Show team stats</button><button class="btn" id="delete-team" ${sample?"disabled":""}>Delete team</button></div><div id="team-results"></div>`;
+    $("teams-content").innerHTML = `<p class="dim">Build a team from the players whose stats you track.</p><form id="team-form"><label>Team name<input id="team-name-save" maxlength="180" required></label><label>Players, one per line<textarea id="team-players" required></textarea></label><button class="btn primary">Save team</button></form><div class="workspace-form"><label>Saved team<select id="analytics-team">${names.map(n=>`<option>${esc(n)}</option>`).join("")}</select></label><label>Minimum roster players in a match<input id="team-min" type="number" min="1" max="5" value="3"></label><button class="btn" id="team-stats">Show team stats</button><button class="btn" id="track-team" ${sample?"disabled":""}>Track team in season</button><button class="btn" id="delete-team" ${sample?"disabled":""}>Delete team</button></div><div id="team-results"></div>`;
     $("team-players").value = info.me ? [info.me,...info.players.filter(p=>p!==info.me).slice(0,4)].join("\n") : "";
     $("team-form").onsubmit = e => {e.preventDefault();safely(async()=>{
       const name=$("team-name-save").value.trim(),players=[...new Set($("team-players").value.split(/\r?\n/).map(p=>p.trim()).filter(Boolean))];
@@ -165,8 +171,10 @@
       const result=await engine("team",{team:name,minimum:Number($("team-min").value)});
       $("team-name-save").value=name;$("team-players").value=state().teams[name].join("\n");
       const summary=Object.entries(result.summary).filter(([,v])=>typeof v!=="object").map(([Metric,Value])=>({Metric:Metric.replaceAll("_"," "),Value}));
-      $("team-results").innerHTML=`<h3>${esc(name)}</h3>${table(summary)}<h3>Players</h3>${table(result.players.map(({key,...p})=>p))}<h3>Matches</h3>${table(result.matches)}`;
+      $("team-results").innerHTML=`<h3>${esc(name)}</h3>${table(summary)}<h3>Players</h3>${table(result.table)}<button class="btn small" id="team-csv">Download players CSV</button><h3>Matches</h3>${table(result.matches)}`;
+      $("team-csv").onclick=()=>download("r6-team-players.csv",csv(result.table),"text/csv");
     });
+    $("track-team").onclick=()=>safely(async()=>{const name=$("analytics-team").value;if(!name)return;real.seasonTeams[name]=[...real.teams[name]];real.removedSeasonTeams[chosenSeason]=(real.removedSeasonTeams[chosenSeason]||[]).filter(n=>n!==name);await save();notify(`Tracking ${name} in Season Tracker.`);});
     $("team-stats").onclick=show;$("analytics-team").onchange=show;
     $("delete-team").onclick=()=>safely(async()=>{const n=$("analytics-team").value;if(n&&confirm(`Delete saved team ${n}? Match stats are kept.`)){delete real.teams[n];await save();await teamsPage();}});
     if(names.length)show();
@@ -177,21 +185,36 @@
     const show=()=>safely(async()=>{if($("operator-scope").value==="This match"){const match=ui.current()?.data;if(!match)throw Error("Open a match on Dashboard first.");const result=JSON.parse((await ui.bridge()).match_operators(JSON.stringify(match)));$("operator-results").innerHTML=table(result.operators)+"<h3>Site performance</h3>"+table(result.sites);return;}const rows=await engine("operators",{player:$("operator-player").value});$("operator-results").innerHTML=table(rows)+`<button class="btn small" id="operator-csv">Download CSV</button>`;$("operator-csv").onclick=()=>download("r6-operators.csv",csv(rows),"text/csv");});
     $("operator-scope").onchange=show;$("operator-show").onclick=show;$("operator-player").onchange=show;show();
   }
+  let chosenSeason="current", chosenSeasonTeam="";
   async function seasonPage() {
     if(sample){$("season-content").innerHTML='<p class="notice">Season tracking is off in the demo. Leave the demo to manage your own seasons.</p>';return;}
-    const seasons=[...new Set(["current",...real.matches.flatMap(m=>m.seasons || (m.season ? [m.season] : []))])];
-    $("season-content").innerHTML=`<div class="workspace-form"><label>Season<select id="season-name">${seasons.map(n=>`<option>${esc(n)}</option>`).join("")}</select></label><button class="btn" id="season-show">Show season</button><button class="btn" id="season-export">Export season JSON</button></div><p class="dim">Teams saved in Team Analytics supply the tracked roster. Only selected players in checked matches count.</p><div id="season-matches"></div><button class="btn primary" id="season-save">Save season matches</button><div id="season-results"></div>`;
+    const seasons=[...new Set([chosenSeason,"current",...real.matches.flatMap(m=>m.seasons || (m.season?[m.season]:[]))])];
+    $("season-content").innerHTML=`<div class="workspace-form"><label>Season<select id="season-name">${seasons.map(n=>`<option ${n===chosenSeason?"selected":""}>${esc(n)}</option>`).join("")}</select></label><button class="btn" id="season-show">Show season</button><button class="btn" id="season-export">Export season JSON</button></div><p class="dim">Only checked matches and the players confirmed for each match count. Built teams and season teams are managed separately.</p><div id="season-team-controls"></div><div id="season-matches"></div><button class="btn primary" id="season-save">Save season matches</button><div id="season-results"></div>`;
     let snapshot=null;
+    const renderTeam=()=>{
+      chosenSeasonTeam=$("season-team")?.value || "";
+      const rows=snapshot.tables[chosenSeasonTeam] || [];
+      const summary=snapshot.summaries[chosenSeasonTeam];
+      const metrics=summary ? Object.entries(summary).map(([Metric,Value])=>({Metric:Metric.replaceAll("_"," "),Value})) : [];
+      $("season-results").innerHTML=`<p>${snapshot.rounds_logged} rounds counted in ${esc(chosenSeason)}</p><h3>${esc(chosenSeasonTeam || "No season team")}: players</h3>${table(rows)}<button class="btn small" id="season-player-csv">Download players CSV</button><h3>Team statistics</h3>${table(metrics)}`;
+      $("season-player-csv").onclick=()=>download("r6-season-players.csv",csv(rows),"text/csv");
+    };
     const show=()=>safely(async()=>{
-      const season=$("season-name").value;
-      $("season-matches").innerHTML=real.matches.map((m,i)=>`<label class="saved-match"><input type="checkbox" data-season-match="${i}" ${(m.seasons || [m.season]).includes(season)?"checked":""}>${esc(m.key)} · ${esc(m.data.map)}</label>`).join("");
-      snapshot=await engine("season",{season});
-      const players=snapshot.players.map(p=>({Player:p.username,Team:p.team,EPS:p.eps,Rounds:p.totals.rounds_played,"K / D / A":`${p.totals.kills} / ${p.totals.deaths} / ${p.totals.assists}`,"K/D":p.kd,"Entry +/-":p.entry_diff,"KOST %":p.kost_pct,"HS %":p.hs_pct,Clutches:p.clutches_won}));
-      $("season-results").innerHTML=`<p>${snapshot.rounds_logged} rounds counted in ${esc(season)}</p>${table(players)}<h3>Season teams</h3>${table(snapshot.teams.map(t=>({Team:t.team,Players:t.players.join(", "),EPS:t.eps,Rounds:t.totals.rounds_played,Kills:t.totals.kills,Deaths:t.totals.deaths,"K/D":t.kd,"KOST %":t.kost_avg})))}`;
+      chosenSeason=$("season-name").value;
+      snapshot=await engine("season",{season:chosenSeason});
+      const names=Object.keys(snapshot.rosters);
+      $("season-team-controls").innerHTML=`<div class="workspace-form"><label>Season team<select id="season-team">${names.map(n=>`<option ${n===chosenSeasonTeam?"selected":""}>${esc(n)}</option>`).join("")}</select></label><button class="btn" id="season-delete-team" ${names.length?"":"disabled"}>Delete season team</button></div><p class="dim">Deleting a season team removes its counted results only from the selected season. Built teams, saved matches and other seasons are kept. Track the team again from Team Analytics to restore an empty roster.</p>`;
+      $("season-team").onchange=renderTeam;
+      $("season-delete-team").onclick=()=>safely(async()=>{
+        const name=$("season-team").value;if(!name||!confirm(`Delete ${name} and its counted results from ${chosenSeason}? Built teams and other seasons are kept.`))return;
+        real.removedSeasonTeams[chosenSeason]=[...new Set([...(real.removedSeasonTeams[chosenSeason]||[]),name])];await save();await show();
+      });
+      $("season-matches").innerHTML=real.matches.map((m,i)=>`<label class="saved-match"><input type="checkbox" data-season-match="${i}" ${(m.seasons || [m.season]).includes(chosenSeason)?"checked":""}>${esc(m.key)} · ${esc(m.data.map)}</label>`).join("");
+      renderTeam();
     });
     $("season-show").onclick=show;$("season-name").onchange=show;
-    $("season-save").onclick=()=>safely(async()=>{const season=$("season-name").value;$("season-matches").querySelectorAll("[data-season-match]").forEach(c=>{const m=real.matches[Number(c.dataset.seasonMatch)];m.seasons=(m.seasons || (m.season?[m.season]:[])).filter(n=>n!==season);if(c.checked)m.seasons.push(season);delete m.season;});await save();show();});
-    $("season-export").onclick=()=>snapshot&&download("r6-season.json",JSON.stringify(snapshot,null,2));show();
+    $("season-save").onclick=()=>safely(async()=>{$("season-matches").querySelectorAll("[data-season-match]").forEach(c=>{const m=real.matches[Number(c.dataset.seasonMatch)];m.seasons=(m.seasons||(m.season?[m.season]:[])).filter(n=>n!==chosenSeason);if(c.checked)m.seasons.push(chosenSeason);delete m.season;});await save();await show();});
+    $("season-export").onclick=()=>snapshot&&download("r6-season.json",JSON.stringify(snapshot,null,2));await show();
   }
   const defaultTheme={name:"R6 Match Stats",team:"",primary:"#52d5f2",secondary:"#f6be4f",logo:""};
   function cleanTheme(value) {
@@ -252,3 +275,4 @@
     activeTab=ui.store.get("r6web.tab","report");if(pages[activeTab])safely(pages[activeTab]);
   });
 })();
+

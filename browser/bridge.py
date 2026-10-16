@@ -68,7 +68,8 @@ def workspace(payload: str, action: str = "overview", argument: str = "{}") -> s
     """
     from stats_db import StatsDB
     from season_stats import StatsManager
-    from ask_engine import ask, team_report, operator_table
+    from ask_engine import ask, team_report, operator_table, team_summary
+    from team_tables import player_table, season_player_table
 
     state, args = json.loads(payload), json.loads(argument)
     entries = state.get("matches", [])
@@ -90,20 +91,29 @@ def workspace(payload: str, action: str = "overview", argument: str = "{}") -> s
             elif action == "team":
                 result = team_report(db, str(args.get("team", "")),
                                      min_players=max(1, min(5, int(args.get("minimum", 3)))))
+                result["table"] = player_table(result["players"])
             elif action == "operators":
                 result = operator_table(db, str(args.get("player") or db.me() or ""))
             elif action == "season":
                 season = str(args.get("season") or "current")[:180]
                 with StatsManager(path, season=season) as manager:
-                    for name, players in teams.items():
+                    for name, players in state.get("seasonTeams", teams).items():
                         manager.add_players(players, team=name)
                     if not state.get("demo"):
                         for entry in entries:
                             if season in entry.get("seasons", [entry.get("season")]) and entry.get("players"):
                                 manager.log_match(entry["data"], players=entry["players"])
+                    for name in state.get("removedSeasonTeams", {}).get(season, []):
+                        manager.delete_team(name)
                     result = manager.export_json()
+                    result["rosters"] = manager.tracked_teams()
+                    result["tables"] = {name: season_player_table(db, manager, name) for name in manager.teams()}
+                    result["summaries"] = {name: team_summary(db, players, 1,
+                        [m["match_id"] for m in manager.match_history(players)])
+                        for name, players in manager.tracked_teams().items()}
             else:
                 result = {"summary": db.summary(), "me": db.me(), "players": list(db.players().values()),
                           "matches": db.match_list(db.me()), "teams": db.rosters(),
                           "tracked": db.players_by_match()}
         return json.dumps(result, ensure_ascii=False, allow_nan=False)
+

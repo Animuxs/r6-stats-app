@@ -1493,7 +1493,7 @@ def _answer_matches(db: StatsDB, q: Query, vocab: Vocab) -> Answer:
                   {"Kills": "count", "Deaths": "count", "K/D": "ratio", "EPS": "eps"})
 
 
-TEAM_PLAYER_METRICS = ["eps", "kills", "deaths", "entry_kills", "entry_deaths", "kost", "kpr", "hs", "survival",
+TEAM_PLAYER_METRICS = ["eps", "kills", "deaths", "assists", "entry_kills", "entry_deaths", "kost", "kpr", "hs", "survival",
                        "clutches", "multikills", "objectives", "traded", "trade_kills"]
 
 
@@ -1560,6 +1560,19 @@ def eps_by_player(db: StatsDB, players: list[str], match_ids: list[str] | None =
     return {k: found.get(k) for k in keys}
 
 
+def player_report(db: StatsDB, player: str, match_ids: list[str]) -> dict[str, Any] | None:
+    """All scoreboard metrics for one player's exact counted season matches."""
+    vocab = Vocab.from_db(db)
+    q = Query(kind="rank", who="players", players=[player.casefold()], group="player")
+    rows = _aggregate(db, q, vocab, TEAM_PLAYER_METRICS, "player", ids=match_ids, minimums=False)
+    if not rows:
+        return None
+    row = rows[0]
+    row["name"] = vocab.players.get(row["key"], player)
+    row["all_time_eps"] = eps_by_player(db, [player]).get(player.casefold())
+    return row
+
+
 def team_report(db: StatsDB, team: str, min_players: int = 3) -> dict[str, Any]:
     """Build a team: a saved team's matches (at least min_players of it on one side, the side with
     the most of them), its stats as a team (team_summary), and each player's own stats from
@@ -1608,3 +1621,4 @@ def suggestions(vocab: Vocab, db: StatsDB, count: int = 8) -> list[str]:
            "Which operators do I play most?", *mine, "Attack vs defense win rate", "My record this week",
            "Top 5 players by EPS"]
     return out[:count]
+

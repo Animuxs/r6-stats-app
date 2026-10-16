@@ -12,7 +12,8 @@ import streamlit as st
 from app_info import is_public_host
 from branding import current_competition
 from ask_engine import eps_by_player, rate, team_report, team_summary
-from metrics_engine import pro_league_row, round_eps, rows_csv
+from metrics_engine import rows_csv
+from team_tables import player_table, season_player_table
 from season_stats import StatsError, StatsManager
 from sources import current_source, demo_active, match_label, no_matches_yet, open_stats_db, parse, tracker_off
 from stats_db import nice_time
@@ -93,6 +94,14 @@ def _delete_team(team: str) -> None:
         db.delete_roster(team)
     st.session_state["team_choice"] = NEW
     st.session_state.pop("team_shown", None)
+
+
+def _delete_season_team(season: str, team: str) -> None:
+    with StatsManager(season=season) as manager:
+        manager.delete_team(team)
+    for key in [k for k in st.session_state if str(k).startswith(f"in_season_{season}_")]:
+        del st.session_state[key]
+    st.session_state["season_message"] = (f"Deleted {team} from {season}. Other seasons and built teams are kept.", [])
 
 
 def _picker_key(season: str, match_id: str) -> str:
@@ -182,7 +191,7 @@ with build_tab:
         teams = db.rosters()
         mates = [name for name, _ in db.teammates(me, limit=ROSTER_SIZE - 1)] if me else []
 
-    if has_matches:
+    if has_matches or teams:
         if st.session_state.get("team_choice") not in [NEW, *teams]:
             # your team (saved on League & Team) to start with, else a new one
             mine = current_competition()["team"].casefold()
@@ -222,18 +231,7 @@ with build_tab:
                 if report["missing"]:
                     st.warning(f"Not found in {md(team)}'s matches: {md(', '.join(report['missing']))}. "
                                "Check the spelling.")
-                table = []
-                for r in sorted(report["players"], key=lambda r: -(r["eps"] or 0)):
-                    row = pro_league_row(
-                        team=0, player=r["name"], eps=round_eps(r["eps"] or 0), kills=r["kills"], deaths=r["deaths"],
-                        entry_kills=r["entry_kills"], entry_deaths=r["entry_deaths"], kost_pct=r["kost"] or 0,
-                        kpr=r["kpr"] or 0, hs_pct=r["hs"] or 0, srv_pct=r["survival"] or 0, clutches=r["clutches"],
-                        multikills=r["multikills"], objectives=r["objectives"], traded=r["traded"],
-                        trade_kills=r["trade_kills"])
-                    row.pop("Team")
-                    player, eps = row.pop("Player"), row.pop("EPS")
-                    table.append({"Player": player, "Matches": r["matches"], "EPS": eps,
-                                  "All-time EPS": _fmt_eps(r["all_time_eps"]), **row})
+                table = player_table(report["players"])
                 st.subheader(f"{md(team)}: players")
                 st.dataframe(table, hide_index=True)
                 st.caption("**EPS** here is from the matches they played for this team; a match where a player was on "
@@ -286,6 +284,9 @@ with season_tab:
                 "its matches here.")
     else:
         selected = st.selectbox("Season team", sorted(rosters, key=str.casefold))
+        st.button("Delete season team", key="delete_season_team", disabled=bool(tracker_off()),
+                  on_click=_delete_season_team, args=(season, selected), type="tertiary")
+        st.caption("Deletes this team's counted results from this season. Built teams, match history and other seasons are kept.")
         _season_matches(season, selected, rosters[selected], counted_by[selected])
         season_ids = [m["match_id"] for m in saved]
         # team stats and EPS are worked out again from the stats database, over the season's matches
@@ -308,19 +309,11 @@ with season_tab:
                 st.caption(f"{len(season_ids) - in_db} of the {len(season_ids)} matches saved to {md(season)} aren't "
                            "in your stats database (their replays are gone), so these numbers leave them out.")
             st.subheader("Roster performance")
-            st.dataframe([{
-                "Player": player.username,
-                # recalculated from the season's matches; the tracker's own number only if they're gone
-                "EPS": _fmt_eps(season_eps.get(player.username.casefold()) or player.eps),
-                "All-time EPS": _fmt_eps(career.get(player.username.casefold())),
-                "Rounds": player.totals["rounds_played"],
-                "K / D / A": f"{player.totals['kills']} / {player.totals['deaths']} / {player.totals['assists']}",
-                "K/D": round(player.kd, 2),
-                "Entry +/-": player.entry_diff,
-                "KOST": f"{player.kost_pct:.1f}%",
-                "HS": f"{player.hs_pct:.1f}%",
-                "Clutches": player.clutches_won,
-            } for player in team.member_stats], hide_index=True)
+            with open_stats_db() as db, StatsManager(season=season) as manager:
+                detail = season_player_table(db, manager, selected)
+            st.dataframe(detail, hide_index=True)
+            st.download_button("Download season players CSV", rows_csv(detail).encode("utf-8"),
+                               file_name="season_players.csv", mime="text/csv")
         if season_teams:
             st.subheader("All season teams")
             st.dataframe([{
@@ -353,3 +346,4 @@ with season_tab:
             } for m in saved], hide_index=True)
     st.download_button("Export season report", json.dumps(snapshot, indent=2).encode("utf-8"),
                        file_name=f"{season}_team_report.json", mime="application/json")
+
