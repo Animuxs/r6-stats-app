@@ -253,10 +253,13 @@ class StatsDB:
             self._conn.executescript(SCHEMA)
             for table in MATCH_TABLES:  # the same columns as the table it holds matches for
                 self._conn.execute(f"CREATE TABLE IF NOT EXISTS review_{table} AS SELECT * FROM {table} WHERE 0")
+                # CREATE TABLE ... AS copies no keys: without this, every lookup by match scans the table
+                self._conn.execute(f"CREATE INDEX IF NOT EXISTS review_{table}_match ON review_{table} (match_id)")
             data = self._conn.execute("SELECT value FROM stats_meta WHERE key = 'data'").fetchone()
             if not data or int(data[0]) < 3:  # filled on its own by an earlier version
                 self._hold_unconfirmed()
-            self._conn.execute("INSERT OR REPLACE INTO stats_meta VALUES ('data', ?)", (str(DATA_VERSION),))
+            if not data or int(data[0]) < DATA_VERSION:  # only then: every page (and the dock) opens the database
+                self._conn.execute("INSERT OR REPLACE INTO stats_meta VALUES ('data', ?)", (str(DATA_VERSION),))
 
     def close(self) -> None:
         self._conn.close()
