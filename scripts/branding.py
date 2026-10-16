@@ -1,4 +1,5 @@
-"""Validated school identity, with atomic desktop preference persistence."""
+"""Validated team identity (colors, logo) and the league or tournament the team plays in, with
+atomic desktop preference persistence."""
 from __future__ import annotations
 
 import base64
@@ -16,7 +17,12 @@ import streamlit as st
 from app_info import is_public_host, is_loopback
 from season_stats import DEFAULT_DB_PATH
 
-DEFAULT_THEME = dict(name='Siege / NECC', team='', primary='#52d5f2', secondary='#f6be4f', logo='')
+DEFAULT_THEME = dict(name='R6 Match Stats', team='', primary='#52d5f2', secondary='#f6be4f', logo='')
+# the default theme's name before 1.6.0, when the app was NECC's only: a saved theme may still carry it
+OLD_DEFAULT_NAMES = {'Siege / NECC'}
+# where the team plays: a Liquipedia event, a NECC division, or a league the team named itself
+DEFAULT_COMPETITION = dict(source='', id='', name='', tier='', team='', url='', season='')
+COMPETITION_SOURCES = {'', 'liquipedia', 'necc', 'custom'}
 
 
 def clean_theme(value):
@@ -49,22 +55,57 @@ def preference_path():
 
 def load_theme(path=None):
     try:
-        return clean_theme(json.loads((path or preference_path()).read_text(encoding='utf-8')))
+        theme = clean_theme(json.loads((path or preference_path()).read_text(encoding='utf-8')))
     except (OSError, ValueError):
         return dict(DEFAULT_THEME)
+    if theme['name'] in OLD_DEFAULT_NAMES:
+        theme['name'] = DEFAULT_THEME['name']
+    return theme
 
 
-def save_theme(value, path=None):
-    path = path or preference_path()
+def _write_json(value, path):
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, temporary = tempfile.mkstemp(dir=path.parent, suffix='.tmp')
     try:
         with os.fdopen(fd, 'w', encoding='utf-8') as file:
-            json.dump(clean_theme(value), file, ensure_ascii=False)
+            json.dump(value, file, ensure_ascii=False)
         os.replace(temporary, path)
     finally:
         if os.path.exists(temporary):
             os.unlink(temporary)
+
+
+def save_theme(value, path=None):
+    _write_json(clean_theme(value), path or preference_path())
+
+
+def clean_competition(value):
+    value = value if isinstance(value, dict) else {}
+    result = {key: str(value.get(key) or default).strip()[:180] for key, default in DEFAULT_COMPETITION.items()}
+    if result['source'] not in COMPETITION_SOURCES:
+        result['source'] = ''
+    if result['tier'] not in ('', 'S', 'A', 'B', 'C', 'D'):
+        result['tier'] = ''
+    url = str(value.get('url') or '')
+    result['url'] = url[:2048] if urlparse(url).scheme == 'https' and urlparse(url).netloc else ''
+    if not result['name']:
+        return dict(DEFAULT_COMPETITION)
+    return result
+
+
+def competition_path():
+    return Path(DEFAULT_DB_PATH).parent / 'competition.json'
+
+
+def load_competition(path=None):
+    try:
+        return clean_competition(json.loads((path or competition_path()).read_text(encoding='utf-8')))
+    except (OSError, ValueError):
+        return dict(DEFAULT_COMPETITION)
+
+
+def save_competition(value, path=None):
+    _write_json(clean_competition(value), path or competition_path())
 
 
 def local_preferences():
@@ -98,6 +139,32 @@ def uploaded_logo(raw):
         output = io.BytesIO()
         image.save(output, format='PNG')
     return 'data:image/png;base64,' + base64.b64encode(output.getvalue()).decode('ascii')
+
+
+def current_competition():
+    """The league or tournament this team plays in: saved on this PC in the Windows app (and a
+    local checkout), kept for the browser session on the public website."""
+    if 'competition' not in st.session_state:
+        st.session_state['competition'] = load_competition() if local_preferences() else dict(DEFAULT_COMPETITION)
+    return clean_competition(st.session_state['competition'])
+
+
+def apply_competition(value):
+    value = clean_competition(value)
+    if local_preferences():
+        save_competition(value)
+    st.session_state['competition'] = value
+    if value['season']:
+        st.session_state['r6_season'] = value['season']
+
+
+def competition_badge(competition):
+    """The banner's corner badge: the event's tier, NECC, or the app's own."""
+    if competition['tier']:
+        return f"{competition['tier']}-TIER EVENT"
+    if competition['source'] == 'necc':
+        return 'NECC / COLLEGIATE'
+    return 'LEAGUE' if competition['name'] else 'TEAM OPERATIONS'
 
 
 def readable_accent(color):
@@ -137,8 +204,11 @@ def render_identity(banner=True):
     </style>''', unsafe_allow_html=True)
     if not banner:
         return
-    logo = f'<img src="{html.escape(theme["logo"], quote=True)}" alt="School logo">' if theme['logo'] else ''
-    st.markdown(f'''<div class="identity-banner">{logo}<div><div class="identity-kicker">RAINBOW SIX SIEGE / COLLEGIATE</div>
+    competition = current_competition()
+    logo = f'<img src="{html.escape(theme["logo"], quote=True)}" alt="Team logo">' if theme['logo'] else ''
+    kicker = f"RAINBOW SIX SIEGE / {competition['name'].upper()}" if competition['name'] else 'RAINBOW SIX SIEGE'
+    sub = theme['team'] or competition['team'] or 'Match intelligence · Roster operations · Season performance'
+    st.markdown(f'''<div class="identity-banner">{logo}<div><div class="identity-kicker">{html.escape(kicker)}</div>
     <div class="identity-name">{html.escape(theme['name'])}</div>
-    <div class="identity-sub">{html.escape(theme['team'] or 'Match intelligence · Roster operations · Season performance')}</div></div>
-    <div class="identity-badge">NECC / TEAM OPERATIONS</div></div>''', unsafe_allow_html=True)
+    <div class="identity-sub">{html.escape(sub)}</div></div>
+    <div class="identity-badge">{html.escape(competition_badge(competition))}</div></div>''', unsafe_allow_html=True)

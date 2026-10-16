@@ -203,12 +203,12 @@ class TestAnalyticsPages(unittest.TestCase):
         self.addCleanup(patch.stop)  # every test starts with an empty database
 
     def test_pages_without_matches_say_where_to_start(self):
-        for page in ("ask.py", "history.py", "operators.py", "teams.py", "schools.py", "appearance.py"):
+        for page in ("ask.py", "history.py", "operators.py", "teams.py", "league.py", "appearance.py"):
             with self.subTest(page=page):
                 at = run_app()
                 at.switch_page(page).run()
                 self.assertFalse(at.exception)
-                if page not in ("schools.py", "appearance.py"):
+                if page not in ("league.py", "appearance.py"):
                     self.assertTrue(any("No matches yet" in i.value for i in at.info), page)
 
     def test_ask_answers_about_the_loaded_matches(self):
@@ -328,7 +328,8 @@ class TestAnalyticsPages(unittest.TestCase):
         at = run_app()
         at.session_state["necc_schools"] = normalize_school_catalog({"schools": [{"name": "Test U", "teams": [
             {"name": "Varsity", "game": "Rainbow Six Siege", "roster": ["_Sniper_", "Bravo"]}]}]})
-        at.switch_page("schools.py").run()
+        at.switch_page("league.py").run()
+        at = next(r for r in at.radio if r.label == "Where do you compete?").set_value("NECC").run()
         at = next(b for b in at.button if b.label == "Track this roster").click().run()
         self.assertFalse(at.exception)
         self.assertIn("Added 2 players to Varsity", at.success[0].value)
@@ -844,8 +845,18 @@ class TestDownloadPage(unittest.TestCase):
     def test_github_unreachable_falls_back_to_the_latest_release_link(self):
         at = download_page(OSError("offline"), R6_HOSTED="1")
         self.assertFalse(at.exception)
-        self.assertEqual(links(at), [app_info.WINDOWS_DOWNLOAD_URL])
+        self.assertEqual(links(at), [app_info.WINDOWS_DOWNLOAD_URL, app_info.BROWSER_EDITION_URL])
         self.assertTrue(app_info.WINDOWS_DOWNLOAD_URL.endswith("/releases/latest/download/" + app_info.WINDOWS_INSTALLER))
+        self.assertTrue(app_info.BROWSER_EDITION_URL.endswith("/releases/latest/download/" + app_info.BROWSER_EDITION))
+
+    def test_links_the_browser_edition_when_the_release_has_it(self):
+        browser = "https://github.com/o/r/releases/download/v9.9.0/R6MatchStats-Browser.html"
+        at = download_page({**RELEASE, "browser": browser}, R6_HOSTED="1")
+        self.assertFalse(at.exception)
+        self.assertEqual(links(at), [RELEASE["installer"], browser])
+        self.assertTrue(any(h.value == "Use it in your browser" for h in at.subheader))
+        # a release from before 1.6.0 has no browser edition: no link to a file that isn't there
+        self.assertNotIn("Use it in your browser", [h.value for h in download_page(RELEASE, R6_HOSTED="1").subheader])
 
     def test_windows_app_offers_a_newer_version(self):
         at = download_page(RELEASE, R6_DESKTOP="1")

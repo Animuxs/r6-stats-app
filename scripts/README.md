@@ -53,8 +53,8 @@ On macOS/Linux, use `go build` (it produces `r6-dissect`), `source
 ## Using the dashboard
 
 The top navigation has **Dashboard**, **Ask**, **Match History**, **Team
-Analytics**, **Operator Analytics**, **School Selection** and **Get the Windows
-app**. Dashboard takes a **Replay source**:
+Analytics**, **Operator Analytics**, **League & Team**, **Team Theme** and **Get
+the Windows app**. Dashboard takes a **Replay source**:
 
 - **Folder or zip on this computer**: a path to one match folder, a `.zip`, or
   your whole `MatchReplay` folder. It's filled in automatically when Siege is
@@ -187,9 +187,48 @@ It always says how it read the question, and when it guesses (a misspelled
 name, or a name that's both a player and an operator) it says so. It works with
 its own word lists and rules: no AI model, and no internet connection.
 
+### Leagues and tournaments
+
+**League & Team** is where you say where your team competes, from three places:
+
+- **Liquipedia events, S- to D-Tier**: every Rainbow Six event on
+  [Liquipedia](https://liquipedia.net/rainbowsix) that's on now, coming up, or
+  ended in the last six months, from the Majors down to community leagues. Filter
+  by tier, region and when, search by event, organizer or team, then pick your
+  team from the event's participants (or type it if it isn't listed).
+- **NECC**: the Rainbow Six season's Divisions I–VI and the placement event, with
+  every team in each, plus NECC's school directory (school colors and logos).
+- **My league isn't listed**: name any league or tournament, and your team.
+
+Saving it puts the league on the banner of every page (and, if you tick **Name my
+season after it**, makes it the season tracker's season), on this PC in the
+Windows app, for the browser session on the public website. **Track your
+players** adds your players' usernames to the season tracker under your team.
+
+Event data comes from Liquipedia's MediaWiki API, following its
+[terms](https://liquipedia.net/api-terms-of-use): at most one request every
+2 seconds over one connection, gzip, a User-Agent naming this project, and
+results kept rather than fetched again. Each release ships a snapshot,
+`liquipedia_events.json`; refresh it before a release with
+
+```bash
+.venv\Scripts\python scripts\events.py         # only new and still-running events (about 10 requests)
+.venv\Scripts\python scripts\events.py --full  # every page again (about 30 requests, a few minutes)
+```
+
+The Windows app's **Check Liquipedia for new events** does the same at most once
+a day and keeps the result next to the season database; the public website only
+uses the snapshot, so a shared server never asks Liquipedia on visitors' behalf.
+Liquipedia's content is CC-BY-SA 3.0, credited wherever events are shown. The
+REST API serves the same list at `GET /api/v1/events` (`tier`, `region`, `q`).
+
+NECC's divisions are `necc_divisions.json`, a dated snapshot of NECC's public
+[LeagueOS](https://necc.v1.leagueos.gg/) season pages (LeagueOS has no public
+API); update it when a new season's divisions are set.
+
 ### NECC school data
 
-School Selection accepts a JSON catalog upload. A deployment can instead set
+League & Team's NECC school directory accepts a JSON catalog upload. A deployment can instead set
 `NECC_R6_DATA_URL` to an HTTPS JSON endpoint that returns the same shape. The
 catalog uses a top-level `schools` array; each school may contain `logo_url`,
 `primary_color`, and `teams`. R6 team entries may contain `name`, `game`,
@@ -366,7 +405,7 @@ metrics_engine.compute_match_metrics  →  PlayerStats per player
    │                │  ask_engine.ask  (plain English → SQL → answer)
    ▼                ▼
 app.py → report.py (Dashboard), ask.py, history.py, teams.py, operators.py,
-  (Streamlit)  schools.py, download.py     /  match_stats.py (CLI)
+  (Streamlit)  league.py, download.py      /  match_stats.py (CLI)
 ```
 
 `app.py` is the entry point: it sets up the page's styling, header and
@@ -403,7 +442,7 @@ then `r6-dissect.exe` (Windows) or `r6-dissect` at the repo root, then
 
 **Season-long stats:** `season_stats.py` (`StatsManager`) logs tracked
 players' rounds into SQLite across a season without double-counting. The
-Season tracker, Team Analytics' Season teams tab and School Selection use this
+Season tracker, Team Analytics' Season teams tab and League & Team use this
 data. See
 [SEASON_STATS.md](SEASON_STATS.md) and `example_season_stats.py`.
 

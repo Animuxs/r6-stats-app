@@ -269,7 +269,7 @@ with season_tab:
 
     if not rosters:
         st.info("No season teams yet. Track a roster first: **Also track … in the season tracker** under Build a "
-                "team, the Dashboard's **Also save it to the season tracker**, or **School Selection**. Then pick "
+                "team, the Dashboard's **Also save it to the season tracker**, or **League & Team**'s NECC school directory. Then pick "
                 "its matches here.")
     else:
         selected = st.selectbox("Season team", sorted(rosters, key=str.casefold))

@@ -23,6 +23,10 @@ python -m venv .venv
 .venv\Scripts\python scripts\app.py
 ```
 
+There's also a **browser edition** ([browser/](browser/README.md)): one HTML
+page that reads a match's replays right in the browser, with nothing to install
+and nothing uploaded.
+
 See [scripts/README.md](scripts/README.md) for details, including how to
 publish the website (Streamlit Community Cloud) and the Windows app (GitHub
 Releases).
@@ -31,9 +35,10 @@ The matches you confirm go into a local stats database, with only the
 players you pick in each one (a stranger on your team in Ranked never counts as
 your teammate), so the app adds match history, operator and team analytics
 (build a team from the players you queue with), plain-English questions about
-your trends ("What's my best map?"), and an opt-in season tracker. School rosters can be
-loaded from an authorized NECC JSON feed or imported catalog; see the dashboard
-documentation for the supported format and configuration.
+your trends ("What's my best map?"), and an opt-in season tracker. Tell it where
+your team competes: any [Liquipedia](https://liquipedia.net/rainbowsix) event from
+S- to D-Tier, a NECC division, or a league of your own (see
+[Leagues and tournaments](scripts/README.md#leagues-and-tournaments)).
 
 A React/R3F web client and Unity Windows client now share the local FastAPI
 service and SQLite season database. See [web/README.md](web/README.md) and

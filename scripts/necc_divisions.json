@@ -1,0 +1,602 @@
+{
+ "source_url": "https://necc.v1.leagueos.gg/",
+ "captured_at": "2026-10-16",
+ "note": "Rainbow Six divisions and the teams in each, from NECC's public LeagueOS season pages. A dated snapshot, not live standings.",
+ "events": [
+  {
+   "id": "2ek7kqsupq1csjr1f4ew1ya0i",
+   "name": "Rainbow Six | Signups (placement)",
+   "division": "",
+   "url": "https://necc.v1.leagueos.gg/league/seasons/2ek7kqsupq1csjr1f4ew1ya0i",
+   "start": "2026-09-23",
+   "end": "2026-09-24",
+   "teams": []
+  },
+  {
+   "id": "aa437rpne256ozzb6f5lv012y",
+   "name": "R6 | Division I",
+   "division": "I",
+   "url": "https://necc.v1.leagueos.gg/league/seasons/aa437rpne256ozzb6f5lv012y",
+   "start": "2026-09-30",
+   "end": "2026-12-10",
+   "teams": [
+    {
+     "name": "Akron White",
+     "school": "The University of Akron",
+     "group": "Group A"
+    },
+    {
+     "name": "Charlotte Esports",
+     "school": "University of North Carolina at Charlotte",
+     "group": "Group B"
+    },
+    {
+     "name": "CMU Eagles",
+     "school": "Central Methodist University",
+     "group": "Group A"
+    },
+    {
+     "name": "CU Gold",
+     "school": "University of Colorado Boulder",
+     "group": "Group B"
+    },
+    {
+     "name": "Cumberland Phoenix",
+     "school": "Cumberland University",
+     "group": "Group B"
+    },
+    {
+     "name": "Fisher Esports",
+     "school": "Fisher College",
+     "group": "Group A"
+    },
+    {
+     "name": "Knights Gold",
+     "school": "University of Central Florida",
+     "group": "Group B"
+    },
+    {
+     "name": "Marshalltown Community College Gold",
+     "school": "Marshalltown Community College",
+     "group": "Group A"
+    },
+    {
+     "name": "NC State Red",
+     "school": "North Carolina State University",
+     "group": "Group B"
+    },
+    {
+     "name": "Pace Aspen Gold",
+     "school": "Pace University",
+     "group": "Group A"
+    },
+    {
+     "name": "Southern Miss",
+     "school": "University of Southern Mississippi",
+     "group": "Group B"
+    },
+    {
+     "name": "UAA Green",
+     "school": "University of Alaska Anchorage",
+     "group": "Group B"
+    },
+    {
+     "name": "UdeS Esports",
+     "school": "Université de Sherbrooke",
+     "group": "Group A"
+    },
+    {
+     "name": "VCU Black.R6",
+     "school": "Virginia Commonwealth University",
+     "group": "Group A"
+    }
+   ]
+  },
+  {
+   "id": "1082ln6jeps0ed6j3vhcj3q9f",
+   "name": "R6 | Division II",
+   "division": "II",
+   "url": "https://necc.v1.leagueos.gg/league/seasons/1082ln6jeps0ed6j3vhcj3q9f",
+   "start": "2026-09-30",
+   "end": "2026-12-10",
+   "teams": [
+    {
+     "name": "Varsity ● Black",
+     "school": "California State University, Northridge"
+    },
+    {
+     "name": "Arkansas State Black",
+     "school": "Arkansas State University"
+    },
+    {
+     "name": "Auburn Navy",
+     "school": "Auburn University"
+    },
+    {
+     "name": "Bronco Esports Emerald",
+     "school": "California State Polytechnic University, Pomona"
+    },
+    {
+     "name": "Butler Esports",
+     "school": "Butler University"
+    },
+    {
+     "name": "Cumberland Black",
+     "school": "Cumberland University"
+    },
+    {
+     "name": "Elon Gold",
+     "school": "Elon University"
+    },
+    {
+     "name": "GVSU Club",
+     "school": "Grand Valley State University"
+    },
+    {
+     "name": "Hoosiers",
+     "school": "Indiana University"
+    },
+    {
+     "name": "Houston Black",
+     "school": "University of Houston"
+    },
+    {
+     "name": "Illini Esports Orange",
+     "school": "University of Illinois Urbana-Champaign"
+    },
+    {
+     "name": "Kettering University",
+     "school": "Kettering University"
+    },
+    {
+     "name": "Minnesota State Mavericks",
+     "school": "Minnesota State University, Mankato"
+    },
+    {
+     "name": "Niner Esports Green",
+     "school": "University of North Carolina at Charlotte"
+    },
+    {
+     "name": "North Georgia Blue",
+     "school": "University of North Georgia"
+    },
+    {
+     "name": "Oklahoma",
+     "school": "University of Oklahoma"
+    },
+    {
+     "name": "Robert Morris University",
+     "school": "Robert Morris University"
+    },
+    {
+     "name": "SFU R6",
+     "school": "Simon Fraser University"
+    },
+    {
+     "name": "St. Ambrose Esports",
+     "school": "St. Ambrose University"
+    },
+    {
+     "name": "Tech Esports Red",
+     "school": "Texas Tech University"
+    },
+    {
+     "name": "Texas State University",
+     "school": "Texas State University"
+    },
+    {
+     "name": "UARK Crimson",
+     "school": "University of Arkansas"
+    },
+    {
+     "name": "UF Club Blue",
+     "school": "University of Florida"
+    },
+    {
+     "name": "UH Red",
+     "school": "University of Houston"
+    },
+    {
+     "name": "UM-Flint",
+     "school": "University of Michigan - Flint"
+    },
+    {
+     "name": "UNIV. OF MICHIGAN",
+     "school": "University of Michigan"
+    },
+    {
+     "name": "University of New Haven Blue",
+     "school": "University of New Haven"
+    },
+    {
+     "name": "Weber State University",
+     "school": "Weber State University"
+    },
+    {
+     "name": "Wright State Raiders",
+     "school": "Wright State University"
+    }
+   ]
+  },
+  {
+   "id": "aurd1w13854i88w2c03qh4ahh",
+   "name": "R6 | Division III",
+   "division": "III",
+   "url": "https://necc.v1.leagueos.gg/league/seasons/aurd1w13854i88w2c03qh4ahh",
+   "start": "2026-09-30",
+   "end": "2026-12-10",
+   "teams": [
+    {
+     "name": "AWPE Black",
+     "school": "Army West Point"
+    },
+    {
+     "name": "Colorado School of Mines Varsity",
+     "school": "Colorado School of Mines"
+    },
+    {
+     "name": "CSU Rams",
+     "school": "Colorado State University"
+    },
+    {
+     "name": "K-State Varsity",
+     "school": "Kansas State University"
+    },
+    {
+     "name": "Knights Black",
+     "school": "University of Central Florida"
+    },
+    {
+     "name": "Lackawanna College",
+     "school": "Lackawanna College"
+    },
+    {
+     "name": "LSU",
+     "school": "Louisiana State University"
+    },
+    {
+     "name": "Mizzou Club",
+     "school": "University of Missouri"
+    },
+    {
+     "name": "MST Gold",
+     "school": "Missouri University of Science and Technology"
+    },
+    {
+     "name": "SAU R6",
+     "school": "Southern Arkansas University"
+    },
+    {
+     "name": "UAH Charger Blue",
+     "school": "The University of Alabama in Huntsville"
+    },
+    {
+     "name": "UF Club Orange",
+     "school": "University of Florida"
+    },
+    {
+     "name": "UNIV. OF MICHIGAN JV1",
+     "school": "University of Michigan"
+    },
+    {
+     "name": "University of Houston - Downtown Varsity",
+     "school": "University of Houston - Downtown"
+    },
+    {
+     "name": "University of Manitoba",
+     "school": "University of Manitoba"
+    },
+    {
+     "name": "WashU Bears",
+     "school": "Washington University in St. Louis"
+    }
+   ]
+  },
+  {
+   "id": "1vpy0fdlt3k078bzq5siiqpnd",
+   "name": "R6 | Division IV",
+   "division": "IV",
+   "url": "https://necc.v1.leagueos.gg/league/seasons/1vpy0fdlt3k078bzq5siiqpnd",
+   "start": "2026-09-30",
+   "end": "2026-12-10",
+   "teams": [
+    {
+     "name": "Academy ● White",
+     "school": "California State University, Northridge"
+    },
+    {
+     "name": "Ashland University",
+     "school": "Ashland University"
+    },
+    {
+     "name": "AVL Varsity",
+     "school": "University of North Carolina Asheville"
+    },
+    {
+     "name": "BGSU Orange",
+     "school": "Bowling Green State University"
+    },
+    {
+     "name": "Bison Green",
+     "school": "North Dakota State University"
+    },
+    {
+     "name": "Bradley University",
+     "school": "Bradley University"
+    },
+    {
+     "name": "CU Black",
+     "school": "University of Colorado Boulder"
+    },
+    {
+     "name": "Endicott Gulls",
+     "school": "Endicott College"
+    },
+    {
+     "name": "FSU Maroon",
+     "school": "Florida State University"
+    },
+    {
+     "name": "Fuel Esports",
+     "school": "Fanshawe College"
+    },
+    {
+     "name": "Hoosiers Cream",
+     "school": "Indiana University"
+    },
+    {
+     "name": "Jade Green",
+     "school": "Husson University"
+    },
+    {
+     "name": "Marietta College",
+     "school": "Marietta College"
+    },
+    {
+     "name": "Marshalltown Community College Blue",
+     "school": "Marshalltown Community College"
+    },
+    {
+     "name": "Mizzou Club B",
+     "school": "University of Missouri"
+    },
+    {
+     "name": "NC State Black",
+     "school": "North Carolina State University"
+    },
+    {
+     "name": "Niner Esports Gold",
+     "school": "University of North Carolina at Charlotte"
+    },
+    {
+     "name": "Northeastern Black",
+     "school": "Northeastern University"
+    },
+    {
+     "name": "Sam Houston State Orange",
+     "school": "Sam Houston State University"
+    },
+    {
+     "name": "SMU Huskies Maroon",
+     "school": "Saint Mary's University (Halifax)"
+    },
+    {
+     "name": "Tarleton State Purple",
+     "school": "Tarleton State University"
+    },
+    {
+     "name": "UAH Charger White",
+     "school": "The University of Alabama in Huntsville"
+    },
+    {
+     "name": "UCSC Amber",
+     "school": "University of California, Santa Cruz"
+    },
+    {
+     "name": "University of Manitoba",
+     "school": "University of Manitoba"
+    },
+    {
+     "name": "UNIVERSITY OF NEW HAVEN CHARGERS GOLD",
+     "school": "University of New Haven"
+    },
+    {
+     "name": "USU Blue",
+     "school": "Utah State University"
+    },
+    {
+     "name": "Widener University Gold",
+     "school": "Widener University"
+    },
+    {
+     "name": "WVU Tech",
+     "school": "WVU Tech"
+    },
+    {
+     "name": "Yotes Blue",
+     "school": "California State University, San Bernardino"
+    }
+   ]
+  },
+  {
+   "id": "d2hr5hs9o8aaflz81z333jeh3",
+   "name": "R6 | Division V",
+   "division": "V",
+   "url": "https://necc.v1.leagueos.gg/league/seasons/d2hr5hs9o8aaflz81z333jeh3",
+   "start": "2026-09-30",
+   "end": "2026-12-10",
+   "teams": [
+    {
+     "name": "Varsity ● Blue",
+     "school": "Wilkes University"
+    },
+    {
+     "name": "JV ● Red",
+     "school": "California State University, Northridge"
+    },
+    {
+     "name": "Alaska Esports",
+     "school": "University of Alaska Fairbanks"
+    },
+    {
+     "name": "AWPE Gold",
+     "school": "Army West Point"
+    },
+    {
+     "name": "Bentley Strike Red",
+     "school": "Bentley University"
+    },
+    {
+     "name": "Buena Vista",
+     "school": "Buena Vista University"
+    },
+    {
+     "name": "Carthage Firebirds",
+     "school": "Carthage College"
+    },
+    {
+     "name": "Chico Red",
+     "school": "California State University, Chico"
+    },
+    {
+     "name": "Cumberland Black",
+     "school": "Cumberland University"
+    },
+    {
+     "name": "Dakota State Blue",
+     "school": "Dakota State University"
+    },
+    {
+     "name": "Eagles Varsity",
+     "school": "Embry-Riddle Aeronautical University"
+    },
+    {
+     "name": "FLPoly Phoenixes",
+     "school": "Florida Polytechnic University"
+    },
+    {
+     "name": "Grims",
+     "school": "New England College"
+    },
+    {
+     "name": "Kettering Academy",
+     "school": "Kettering University"
+    },
+    {
+     "name": "Knighthaven",
+     "school": "University of Central Florida"
+    },
+    {
+     "name": "Lackawanna College",
+     "school": "Lackawanna College"
+    },
+    {
+     "name": "Marist Red",
+     "school": "Marist University"
+    },
+    {
+     "name": "Missouri State Maroon",
+     "school": "Missouri State University"
+    },
+    {
+     "name": "Pittsburg State University",
+     "school": "Pittsburg State University"
+    },
+    {
+     "name": "Sacred Heart University",
+     "school": "Sacred Heart University"
+    },
+    {
+     "name": "TCU Esports",
+     "school": "Texas Christian University"
+    },
+    {
+     "name": "Texas Tech Black",
+     "school": "Texas Tech University"
+    },
+    {
+     "name": "UdeS Acad",
+     "school": "Université de Sherbrooke"
+    },
+    {
+     "name": "University of South Alabama",
+     "school": "University of South Alabama"
+    },
+    {
+     "name": "UNO Black",
+     "school": "University of Nebraska Omaha"
+    },
+    {
+     "name": "USM Huskies",
+     "school": "University of Southern Maine"
+    },
+    {
+     "name": "Warner",
+     "school": "Warner University"
+    }
+   ]
+  },
+  {
+   "id": "2plygpcqzbvu3tk2jy3yncmv9",
+   "name": "R6 | Division VI",
+   "division": "VI",
+   "url": "https://necc.v1.leagueos.gg/league/seasons/2plygpcqzbvu3tk2jy3yncmv9",
+   "start": "2026-09-30",
+   "end": "2026-12-10",
+   "teams": [
+    {
+     "name": "ACC Lumberjacks",
+     "school": "Alpena Community College"
+    },
+    {
+     "name": "Bronco Esports Gold",
+     "school": "California State Polytechnic University, Pomona"
+    },
+    {
+     "name": "Concordia- St. Paul",
+     "school": "Concordia University, St. Paul"
+    },
+    {
+     "name": "Drury University",
+     "school": "Drury University"
+    },
+    {
+     "name": "ECU Tiger Lanoy",
+     "school": "East Central University"
+    },
+    {
+     "name": "Edinboro University",
+     "school": "Pennsylvania Western University at Edinboro"
+    },
+    {
+     "name": "King's College",
+     "school": "King's College"
+    },
+    {
+     "name": "MSSU Gold",
+     "school": "Missouri Southern State University"
+    },
+    {
+     "name": "Niner Esports White",
+     "school": "University of North Carolina at Charlotte"
+    },
+    {
+     "name": "Royal Gold",
+     "school": "Husson University"
+    },
+    {
+     "name": "UAA Gold",
+     "school": "University of Alaska Anchorage"
+    },
+    {
+     "name": "Widener University Blue",
+     "school": "Widener University"
+    },
+    {
+     "name": "York Spartans",
+     "school": "York College of Pennsylvania"
+    }
+   ]
+  }
+ ]
+}

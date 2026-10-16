@@ -4,7 +4,8 @@ app.py
 Entry point of the R6 Match Stats website and Windows app (Streamlit).
 Pages: report.py (Dashboard: one match's scoreboards), ask.py (plain-English questions about
 every match), history.py (every match), teams.py (build a team; season teams), operators.py,
-schools.py (NECC school rosters) and download.py (get the Windows app).
+league.py (your league or tournament: Liquipedia events, NECC divisions, or your own; NECC's school
+directory), appearance.py (team colors and logo) and download.py (get the Windows app).
 
 Run with:  streamlit run scripts/app.py   (from the repo root)
 """
@@ -17,7 +18,7 @@ from pathlib import Path
 import streamlit as st
 
 from app_info import APP_NAME, can_dock, quiet_windows_connection_resets, send_window_command
-from branding import render_identity
+from branding import current_competition, render_identity
 
 if __name__ == "__main__":
     from streamlit import runtime
@@ -129,8 +130,8 @@ page = st.navigation([
     st.Page("history.py", title="Match History", icon=":material/history:"),
     st.Page("teams.py", title="Team Analytics", icon=":material/groups:"),
     st.Page("operators.py", title="Operator Analytics", icon=":material/target:"),
-    st.Page("schools.py", title="School Selection", icon=":material/school:"),
-    st.Page("appearance.py", title="School Theme", icon=":material/palette:"),
+    st.Page("league.py", title="League & Team", icon=":material/emoji_events:"),
+    st.Page("appearance.py", title="Team Theme", icon=":material/palette:"),
     st.Page("download.py", title="Get the Windows app", icon=":material/download:"),
 ], position="sidebar")
 if can_dock():
@@ -141,5 +142,7 @@ if can_dock():
             send_window_command("dock", edge="left")
         if right.button("Dock right ⇥", width="stretch", key="dock_right"):
             send_window_command("dock", edge="right")
+if "r6_season" not in st.session_state and current_competition()["season"]:
+    st.session_state["r6_season"] = current_competition()["season"]  # the season named after your league
 render_identity()
 page.run()
