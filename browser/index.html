@@ -4,16 +4,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-/* Layout: one column command-center page. A header with the team's league, three tabs, and a working
+/* Layout: one column command-center page. A header with the team's league, shared navigation, and a working
    match report under them, in the Windows app's own dark navy, cyan and gold. */
-:root {
-  --bg:#080e19; --panel:#101d2c; --row:#152437; --border:#293b51; --text:#f2f6fb; --dim:#a8b8ca;
-  --accent:#52d5f2; --gold:#f6be4f; --atk:#e8924a; --def:#6aa4dd; --pos:#86b99f; --neg:#e17e69;
-  --display:'Barlow Condensed','Arial Narrow','Segoe UI Semibold',sans-serif;
-  --sans:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
-  --mono:'IBM Plex Mono','Cascadia Mono',Consolas,ui-monospace,monospace;
-  color-scheme: dark;
-}
+/*@@THEME@@*/
+
 * { box-sizing:border-box; }
 [hidden] { display:none !important; }
 html, body { background:var(--bg); color:var(--text); }
@@ -80,11 +74,11 @@ select, input[type="search"], input[type="text"] { background:var(--row); border
 .tag { display:inline-block; padding:2px 8px; border:1px solid var(--gold); color:var(--gold); border-radius:2px;
        font:600 10px var(--mono); letter-spacing:.12em; text-transform:uppercase; }
 .metrics { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; }
-.metric { border:1px solid var(--border); border-top:3px solid var(--accent); background:linear-gradient(125deg,#17283b,#0c1624); padding:10px 14px; min-width:0; }
+.metric { border:1px solid var(--border); border-top:3px solid var(--school); background:linear-gradient(125deg,#17283b,#0c1624); padding:10px 14px; min-width:0; }
 .metric span { display:block; font:500 10px var(--mono); color:var(--dim); text-transform:uppercase; letter-spacing:.1em; }
 .metric b { display:block; font:600 1.55rem var(--mono); color:var(--accent); overflow-wrap:anywhere; line-height:1.25; }
 .scorecard { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:14px; padding:18px 22px;
-             border:1px solid var(--border); border-left:4px solid var(--accent); background:linear-gradient(115deg,#182a3f,#0d1725); }
+             border:1px solid var(--border); border-left:4px solid var(--school); background:linear-gradient(115deg,#182a3f,#0d1725); }
 .scorecard .team { font:600 1.35rem var(--display); text-transform:uppercase; letter-spacing:.03em; overflow-wrap:anywhere; }
 .scorecard .team:last-child { text-align:right; }
 .scorecard .score { text-align:center; font:600 2.4rem var(--mono); color:var(--accent); white-space:nowrap; }
@@ -160,6 +154,31 @@ td.eps { color:var(--accent); font-weight:700; }
   .brand h1 { font-size:1.5rem; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation:none !important; transition:none !important; } }
+
+.workspace-bar {display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:14px 0;border-bottom:1px solid var(--border);}
+.workspace-bar>span {margin-right:auto;color:var(--dim);font:12px var(--mono);}
+.workspace-panel h2 {font-size:2rem;margin-bottom:18px;}
+.workspace-panel form,.workspace-form {display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin-bottom:18px;}
+.workspace-form label, .workspace-panel form label {display:grid;gap:5px;font-size:12px;color:var(--dim);flex:1;min-width:160px;}
+.workspace-panel input,.workspace-panel select,.workspace-panel textarea {width:100%;background:var(--row);border:1px solid var(--border);color:var(--text);padding:9px;font:inherit;}
+.workspace-panel textarea {min-height:85px;}
+.confirmation {padding:18px;border:1px solid var(--border);background:var(--panel);display:grid;gap:12px;}
+.player-picks {display:flex;flex-wrap:wrap;gap:8px 16px;}
+.player-picks label {display:flex;gap:6px;align-items:center;}
+.player-picks input {accent-color:var(--accent);}
+.workspace-panel .table-wrap {margin:12px 0;}
+.workspace-chart {width:100%;height:230px;border:1px solid var(--border);background:var(--panel);margin:12px 0;}
+.workspace-chart text {fill:var(--dim);font:11px var(--mono);}
+.workspace-chart line {stroke:var(--border);}
+.workspace-chart rect,.workspace-chart circle {fill:var(--accent);}
+.workspace-chart polyline {fill:none;stroke:var(--accent);stroke-width:3;}
+.team-logo {width:40px;height:40px;object-fit:contain;}
+.brand>svg {color:var(--accent);}
+.brand h1 {font-size:1.9rem;}
+.saved-match {display:flex;flex-wrap:wrap;gap:10px;align-items:center;border:1px solid var(--border);padding:12px;margin:8px 0;background:var(--panel);}
+.saved-match>div {flex:1;min-width:200px;}.saved-match small {display:block;color:var(--dim);}
+button:disabled {cursor:not-allowed;}
+
 </style>
 
 <div class="wrap">
@@ -171,11 +190,23 @@ td.eps { color:var(--accent); font-weight:700; }
     <div class="league-chip" id="league-chip"><span>YOUR LEAGUE</span><b>Not picked yet</b><span>Pick it on League &amp; Team</span></div>
   </header>
   <nav class="tabs" role="tablist" aria-label="Sections">
-    <button class="tab" role="tab" id="tab-report" aria-selected="true" aria-controls="report">Match report</button>
+    <button class="tab" role="tab" id="tab-report" aria-selected="true" aria-controls="report">Dashboard</button>
+    <button class="tab" role="tab" id="tab-ask" aria-selected="false" aria-controls="ask">Ask</button>
+    <button class="tab" role="tab" id="tab-history" aria-selected="false" aria-controls="history">Match History</button>
+    <button class="tab" role="tab" id="tab-teams" aria-selected="false" aria-controls="teams">Team Analytics</button>
+    <button class="tab" role="tab" id="tab-operators" aria-selected="false" aria-controls="operators">Operator Analytics</button>
+    <button class="tab" role="tab" id="tab-season" aria-selected="false" aria-controls="season">Season Tracker</button>
+    <button class="tab" role="tab" id="tab-theme" aria-selected="false" aria-controls="theme">Team Theme</button>
     <button class="tab" role="tab" id="tab-league" aria-selected="false" aria-controls="league">League &amp; Team</button>
     <button class="tab" role="tab" id="tab-about" aria-selected="false" aria-controls="about">About</button>
   </nav>
 
+  <div class="workspace-bar"><span id="workspace-status" role="status">Your browser workspace</span>
+  <button class="btn small" id="workspace-demo">Try the demo season</button>
+  <button class="btn small" id="workspace-export">Export workspace</button>
+  <button class="btn small" id="workspace-import">Import workspace</button>
+  <input type="file" id="workspace-file" accept=".json,application/json" hidden></div>
+  <div id="workspace-message" role="status" hidden></div>
   <main>
     <section class="panel" id="report" role="tabpanel" aria-labelledby="tab-report">
       <div class="intake">
@@ -241,6 +272,12 @@ td.eps { color:var(--accent); font-weight:700; }
       <p class="dim" id="attribution" style="font-size:.82rem; margin:0"></p>
     </section>
 
+<section class="panel workspace-panel" id="ask" role="tabpanel" aria-labelledby="tab-ask" hidden><h2>Ask</h2><div id="ask-content"></div></section>
+<section class="panel workspace-panel" id="history" role="tabpanel" aria-labelledby="tab-history" hidden><h2>Match History</h2><div id="history-content"></div></section>
+<section class="panel workspace-panel" id="teams" role="tabpanel" aria-labelledby="tab-teams" hidden><h2>Team Analytics</h2><div id="teams-content"></div></section>
+<section class="panel workspace-panel" id="operators" role="tabpanel" aria-labelledby="tab-operators" hidden><h2>Operator Analytics</h2><div id="operators-content"></div></section>
+<section class="panel workspace-panel" id="season" role="tabpanel" aria-labelledby="tab-season" hidden><h2>Season Tracker</h2><div id="season-content"></div></section>
+<section class="panel workspace-panel" id="theme" role="tabpanel" aria-labelledby="tab-theme" hidden><h2>Team Theme</h2><div id="theme-content"></div></section>
     <section class="panel" id="about" role="tabpanel" aria-labelledby="tab-about" hidden>
       <div class="about">
         <h2>What this is</h2>
@@ -252,8 +289,8 @@ td.eps { color:var(--accent); font-weight:700; }
           <li>The folder is <span class="mono">Documents\My Games\Rainbow Six - Siege\&lt;your id&gt;\MatchReplay</span>.</li>
           <li>Drop the whole match folder, its round files, or a zip of them on <b>Match report</b>.</li>
         </ul>
-        <h2>Want more?</h2>
-        <p>The Windows app adds match history, plain-English questions about your trends, team and operator analytics, and a season tracker. It's free on the project's <a id="releases-link" href="https://github.com/julio208920/r6-dissect/releases/latest" target="_blank" rel="noopener">releases page</a>.</p>
+        <h2>Your complete workspace</h2>
+        <p>History, Ask, team and operator analytics, season tracking and themes are included here. Your browser saves confirmed matches on this device; export a workspace backup to move them. The Windows app also provides native docking and automatic replay-folder discovery. Download it from the project's <a id="releases-link" href="https://github.com/julio208920/r6-dissect/releases/latest" target="_blank" rel="noopener">releases page</a>.</p>
         <p class="dim">R6 Match Stats is an unofficial fan project, free to use. It isn't made, endorsed or supported by Ubisoft. Rainbow Six and Ubisoft are trademarks of Ubisoft Entertainment. It only reads replay files the game has already saved.</p>
       </div>
     </section>
@@ -282,13 +319,14 @@ td.eps { color:var(--accent); font-weight:700; }
   if (R6.releasesUrl) $("releases-link").href = R6.releasesUrl;
 
   // ------------------------------------------------------------ tabs ----
-  const tabs = ["report", "league", "about"];
+  const tabs = ["report", "ask", "history", "teams", "operators", "season", "league", "theme", "about"];
   function showTab(name) {
     for (const t of tabs) {
       $(`tab-${t}`).setAttribute("aria-selected", String(t === name));
       $(t).hidden = t !== name;
     }
     store.set("r6web.tab", name);
+    document.dispatchEvent(new CustomEvent("r6tab", {detail:name}));
   }
   for (const t of tabs) $(`tab-${t}`).addEventListener("click", () => showTab(t));
   const startTab = tabs.includes(location.hash.slice(1)) ? location.hash.slice(1) : store.get("r6web.tab", "report");
@@ -319,6 +357,8 @@ td.eps { color:var(--accent); font-weight:700; }
       const options = { indexURL: R6.pyodideBase };
       if (R6.stdlibBase64) options.stdLibURL = URL.createObjectURL(new Blob([base64Bytes(R6.stdlibBase64)]));
       const pyodide = await window.loadPyodide(options);
+      await pyodide.loadPackage("sqlite3");
+      pyodide.runPython("import sqlite3");
       for (const [name, code] of Object.entries(R6.python)) pyodide.FS.writeFile(`/home/pyodide/${name}`, code);
       pyodide.runPython("import sys; sys.path.insert(0, '/home/pyodide'); import bridge");
       step("python", "done");
@@ -496,6 +536,7 @@ td.eps { color:var(--accent); font-weight:700; }
   let current = null;
   function renderReport(report, { label, demo }) {
     current = report;
+    window.R6ReportMeta = {label, demo};
     const m = report.match, [s0, s1] = m.final_score, [t0, t1] = m.team_names;
     const warn = [
       ...report.warnings,
@@ -531,6 +572,7 @@ td.eps { color:var(--accent); font-weight:700; }
       a.href = URL.createObjectURL(new Blob([JSON.stringify(current, null, 2)], { type: "application/json" }));
       a.download = `${(m.match_id || "match").replace(/[^\w-]+/g, "_")}.json`; a.click();
     });
+    document.dispatchEvent(new CustomEvent("r6report", {detail: {report:current, meta:window.R6ReportMeta}}));
   }
   async function copy(text) {
     try { await navigator.clipboard.writeText(text); $("copied").textContent = "Copied."; }
@@ -653,5 +695,8 @@ td.eps { color:var(--accent); font-weight:700; }
   $("attribution").innerHTML = `${esc(R6.attribution)} <a href="https://liquipedia.net/rainbowsix/Liquipedia:Copyrights" target="_blank" rel="noopener">License</a>. Your pick is saved in this browser only.`;
   renderChip();
   renderEvents();
+  window.R6UI = {bridge:loadPython, renderReport, showTab, current:()=>current, saveLeague:save, store, esc};
 })();
 </script>
+
+<script>/*@@WORKSPACE@@*/</script>

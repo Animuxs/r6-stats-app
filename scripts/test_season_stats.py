@@ -32,6 +32,28 @@ class StatsManagerTest(unittest.TestCase):
         self.assertEqual({p.username for p in self.sm.all_player_stats()}, {"Fabian", "Bosco"})
         self.assertIsNone(self.sm.get_player_stats("Kanto"))
 
+    def test_deleting_season_team_preserves_other_team_and_season(self):
+        self.sm.add_players(TEAM0, team="Squad")
+        self.sm.add_players(TEAM1, team="Rivals")
+        self.sm.log_match(self.match)
+        self.sm.season = "Other"
+        self.sm.log_match(self.match)
+        self.sm.season = "Y10S3"
+        self.sm.delete_team("Squad")
+        self.assertNotIn("Squad", self.sm.tracked_teams())
+        self.assertIsNone(self.sm.get_team_stats("Squad"))
+        self.assertIsNotNone(self.sm.get_team_stats("Rivals"))
+        self.sm.log_match(self.match)
+        self.assertIsNone(self.sm.get_team_stats("Squad"))
+        self.sm.season = "Other"
+        self.assertIsNotNone(self.sm.get_team_stats("Squad"))
+        self.sm.season = "Y10S3"
+        self.sm.add_players(TEAM0, team="Squad")
+        self.assertIn("Squad", self.sm.tracked_teams())
+        self.assertIsNone(self.sm.get_team_stats("Squad"))
+        self.sm.log_match(self.match)
+        self.assertIsNotNone(self.sm.get_team_stats("Squad"))
+
     def test_totals_match_metrics_engine(self):
         self.sm.add_players(TEAM0 + TEAM1)
         self.sm.log_match(self.match)

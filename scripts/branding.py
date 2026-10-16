@@ -185,7 +185,7 @@ def render_identity(banner=True):
     header[data-testid="stHeader"] {{background:#080e19e8;}}
     section[data-testid="stSidebar"] {{background:#101a2a;}}
     h1,h2,h3 {{text-transform:uppercase;letter-spacing:.035em!important;}}
-    h1 {{font-size:2.8rem!important;}}
+    h1 {{font-size:2rem!important;}}
     [data-testid="stMetric"] {{background:linear-gradient(125deg,#17283b,#0c1624);border:1px solid #293b51;border-top:3px solid var(--school);border-radius:3px;}}
     [data-testid="stMetricValue"] {{color:var(--accent);font-size:clamp(20px,2.4vw,32px);}}
     [data-testid="stTabs"] button[aria-selected="true"] {{color:var(--accent);}}
@@ -193,13 +193,13 @@ def render_identity(banner=True):
     .scorecard {{background:linear-gradient(115deg,#182a3f,#0d1725);border-left:4px solid var(--school);}}
     table.pl th {{background:#101d2c;color:#b3c4d7;}} table.pl td {{border-color:#293b51;}}
     table.pl tr:nth-child(even) td {{background:#152437;}}
-    .identity-banner {{display:flex;align-items:center;gap:20px;border:1px solid #293b51;border-left:5px solid var(--school);padding:25px 30px;background:linear-gradient(115deg,#14263bee,#0b1422);margin:12px 0 24px;position:relative;overflow:hidden;}}
-    .identity-banner:after {{content:'';position:absolute;right:30px;top:-30px;width:70px;height:230px;transform:rotate(25deg);background:var(--school);opacity:.15;}}
+    .identity-banner {{display:flex;align-items:center;gap:20px;border:0;border-bottom:1px solid var(--border);padding:18px 0;background:transparent;margin:0 0 18px;position:relative;overflow:hidden;}}
+    .identity-banner:after {{content:none;position:absolute;right:30px;top:-30px;width:70px;height:230px;transform:rotate(25deg);background:var(--school);opacity:.15;}}
     .identity-banner img {{width:64px;height:64px;object-fit:contain;}}
     .identity-kicker {{color:var(--accent);font:700 11px monospace;letter-spacing:.2em;}}
-    .identity-name {{font:700 clamp(22px,3vw,38px) 'Barlow Condensed','Arial Narrow',sans-serif;color:#f2f6fb;line-height:1.1;margin:7px 0;}}
+    .identity-name {{font:600 clamp(22px,3vw,30px) 'Barlow Condensed','Arial Narrow',sans-serif;color:#f2f6fb;line-height:1.1;margin:7px 0;}}
     .identity-sub {{color:#a8b8ca;font-size:13px;}}
-    .identity-badge {{margin-left:auto;border:1px solid var(--secondary);color:var(--secondary);padding:8px 12px;font:700 11px monospace;white-space:nowrap;}}
+    .identity-badge {{margin-left:auto;border:1px solid var(--secondary);color:var(--secondary);border-left:3px solid var(--secondary);background:var(--panel);padding:8px 12px;font:700 11px monospace;white-space:nowrap;}}
     @media(max-width:700px) {{.identity-banner {{padding:18px 14px;gap:12px;}}.identity-badge {{display:none;}}h1 {{font-size:2rem!important;}}}}
     </style>''', unsafe_allow_html=True)
     if theme['logo']:

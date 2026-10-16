@@ -287,6 +287,9 @@ class StatsManager:
         self._conn.row_factory = sqlite3.Row
         with self._conn:
             self._conn.executescript(_SCHEMA)
+            self._conn.execute("CREATE TABLE IF NOT EXISTS removed_season_teams ("
+                               "season TEXT NOT NULL, team TEXT NOT NULL COLLATE NOCASE, "
+                               "PRIMARY KEY (season, team))")
             self._conn.execute(
                 "INSERT OR IGNORE INTO meta(key, value) VALUES ('schema_version', ?)",
                 (str(SCHEMA_VERSION),),
@@ -311,6 +314,9 @@ class StatsManager:
         if not username:
             raise StatsError("username must not be empty")
         with self._conn:
+            if team:
+                self._conn.execute("DELETE FROM removed_season_teams WHERE season = ? AND team = ?",
+                                   (self.season, team))
             self._conn.execute(
                 """INSERT INTO tracked_players(username, team, added_at) VALUES (?, ?, ?)
                    ON CONFLICT(username) DO UPDATE SET team = excluded.team""",
@@ -333,8 +339,26 @@ class StatsManager:
 
     def tracked_players(self) -> dict[str, str | None]:
         """{username: pinned team or None}"""
-        rows = self._conn.execute("SELECT username, team FROM tracked_players ORDER BY username")
+        rows = self._conn.execute("SELECT username, team FROM tracked_players WHERE team IS NULL OR "
+                                  "team COLLATE NOCASE NOT IN (SELECT team FROM removed_season_teams WHERE season = ?) "
+                                  "ORDER BY username", (self.season,))
         return {r["username"]: r["team"] for r in rows}
+
+    def delete_team(self, team: str) -> None:
+        """Remove a team and its counted player results from this season only.
+
+        Built teams, the main match database, and every other season are preserved.
+        Explicitly tracking the roster again restores it as an empty season team.
+        """
+        with self._conn:
+            self._conn.execute("INSERT OR IGNORE INTO removed_season_teams VALUES (?, ?)",
+                               (self.season, team))
+            self._conn.execute("DELETE FROM match_ratings WHERE season = ? AND username IN "
+                               "(SELECT username FROM player_totals WHERE season = ? AND team = ? COLLATE NOCASE)",
+                               (self.season, self.season, team))
+            for table in ("player_totals", "logged_rounds"):
+                self._conn.execute(f"DELETE FROM {table} WHERE season = ? AND team = ? COLLATE NOCASE",
+                                   (self.season, team))
 
     # ---------------------------------------------------------- logging ----
 
@@ -379,7 +403,8 @@ class StatsManager:
             self._conn.executemany(
                 "INSERT OR IGNORE INTO match_ratings (season, match_id, username, rounds, rating) VALUES (?, ?, ?, ?, ?)",
                 [(self.season, str(match_id), tracked[name.casefold()], ps.rounds_played, ps.rating)
-                 for name, ps in stats.items() if name.casefold() in tracked and ps.rounds_played],
+                 for name, ps in stats.items() if name.casefold() in tracked and ps.rounds_played
+                 and name.casefold() in {p.casefold() for p in result.players_logged}],
             )
         pinned = self.tracked_players()
         no_team = sorted(u for u in result.players_logged if not pinned.get(u) and not self._stored_team(u))
@@ -427,6 +452,9 @@ class StatsManager:
                 continue
             username, pinned_team = hit
             team = pinned_team or team_of.get(name)
+            if team and self._conn.execute("SELECT 1 FROM removed_season_teams WHERE season = ? AND team = ?",
+                                           (self.season, team)).fetchone():
+                continue
 
             cur = self._conn.execute(
                 """INSERT OR IGNORE INTO logged_rounds
@@ -523,7 +551,8 @@ class StatsManager:
         their matches are in this season yet."""
         teams: dict[str, list[str]] = {}
         for r in self._conn.execute("SELECT username, team FROM tracked_players WHERE team IS NOT NULL "
-                                    "ORDER BY team COLLATE NOCASE, added_at, username"):
+                                    "AND team COLLATE NOCASE NOT IN (SELECT team FROM removed_season_teams WHERE season = ?) "
+                                    "ORDER BY team COLLATE NOCASE, added_at, username", (self.season,)):
             teams.setdefault(r["team"], []).append(r["username"])
         return teams
 
