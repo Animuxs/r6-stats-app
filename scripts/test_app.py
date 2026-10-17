@@ -77,6 +77,15 @@ class TestReportPage(unittest.TestCase):
         self.assertEqual(len(at.radio), 0)
         self.assertEqual(len(at.text_input), 0)
 
+    def test_with_nothing_loaded_it_says_how_to_start_and_offers_the_demo(self):
+        at = run_app(R6_HOSTED="1")
+        self.assertFalse(at.exception)
+        self.assertTrue(any(m.value == "#### Getting started" for m in at.markdown))
+        at.button(key="start_demo_here").click().run()
+        self.assertFalse(at.exception)
+        self.assertTrue(at.session_state["r6_demo_db"] if "r6_demo_db" in at.session_state else
+                        any("Demo season" in i.value for i in at.info))
+
     def test_windows_app_has_no_replays_folder_option(self):
         at = run_app(R6_DESKTOP="1")
         self.assertEqual(at.radio[0].options, ["Folder or zip on this computer", "Upload"])

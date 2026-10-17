@@ -33,7 +33,7 @@ from season_stats import GENERIC_TEAM_NAMES, StatsError
 from session import Session
 from sources import (
     DemoSource, LoadedSource, ReplaySource, can_read_local_files, folder_source, load_source, save_replay_folder,
-    saved_replay_folder, start_workdir_sweeper,
+    saved_replay_folder, start_demo, start_workdir_sweeper,
 )
 from scoreboard_image import scoreboard_png
 from stats_db import NotAdded, nice_time
@@ -348,7 +348,7 @@ class DashboardTab(Tab):
             return
         source = DemoSource() if self.demo_mode else self.choose_source()
         if source is None:
-            st.info("Load a replay above, or turn on the demo match in the sidebar.")
+            self.getting_started()
             return
         if source.skipped:
             st.warning(source.skipped, icon="🛡️")
@@ -378,6 +378,21 @@ class DashboardTab(Tab):
                 with st.expander("🔍 Parser debug info"):
                     st.json(raw_shape_preview(raw))
         self.show_match(match, name, source.round_files(name), source, *mine)
+
+    def getting_started(self) -> None:
+        """What to do with nothing loaded yet: the steps, and the demo season a click away."""
+        with st.container(border=True):
+            st.markdown("#### Getting started")
+            st.markdown(
+                "1. **Load a match** above" + (": the app finds Siege's replay folder by itself, or paste its path."
+                                               if self.local_files else ": upload a match folder's zip.") + "\n"
+                "2. Check the scoreboard, then **Confirm match and players** to add it to your stats.\n"
+                "3. Ask anything on **Ask**, draw it on **Charts**, or open the **Assistant** in the corner.")
+            left, right = st.columns(2)
+            left.button("Try the demo season", icon=":material/science:", key="start_demo_here", on_click=start_demo,
+                        type="primary", width="stretch", help="Twelve made-up matches on every page. Your own stats "
+                                                              "aren't touched; leave it from the sidebar.")
+            right.page_link("download.py", label="Where are my replays?", icon=":material/folder_open:")
 
     # ----------------------------------------------------------- input ----
     def sidebar(self) -> bool:
