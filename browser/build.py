@@ -139,6 +139,9 @@ def main() -> None:
     (cloudflare / "_headers").write_text(
         "/R6MatchStats-School-PIN-Pilot.html\n"
         "  Content-Disposition: attachment; filename=R6MatchStats-School-PIN-Pilot.html\n"
+        "  X-Content-Type-Options: nosniff\n"
+        "/R6MatchStats-School-PIN-Pilot\n"
+        "  Content-Disposition: attachment; filename=R6MatchStats-School-PIN-Pilot.html\n"
         "  X-Content-Type-Options: nosniff\n", encoding="utf-8")
 
 
