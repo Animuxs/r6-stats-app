@@ -18,7 +18,7 @@ def _note(kind: str, text: str) -> None:
 
 
 def _keep(match_id: str) -> None:
-    players = [p for team in (0, 1) for p in st.session_state.get(f"check:{match_id}:{team}", [])]
+    players = [p for team in (0, 1) for p in Session().get(f"check:{match_id}:{team}", [])]
     try:
         with Session().stats() as db:
             db.confirm_checked(match_id, players)

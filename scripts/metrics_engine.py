@@ -122,23 +122,6 @@ class RoundBreakdown:
     headshots: int = 0
     kost: bool = False
 
-    def summary(self) -> str:
-        bits = [f"{self.kills}K"] if self.kills else []
-        if self.assists:
-            bits.append(f"{self.assists}A")
-        bits.append("died" if self.deaths else "survived")
-        for flag, label in (
-            (self.entry_kill, "entry kill"), (self.entry_death, "entry death"),
-            (self.traded, "traded"), (self.planted, "planted"), (self.defused, "defused"),
-        ):
-            if flag:
-                bits.append(label)
-        if self.trade_kills:
-            bits.append(f"{self.trade_kills} trade kill{'s' if self.trade_kills > 1 else ''}")
-        if self.clutch:
-            bits.append(f"clutched {self.clutch}")
-        return ", ".join(bits)
-
     def highlights(self) -> list[tuple[str, str]]:
         """What stood out this round, as (label, tone) pairs, tone "pos", "neg" or "" (neutral):
         a multikill ("3K", "ACE"), the opening duel, trades, the defuser and clutches."""

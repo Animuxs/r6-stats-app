@@ -5,6 +5,7 @@ from pathlib import Path
 import streamlit as st
 
 from app_info import is_public_host
+from session import Session
 from stats_db import default_path
 from team_accounts import AccountError, TeamStore
 
@@ -26,7 +27,7 @@ def store():
 
 
 def current_team():
-    token = st.session_state.get("team_token")
+    token = Session().team_token
     if not token:
         return None
     # Fail closed: never silently fall back to another workspace for an expired session.
@@ -34,38 +35,41 @@ def current_team():
 
 
 def team_folder():
-    return store().team_folder(st.session_state["team_token"]) if current_team() else None
+    return store().team_folder(Session().team_token) if current_team() else None
 
 
 def switch_account(token=None):
     # No replay cache, theme, player choice or planning data crosses an account boundary.
-    st.session_state.clear()
+    session = Session()
+    session.clear()
     st.query_params.clear()
     if token:
-        st.session_state["team_token"] = token
+        session.team_token = token
 
 
 def selected_player():
-    if not st.session_state.get("team_token") or st.session_state.get("demo_season_folder"):
+    session = Session()
+    if not session.team_token or session.demo:
         return None
     account = current_team()
-    chosen = st.session_state.get("team_person")
+    chosen = session.team_person
     return next((p["player"] or None for p in account["directory"] if p["id"] == chosen), None)
 
 
 def read_document(name):
-    value, revision = store().document(st.session_state['team_token'], name)
-    st.session_state.setdefault('team_revision_' + name, revision)
+    session = Session()
+    value, revision = store().document(session.team_token, name)
+    session.setdefault('team_revision_' + name, revision)
     return value
 
 
 def write_document(name, value):
-    key = 'team_revision_' + name
-    if key not in st.session_state:
+    session, key = Session(), 'team_revision_' + name
+    if not session.has(key):
         read_document(name)
-    store().save_document(st.session_state['team_token'], name, value, st.session_state[key])
-    st.session_state[key] += 1
+    store().save_document(session.team_token, name, value, session.get(key))
+    session.set(key, session.get(key) + 1)
 
 
 def shared_active():
-    return not st.session_state.get('demo_season_folder') and bool(current_team())
+    return not Session().demo and bool(current_team())

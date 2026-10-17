@@ -42,12 +42,12 @@ class TeamHubTab(Tab):
         st.caption(f"Shared school address: {account['email']} · format checked, not verified")
         left, right = st.columns(2)
         if left.button('Refresh shared workspace', width='stretch'):
-            token, person = self.session.get('team_token'), self.session.get('team_person')
+            token, person = self.session.team_token, self.session.team_person
             switch_account(token)
-            self.session.set('team_person', person)
+            self.session.team_person = person
             st.rerun()
         if right.button('Sign out of this device', width='stretch'):
-            store().logout(self.session.get('team_token'))
+            store().logout(self.session.team_token)
             switch_account()
             st.rerun()
         st.caption('Changes appear when teammates refresh or interact with their page. Each person signs in to the same '
@@ -91,12 +91,12 @@ class TeamHubTab(Tab):
         people = account['directory']
         by_id = {p['id']: p for p in people}
         labels = lambda key: 'Team overview / no selected player' if not key else by_id[key]['name']
-        choice = self.session.get('team_person')
+        choice = self.session.team_person
         options = [''] + list(by_id)
         chosen = st.selectbox('Who are you viewing as?', options,
                               index=options.index(choice) if choice in options else 0, format_func=labels)
         if chosen != choice:
-            self.session.set('team_person', chosen)
+            self.session.team_person = chosen
             st.rerun()
         if people:
             st.dataframe([{'Name': p['name'], 'Player username': p['player'] or '—',
@@ -117,14 +117,14 @@ class TeamHubTab(Tab):
             if st.form_submit_button('Save member', type='primary'):
                 updated = {'id': selected or secrets.token_hex(16), 'name': name, 'player': player,
                            'roles': roles, 'custom_role': custom}
-                store().save_directory(self.session.get('team_token'),
+                store().save_directory(self.session.team_token,
                                        [p for p in people if p['id'] != selected] + [updated], revision)
                 self.session.drop('team_directory_revision_')
                 st.rerun()
         if selected:
             confirmed = st.checkbox('Confirm removal of this member profile (match stats are kept)')
             if st.button('Remove member profile', disabled=not confirmed):
-                store().save_directory(self.session.get('team_token'), [p for p in people if p['id'] != selected], revision)
+                store().save_directory(self.session.team_token, [p for p in people if p['id'] != selected], revision)
                 self.session.drop('team_directory_revision_')
                 st.rerun()
 

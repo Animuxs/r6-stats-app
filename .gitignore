@@ -52,6 +52,10 @@ __pycache__/
 /browser/r6-dissect.wasm
 /browser/wasm_exec.js
 
+# coverage data (scripts/run_tests.py --coverage writes it to build/)
+.coverage
+.coverage.*
+
 # Local Cloudflare development state contains team credentials and data
 /team-server/.wrangler/
 /team-server/node_modules/

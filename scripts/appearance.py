@@ -33,7 +33,7 @@ class ThemeTab(Tab):
                     except OSError:
                         st.error('Could not save the chime setting. Check access to the app data folder.')
         theme = current_theme()
-        schools = st.session_state.get('necc_schools') or bundled_school_catalog()
+        schools = self.session.get('necc_schools') or bundled_school_catalog()
         team_css()
         left, right = st.columns([2, 1], gap='large')
         with left:

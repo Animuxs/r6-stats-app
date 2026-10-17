@@ -1,7 +1,10 @@
 """The app's shared structure: the Session every tab reads and writes, the ReplaySource kinds the
 tabs use without asking which kind they have, the Tab base class, and the links between tabs."""
 
+import ast
+import inspect
 import os
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -14,7 +17,7 @@ import branding
 import season_stats
 import sources
 from session import Session
-from tab import Tab
+from tab import PAGES, Tab
 
 APP = str(Path(__file__).with_name("app.py"))
 
@@ -64,10 +67,18 @@ class TestReplaySources(unittest.TestCase):
         self.assertEqual(folder.path, Path("C:/replays"))
         self.assertIsNone(sources.LoadedSource.of(None))
 
+    # every kind of replay source, made the way the app makes it: TestTheStructureHolds checks none is missing
+    KINDS = {
+        "UploadSource": lambda state: sources.LoadedSource.of(state),
+        "FolderSource": lambda state: sources.LoadedSource.of(dict(state, sig=("path", "C:/replays", 1))),
+        "DemoSource": lambda state: sources.DemoSource(),
+    }
+
     def test_every_kind_answers_the_same_questions(self):
-        for source in (sources.LoadedSource.of(dict(self.STATE, parsed={})), sources.DemoSource()):
-            with self.subTest(kind=type(source).__name__):
-                self.assertIsInstance(source, sources.ReplaySource)
+        for kind, make in self.KINDS.items():
+            source = make(dict(self.STATE, parsed={}))
+            with self.subTest(kind=kind):
+                self.assertEqual(type(source).__name__, kind)
                 names = source.matches()
                 self.assertEqual(names, sorted(names, reverse=True))  # newest first
                 self.assertEqual(source.newest(), names[0])
@@ -122,6 +133,8 @@ class TestTabsTogether(unittest.TestCase):
     def setUp(self):
         folder = Path(tempfile.mkdtemp())
         for patch in (mock.patch.object(season_stats, "DEFAULT_DB_PATH", folder / "stats.db"),
+                      mock.patch("parser.find_replay_folders", return_value=[]),  # never this PC's replays
+                      mock.patch("rosters.update_on_launch"),  # nor online
                       mock.patch.object(app_info, "is_loopback", return_value=True)):
             patch.start()
             self.addCleanup(patch.stop)
@@ -154,6 +167,121 @@ class TestTabsTogether(unittest.TestCase):
         self.assertTrue(any(b.label.startswith("Check Liquipedia") for b in at.button))
         at = at.switch_page("teams.py").run()
         self.assertTrue(any("isn't part of the demo season" in i.value for i in at.info))
+
+
+SCRIPTS = Path(__file__).parent
+NAVIGATION = re.findall(r'st\.Page\("(\w+\.py)"', (SCRIPTS / "app.py").read_text(encoding="utf-8"))
+# the modules under the Session that keep their own values in st.session_state, and the Session itself
+STATE_OWNERS = {"session.py", "sources.py", "branding.py"}
+# scripts run by hand, not part of the app
+TOOLS = {"capture_necc_rosters.py", "example_season_stats.py", "run_tests.py"}
+# parts of this repo the Windows app doesn't include: the REST API (its own server) and the command line scoreboard
+NOT_IN_THE_WINDOWS_APP = {"api.py", "match_stats.py"}
+
+
+def _tree(name: str) -> ast.Module:
+    return ast.parse((SCRIPTS / name).read_text(encoding="utf-8"), name)
+
+
+def _app_modules() -> list[str]:
+    return sorted(p.name for p in SCRIPTS.glob("*.py") if not p.name.startswith("test_") and p.name not in TOOLS)
+
+
+def _concrete_subclasses(base: type) -> set[type]:
+    found = set()
+    for sub in base.__subclasses__():
+        found |= _concrete_subclasses(sub)
+        if not inspect.isabstract(sub):
+            found.add(sub)
+    return found
+
+
+class TestTheStructureHolds(unittest.TestCase):
+    """The rules that keep the app one program as it grows. A new tab, replay source or module that
+    doesn't follow them fails here, with what to change."""
+
+    def test_every_page_is_one_tab(self):
+        """Each page in app.py's navigation is a Tab subclass with a title and a name, listed in
+        tab.PAGES, and the page file ends by running it: nothing else runs when the file is loaded."""
+        self.assertTrue(NAVIGATION)
+        names = {}
+        for page in [*NAVIGATION, "dock.py"]:
+            with self.subTest(page=page):
+                tree = _tree(page)
+                tabs = [n for n in tree.body if isinstance(n, ast.ClassDef)
+                        and any(isinstance(b, ast.Name) and b.id == "Tab" for b in n.bases)]
+                self.assertEqual(len(tabs), 1, f"{page} must define exactly one Tab subclass")
+                tab = tabs[0]
+                attrs = {}
+                for node in tab.body:  # title, name = "...", "..."
+                    if isinstance(node, ast.Assign) and isinstance(node.value, ast.Tuple):
+                        attrs.update({t.id: v.value for t, v in zip(node.targets[0].elts, node.value.elts)
+                                      if isinstance(v, ast.Constant)})
+                    elif isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant):
+                        attrs.update({t.id: node.value.value for t in node.targets if isinstance(t, ast.Name)})
+                self.assertTrue(attrs.get("title"), f"{tab.name} needs a title")
+                self.assertEqual(PAGES.get(attrs.get("name")), page, f"add {attrs.get('name')!r}: {page!r} to tab.PAGES")
+                names[attrs["name"]] = page
+                self.assertIn("render", {n.name for n in tab.body if isinstance(n, ast.FunctionDef)})
+                last = tree.body[-1]
+                self.assertEqual(ast.unparse(last), f"{tab.name}().run()", f"{page} must end with {tab.name}().run()")
+                for node in tree.body[:-1]:
+                    if isinstance(node, (ast.Import, ast.ImportFrom, ast.FunctionDef, ast.ClassDef)):
+                        continue
+                    if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant):
+                        continue  # the docstring
+                    targets = node.targets if isinstance(node, ast.Assign) else [getattr(node, "target", None)]
+                    names_set = [n.id for t in targets for n in ast.walk(t) if isinstance(n, ast.Name)]
+                    self.assertTrue(isinstance(node, (ast.Assign, ast.AnnAssign)) and names_set
+                                    and all(n.lstrip("_").isupper() for n in names_set),
+                                    f"{page} line {node.lineno}: only imports, functions, classes and CONSTANTS "
+                                    "go at the top of a page; drawing belongs in the tab's render()")
+        self.assertEqual(set(PAGES.values()), set(names.values()), "tab.PAGES lists a page that isn't a tab")
+
+    def test_tabs_share_state_through_the_session(self):
+        """Only the Session (and the modules under it that own their keys) touch st.session_state:
+        tabs ask the Session, so every tab sees the same season, team, replays and demo season."""
+        for name in _app_modules():
+            if name in STATE_OWNERS:
+                continue
+            with self.subTest(module=name):
+                uses = [n.lineno for n in ast.walk(_tree(name))
+                        if isinstance(n, ast.Attribute) and n.attr == "session_state"]
+                self.assertEqual(uses, [], f"{name} uses st.session_state on lines {uses}: use Session() "
+                                           "(or self.session in a tab) instead")
+
+    def test_tabs_never_import_each_other(self):
+        """Loading a page runs it, so a tab reaches another through the Session and Tab.go_to, never
+        by importing its file."""
+        pages = {p[:-3] for p in [*NAVIGATION, "dock.py"]}
+        for name in _app_modules():
+            with self.subTest(module=name):
+                imported = {a.name.split(".")[0] for n in ast.walk(_tree(name)) if isinstance(n, ast.Import) for a in n.names}
+                imported |= {(n.module or "").split(".")[0] for n in ast.walk(_tree(name)) if isinstance(n, ast.ImportFrom)}
+                self.assertFalse(imported & pages, f"{name} imports the page(s) {imported & pages}")
+
+    def test_links_between_tabs_go_through_the_tab_base(self):
+        """st.switch_page is called in one place, Tab.go_to, with the page from tab.PAGES."""
+        for name in _app_modules():
+            with self.subTest(module=name):
+                calls = [n.lineno for n in ast.walk(_tree(name)) if isinstance(n, ast.Attribute) and n.attr == "switch_page"]
+                self.assertEqual(calls, [] if name != "tab.py" else calls, f"{name}: use self.go_to(...)")
+                for node in ast.walk(_tree(name)):  # st.page_link("x.py") names a real tab
+                    if isinstance(node, ast.Call) and getattr(node.func, "attr", "") == "page_link" and node.args:
+                        self.assertIn(node.args[0].value, PAGES.values())
+
+    def test_every_replay_source_is_held_to_the_same_contract(self):
+        """Each kind of ReplaySource the app makes is in TestReplaySources' contract test: add a new kind there."""
+        kinds = {c.__name__ for c in _concrete_subclasses(sources.ReplaySource) if not c.__subclasses__()}
+        self.assertEqual(kinds, set(TestReplaySources.KINDS), "a ReplaySource kind isn't in TestReplaySources.KINDS")
+
+    def test_every_app_module_ships_in_the_windows_app(self):
+        """Each module of the app is in the Windows app's file list (tools run by hand are in TOOLS)."""
+        spec = (SCRIPTS.parent / "desktop" / "R6MatchStats.spec").read_text(encoding="utf-8")
+        for name in _app_modules():
+            if name not in NOT_IN_THE_WINDOWS_APP:
+                with self.subTest(module=name):
+                    self.assertTrue(f'"{name}"' in spec, f"add {name} to APP_FILES in desktop/R6MatchStats.spec")
 
 
 if __name__ == "__main__":

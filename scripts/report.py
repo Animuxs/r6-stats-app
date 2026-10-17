@@ -220,7 +220,7 @@ def _add_match(source: str, match: dict, files: int) -> None:
         with session.tracker(season) as tracker:
             tracked = {u.casefold() for u in tracker.tracked_players()}
             for team in (0, 1):
-                team_name = (st.session_state.get(_team_name_key(match, team)) or "").strip()
+                team_name = (session.get(_team_name_key(match, team)) or "").strip()
                 if team_name.upper() in GENERIC_TEAM_NAMES:
                     team_name = ""  # never save a replay's generic label as a team: it'd lump opponents together
                 for player in picked[team]:
@@ -267,8 +267,8 @@ def confirm_match(source: str, match: dict, files: int, team: str = "", roster: 
         key = _picked_key(match, side)
         # what's in the database for this match, else your team's players: never a stranger
         on_roster = rosters.on_roster(names, roster)
-        if key not in st.session_state:
-            st.session_state[key] = [n for n in (added or {}).get("players", []) if n in names] if added else on_roster
+        if not session.has(key):
+            session.set(key, [n for n in (added or {}).get("players", []) if n in names] if added else on_roster)
             from_roster += [] if added else on_roster
         picked[side] = column.multiselect(team_names[side], names, key=key, placeholder="Players to track")
     if from_roster:
@@ -306,13 +306,13 @@ def confirm_match(source: str, match: dict, files: int, team: str = "", roster: 
 
 def _keep_replay_folder() -> None:
     """The folder box's callback: keep a folder that's there for next time, on this PC."""
-    typed = (st.session_state.get("replay_folder") or "").strip().strip('"')
+    typed = (Session().get("replay_folder") or "").strip().strip('"')
     if typed and Path(typed).expanduser().exists():
         save_replay_folder(Path(typed).expanduser())
 
 
 def _use_game_folder(auto: str) -> None:
-    st.session_state["replay_folder"] = auto
+    Session().set("replay_folder", auto)
     save_replay_folder(None)
 
 

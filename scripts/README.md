@@ -485,11 +485,28 @@ data. See
 ## Tests
 
 ```bash
-python -m unittest discover -s scripts   # metrics engine, pages, command line, replay files and scanner,
-                                         # season stats, stats database, Ask (checked against scoreboard numbers)
-python -m unittest discover -s desktop   # the Windows app's integrity check
+python scripts/run_tests.py              # every app test, on all your cores (the same tests as unittest discover)
+python scripts/run_tests.py --lint --coverage   # what every pull request runs (pip install -r scripts/requirements-dev.txt)
+python scripts/run_tests.py desktop      # the Windows app's launcher and integrity check
 go test ./...                            # the Go replay parser
 ```
+
+What they cover:
+
+- **Every tab in every situation** (`test_pages.py`): a fresh install of the Windows app, the public
+  website, the demo season, a season with replays and teams (a one-player team, a team without matches,
+  names with quotes and emoji), the match-day panel hidden, and unreadable planning data. Every tab must
+  open without an error, then every choice in every picker, every checkbox, toggle and button is tried.
+  The tabs come from `app.py`'s navigation, so a new tab is tested without adding it here.
+- **Odd inputs** (`test_robustness.py`): replays with unusual shapes (one round, no kills, a player who
+  left, suicides, overtime, a 1v1, missing fields, 150 random matches) through the scoreboard, the stats
+  database, the season tracker, Ask and the docked view; hundreds of questions to Ask; damaged settings,
+  catalogs, logos and match-day backups.
+- **The structure** (`test_structure.py`): every page is one `Tab` subclass listed in `tab.PAGES` and ends
+  by running it; only `Session` (and `sources.py` and `branding.py` under it) touches `st.session_state`;
+  tabs never import each other and link through `Tab.go_to`; every `ReplaySource` kind passes the same
+  contract test; every module ships in the Windows app. Each failure says what to change.
+- **Coverage**: `--coverage` fails if the tests cover less than 93% of the app or 75% of any one module.
 
 ## Troubleshooting
 

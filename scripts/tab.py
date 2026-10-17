@@ -6,8 +6,8 @@ that says what's on it by overriding render(), and ends with SomeTab().run(): st
 the page files as before, so the navigation, the tests and the Windows app's file list don't change.
 
 A Tab gets the session (session.Session: the season, your team, the replays, the demo season) and
-the helpers the tabs share: the stats database, the "no matches yet" state, the season tracker's
-on/off note, notes left across a rerun, and links to the other tabs.
+the helpers the tabs share: the stats database, the "no matches yet" state, notes left across a rerun,
+and links to the other tabs.
 """
 
 from __future__ import annotations
@@ -24,7 +24,8 @@ from team_accounts import AccountError
 
 # each tab's page file, for links between tabs
 PAGES = {"dashboard": "report.py", "ask": "ask.py", "history": "history.py", "teams": "teams.py",
-         "operators": "operators.py", "matchday": "matchday.py", "team": "team_hub.py", "league": "league.py", "theme": "appearance.py", "download": "download.py"}
+         "operators": "operators.py", "matchday": "matchday.py", "team": "team_hub.py", "league": "league.py", "theme": "appearance.py", "download": "download.py",
+         "dock": "dock.py"}
 
 
 class Tab(ABC):
@@ -72,13 +73,6 @@ class Tab(ABC):
     def show_note(self) -> None:
         if note := self.session.take_note(self.name):
             getattr(st, note[0])(md(note[1]))
-
-    def tracker_note(self) -> bool:
-        """Says why the season tracker is off here, if it is; True when it is."""
-        reason = self.session.tracker_off
-        if reason:
-            st.caption(reason)
-        return bool(reason)
 
     def go_to(self, tab: str) -> None:
         st.switch_page(PAGES[tab])

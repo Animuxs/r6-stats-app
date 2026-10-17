@@ -449,6 +449,8 @@ def load_catalog(path: Path) -> dict[str, Any] | None:
         catalog = None
     if not (isinstance(catalog, dict) and isinstance(catalog.get("events"), list)):
         catalog = None
+    else:  # an event that isn't one (a damaged file): left out, not shown as a crash
+        catalog["events"] = [e for e in catalog["events"] if isinstance(e, dict) and e.get("name")]
     _loaded[key] = (stamp, catalog)
     return catalog
 

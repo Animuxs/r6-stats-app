@@ -90,8 +90,8 @@ if is_windows_app():
     rosters.update_on_launch()  # newer team rosters, at most once a day, in the background
 # the demo season: a made-up season in a stats database of its own, from the sidebar or ?demo in the
 # address (a link to share), so every page has something to show and nobody's real stats are touched
-if "demo" in st.query_params and not st.session_state.get("demo_from_link"):
-    st.session_state["demo_from_link"] = True
+if "demo" in st.query_params and not Session().get("demo_from_link"):
+    Session().set("demo_from_link", True)
     if not demo_active():
         start_demo()
 with st.sidebar:
@@ -111,7 +111,7 @@ _initial_season = Session().season  # the first time: the season named after you
 render_identity()
 if _signed_team and not demo_active():
     from ui import md
-    _person = next((p for p in _signed_team['directory'] if p['id'] == st.session_state.get('team_person')), None)
+    _person = next((p for p in _signed_team['directory'] if p['id'] == Session().team_person), None)
     _view = _person['name'] if _person else 'team overview'
     st.caption(md(f"Team workspace: {_signed_team['name']} · Viewing as {_view} · Shared account access"))
 if demo_active():

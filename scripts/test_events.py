@@ -328,6 +328,7 @@ class TestLeaguePage(unittest.TestCase):
         for patch in (mock.patch.object(season_stats, "DEFAULT_DB_PATH", folder / "season_stats.db"),
                       mock.patch.object(branding, "DEFAULT_DB_PATH", folder / "season_stats.db"),
                       mock.patch.object(branding, "local_preferences", return_value=True),
+                      mock.patch("parser.find_replay_folders", return_value=[]),  # never this PC's replays
                       mock.patch("rosters.update_on_launch")):  # never online in a test
             patch.start()
             self.addCleanup(patch.stop)

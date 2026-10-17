@@ -1,0 +1,16 @@
+# Coverage of the app by its tests (scripts/run_tests.py --coverage), across every test process.
+[run]
+source = scripts
+omit =
+    scripts/test_*.py
+    scripts/run_tests.py
+    scripts/capture_necc_rosters.py
+    scripts/example_season_stats.py
+concurrency = multiprocessing,thread
+parallel = true
+data_file = build/.coverage
+
+[report]
+skip_covered = true
+show_missing = true
+sort = cover
