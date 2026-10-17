@@ -1,5 +1,6 @@
-"""Match History: the matches you've added to your stats, newest first, with your result in each
-and the players tracked in it; and the matches an earlier version added on its own, to check."""
+"""Match History: the matches you've added to your stats, newest first, with your result in each,
+the players tracked in it and what you wrote about it (a tag, a note, a video link); and the matches
+an earlier version added on its own, to check."""
 
 from __future__ import annotations
 
@@ -8,7 +9,7 @@ import streamlit as st
 from metrics_engine import eps_from_rating, round_eps, rows_csv
 from session import Session
 from sources import match_label
-from stats_db import NotAdded, nice_time
+from stats_db import MAX_NOTE, MAX_VOD, NOTE_TAGS, BadNote, NotAdded, nice_time
 from tab import Tab
 from ui import md
 
@@ -32,6 +33,22 @@ def _remove(match_id: str, label: str) -> None:
     with Session().stats() as db:
         db.remove_match(match_id)
     _note("success", f"Removed {label} from your stats.")
+
+
+def _save_note(match_id: str, label: str) -> None:
+    session = Session()
+    try:
+        with session.stats() as db:
+            db.save_note(match_id, session.get(f"note_tag_{match_id}") or "", session.get(f"note_text_{match_id}", ""),
+                         session.get(f"note_vod_{match_id}", ""))
+    except BadNote as e:
+        _note("error", str(e))
+        return
+    _note("success", f"Saved your note on {label}.")
+
+
+def _new_filter() -> None:
+    Session().pop("history_rows")  # a row picked in the old list would be another match in the new one
 
 
 def _keep_recorders() -> None:
@@ -105,6 +122,8 @@ class HistoryTab(Tab):
             rows = db.match_list(me)
             tracked = db.players_by_match()
             waiting = db.to_check()
+            notes = db.notes()
+            tags = db.tags()
             if not rows and not waiting:
                 self.has_matches(db)
                 return
@@ -112,7 +131,7 @@ class HistoryTab(Tab):
             check_earlier(waiting)
         if rows:
             self.summary(rows, me)
-            self.matches(rows, tracked)
+            self.matches(rows, tracked, notes, tags)
 
     def summary(self, rows: list[dict], me: str | None) -> None:
         mine = [r for r in rows if r["player"]]
@@ -128,9 +147,20 @@ class HistoryTab(Tab):
             columns[3].metric("EPS", eps, help="Your average EPS, weighted by rounds played")
         st.caption((f"Your matches as **{md(me)}**, newest first. " if mine else "")
                    + "**Tracked** is who you picked when you added the match: only their stats are kept. "
-                     "Select a match to open it on the Dashboard or remove it.")
+                     "Select a match to open it on the Dashboard, tag it (scrim, official...), write a note or "
+                     "link its video, or remove it.")
 
-    def matches(self, rows: list[dict], tracked: dict[str, list[str]]) -> None:
+    def matches(self, rows: list[dict], tracked: dict[str, list[str]], notes: dict[str, dict],
+                tags: list[str]) -> None:
+        if tags:  # once a match is tagged: just the scrims, say
+            if self.session.get("history_tag") not in ("All matches", *tags, "Not tagged"):
+                self.session.pop("history_tag")  # its last match untagged since
+            show = st.segmented_control("Show", ["All matches", *tags, "Not tagged"], default="All matches",
+                                        key="history_tag", on_change=_new_filter)
+            if show == "Not tagged":
+                rows = [r for r in rows if not notes.get(r["match_id"], {}).get("tag")]
+            elif show in tags:
+                rows = [r for r in rows if notes.get(r["match_id"], {}).get("tag") == show]
         table = []
         for r in rows:
             row = {"When": nice_time(r["played_at"]), "Map": r["map"] or "", "Type": r["match_type"] or ""}
@@ -141,16 +171,23 @@ class HistoryTab(Tab):
             else:
                 row |= {"Result": "—", "Score": f"{r['score0']}–{r['score1']}", "K-D": "", "EPS": None}
             row["Tracked"] = ", ".join(tracked.get(r["match_id"], []))
+            note = notes.get(r["match_id"], {})
+            row |= {"Tag": note.get("tag", ""), "Note": note.get("note", ""), "VOD": note.get("vod") or None}
             table.append(row)
+        if not table:
+            st.info("No matches here. Pick **All matches** above.")
+            return
         picked = st.dataframe(table, hide_index=True, on_select="rerun", selection_mode="single-row",
-                              key="history_rows")
+                              key="history_rows", column_config={
+                                  "Note": st.column_config.TextColumn("Note", width="medium"),
+                                  "VOD": st.column_config.LinkColumn("VOD", display_text="Watch")})
         chosen = picked.selection.rows if picked else []
-        if chosen:
-            self.selected(rows[chosen[0]])
+        if chosen and chosen[0] < len(rows):
+            self.selected(rows[chosen[0]], notes.get(rows[chosen[0]]["match_id"], {}))
         st.download_button("⬇ CSV", rows_csv(table).encode("utf-8"), file_name="match_history.csv", mime="text/csv")
 
-    def selected(self, r: dict) -> None:
-        """What you can do with the match picked in the table: open it, or remove it."""
+    def selected(self, r: dict, note: dict) -> None:
+        """What you can do with the match picked in the table: open it, write about it, or remove it."""
         name, label = r["source"], match_label(r["source"], r)
         source = self.session.replays  # any kind: a folder, uploads, the demo season
         on_hand = bool(source and source.has(name))
@@ -167,6 +204,21 @@ class HistoryTab(Tab):
                         if on_hand and source.adds_to_stats else " Its replay is gone, so it can't be added back."
                         if not on_hand else ""))
             st.button("Yes, remove it", on_click=_remove, args=(r["match_id"], label), type="primary")
+        self.note_form(r["match_id"], label, note)
+
+    def note_form(self, match_id: str, label: str, note: dict) -> None:
+        """A match's tag, note and video link: they stay with it, and Ask understands the tags."""
+        with st.form(f"note_form_{match_id}"):
+            st.markdown(f"**Your notes on {md(label)}**")
+            tag, vod = st.columns([1, 2])
+            tag.selectbox("Tag", ["", *NOTE_TAGS], index=([""] + list(NOTE_TAGS)).index(note.get("tag", "")),
+                          format_func=lambda t: t or "No tag", key=f"note_tag_{match_id}")
+            vod.text_input("Video link", value=note.get("vod", ""), max_chars=MAX_VOD, key=f"note_vod_{match_id}",
+                           placeholder="https://youtu.be/...")
+            st.text_area("Note", value=note.get("note", ""), max_chars=MAX_NOTE, key=f"note_text_{match_id}",
+                         placeholder="What worked, what to fix, who subbed in...")
+            st.form_submit_button("Save note", on_click=_save_note, args=(match_id, label))
+        st.caption("Tags work on **Ask** too: \"my K/D in scrims\", \"win rate in official matches\".")
 
 
 HistoryTab().run()

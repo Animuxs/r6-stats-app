@@ -21,6 +21,8 @@ Tables (SQLite, in the same file as the season tracker's tables):
                    Every round of a match counts for both
                    teams, so a player who disconnected doesn't take rounds away from their team.
     rosters        the teams built on the Team page: team name -> players
+    match_notes    what you wrote about a match on Match History: a tag (Official, Scrim, ...),
+                   a note and a link to its video. Adding the match again keeps them.
     review_*       copies of the four match tables, for the matches an earlier version added on
                    its own with every player in them. They don't count until you check them on
                    Match History: keep the players you track, or remove the match.
@@ -38,6 +40,7 @@ import sqlite3
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterable
+from urllib.parse import urlsplit
 
 import season_stats
 from metrics_engine import compute_match_metrics
@@ -132,6 +135,14 @@ CREATE TABLE IF NOT EXISTS rosters (
     PRIMARY KEY (team, player_key)
 );
 
+CREATE TABLE IF NOT EXISTS match_notes (
+    match_id   TEXT PRIMARY KEY,
+    tag        TEXT NOT NULL DEFAULT '',  -- one of NOTE_TAGS, or '' for none
+    note       TEXT NOT NULL DEFAULT '',
+    vod        TEXT NOT NULL DEFAULT '',  -- a link (http or https) to the match's video
+    updated_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS stats_meta (
     key   TEXT PRIMARY KEY,
     value TEXT
@@ -164,8 +175,36 @@ _PLANTED_ENDINGS = {"DefusedBomb", "DisabledDefuser", "bomb_detonated"}  # the l
 _MATCH_FOLDER_TIME = re.compile(r"Match-(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})")
 
 
+# what a match can be tagged as on Match History (and what Ask understands: "my K/D in scrims")
+NOTE_TAGS = ("Official", "Scrim", "Practice", "Casual")
+MAX_NOTE = 2000  # characters
+MAX_VOD = 500
+
+
 class NotAdded(ValueError):
     """A match that can't be added, and why (in words to show as they are)."""
+
+
+class BadNote(ValueError):
+    """A match note that can't be saved, and why (in words to show as they are)."""
+
+
+def clean_vod(link: str) -> str:
+    """A video link as it's kept: http or https, with a host and no spaces ("" for none). Raises
+    BadNote for anything else, so a note never holds a javascript: or file: link to click."""
+    link = (link or "").strip()
+    if not link:
+        return ""
+    if not link.lower().startswith(("http://", "https://")):
+        link = "https://" + link  # "youtu.be/abc" as people paste it
+    try:
+        parts = urlsplit(link)
+    except ValueError:
+        parts = None
+    if (parts is None or parts.scheme.lower() not in ("http", "https") or not parts.hostname or "." not in parts.hostname
+            or any(c.isspace() for c in link) or len(link) > MAX_VOD):
+        raise BadNote("The video link must be a web address, like https://youtu.be/... or https://twitch.tv/....")
+    return link
 
 
 def default_path() -> Path:
@@ -357,11 +396,45 @@ class StatsDB:
         return match_id
 
     def remove_match(self, match_id: str) -> None:
-        """Take a match out of your stats (or out of the ones waiting to be checked)."""
+        """Take a match out of your stats (or out of the ones waiting to be checked), and its note."""
         with self._conn:
             for prefix in ("", "review_"):
                 for table in MATCH_TABLES:
                     self._conn.execute(f"DELETE FROM {prefix}{table} WHERE match_id = ?", (match_id,))
+            self._conn.execute("DELETE FROM match_notes WHERE match_id = ?", (match_id,))
+
+    # -------------------------------------------------------------- notes ----
+
+    def save_note(self, match_id: str, tag: str = "", note: str = "", vod: str = "") -> None:
+        """Keep a match's tag, note and video link (replacing what it had; all three empty clears
+        it). Raises BadNote for a match that isn't in your stats, an unknown tag, a note that's too
+        long, or a link that isn't a web address."""
+        tag, note = (tag or "").strip(), (note or "").strip()
+        if tag not in ("", *NOTE_TAGS):
+            raise BadNote(f"A match can be tagged {', '.join(NOTE_TAGS)}, or nothing.")
+        if len(note) > MAX_NOTE:
+            raise BadNote(f"Keep the note under {MAX_NOTE} characters.")
+        vod = clean_vod(vod)
+        if not self._conn.execute("SELECT 1 FROM matches WHERE match_id = ?", (match_id,)).fetchone():
+            raise BadNote("That match isn't in your stats anymore.")
+        with self._conn:
+            if tag or note or vod:
+                self._conn.execute("INSERT OR REPLACE INTO match_notes VALUES (?, ?, ?, ?, ?)",
+                                   (match_id, tag, note, vod, datetime.now().isoformat(timespec="seconds")))
+            else:
+                self._conn.execute("DELETE FROM match_notes WHERE match_id = ?", (match_id,))
+
+    def notes(self) -> dict[str, dict[str, str]]:
+        """{match_id: {"tag", "note", "vod"}} for every match in your stats with a note."""
+        rows = self._conn.execute("SELECT n.match_id, n.tag, n.note, n.vod FROM match_notes n "
+                                  "JOIN matches m ON m.match_id = n.match_id")
+        return {r["match_id"]: {"tag": r["tag"], "note": r["note"], "vod": r["vod"]} for r in rows}
+
+    def tags(self) -> list[str]:
+        """The tags in use, in NOTE_TAGS' order."""
+        used = {r[0] for r in self._conn.execute("SELECT DISTINCT n.tag FROM match_notes n "
+                                                 "JOIN matches m ON m.match_id = n.match_id WHERE n.tag != ''")}
+        return [t for t in NOTE_TAGS if t in used]
 
     def added(self, source: str) -> dict[str, Any] | None:
         """The match added from the replay folder `source` (its matches row, and the players kept

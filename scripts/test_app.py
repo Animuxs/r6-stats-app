@@ -76,12 +76,16 @@ class TestReportPage(unittest.TestCase):
         at = run_app(R6_DESKTOP="1")
         self.assertEqual(at.radio[0].options, ["Folder or zip on this computer", "Upload"])
 
-    def test_demo_match_can_be_downloaded_as_csv_json_and_txt(self):
+    def test_demo_match_can_be_downloaded_as_csv_json_txt_and_a_picture(self):
         at = run_app(R6_HOSTED="1")
         at.toggle[0].set_value(True).run()
         buttons = at.get("download_button")
-        self.assertEqual([b.proto.label for b in buttons], ["⬇ CSV", "⬇ JSON", "⬇ TXT", "⬇ Rounds CSV"])
-        self.assertEqual([Path(b.proto.url).suffix for b in buttons], [".csv", ".json", ".txt", ".csv"])
+        self.assertEqual([b.proto.label for b in buttons],
+                         ["⬇ CSV", "⬇ JSON", "⬇ TXT", "⬇ Rounds CSV", "⬇ Scoreboard image"])
+        self.assertEqual([Path(b.proto.url).suffix for b in buttons], [".csv", ".json", ".txt", ".csv", ".png"])
+        at = at.run()  # drawn once per scoreboard and color, then kept
+        self.assertFalse(at.exception)
+        self.assertEqual(at.get("download_button")[-1].proto.url, buttons[-1].proto.url)
 
     def test_the_demo_match_is_never_added_to_your_stats(self):
         at = run_app(R6_HOSTED="1")
@@ -336,6 +340,58 @@ class TestAnalyticsPages(unittest.TestCase):
         self.assertEqual(len(at.dataframe[0].value), 3)
         self.assertEqual({m.label: m.value for m in at.metric}["Matches"], "3")
 
+    def test_match_notes(self):
+        from stats_db import StatsDB
+
+        at = with_matches(run_app(), count=3)
+        at.switch_page("history.py").run()
+        self.assertFalse(at.segmented_control)  # nothing tagged yet: no filter
+        self.assertEqual(list(at.dataframe[0].value.columns[-3:]), ["Tag", "Note", "VOD"])
+        newest = "demo-2"  # the table is newest first
+
+        def pick(at: AppTest, row: int = 0) -> AppTest:
+            at.session_state["history_rows"] = {"selection": {"rows": [row], "columns": [], "cells": []}}
+            return at.run()
+
+        at = pick(at)
+        self.assertTrue(any(m.value.startswith("**Your notes on ") for m in at.markdown))  # bold, not escaped
+        at.selectbox(key=f"note_tag_{newest}").set_value("Scrim")
+        at.text_input(key=f"note_vod_{newest}").set_value("javascript:alert(1)")
+        at.text_area(key=f"note_text_{newest}").set_value("Lost the retakes on Kids")
+        at = next(b for b in at.button if b.label == "Save note").click().run()
+        self.assertFalse(at.exception)
+        self.assertIn("web address", at.error[0].value)  # never a link that runs something
+        with StatsDB() as db:
+            self.assertEqual(db.notes(), {})
+        at = pick(at)
+        at.text_input(key=f"note_vod_{newest}").set_value("youtu.be/abc")
+        at = next(b for b in at.button if b.label == "Save note").click().run()
+        self.assertTrue(any("Saved your note" in s.value for s in at.success))
+        with StatsDB() as db:
+            self.assertEqual(db.notes()[newest], {"tag": "Scrim", "note": "Lost the retakes on Kids",
+                                                  "vod": "https://youtu.be/abc"})
+        table = at.dataframe[0].value
+        self.assertEqual((table["Tag"][0], table["VOD"][0]), ("Scrim", "https://youtu.be/abc"))
+        # now there's a tag to show just its matches, and picking it forgets the row picked before
+        at = pick(at, 2)
+        at = at.segmented_control(key="history_tag").set_value("Scrim").run()
+        self.assertFalse(at.exception)
+        self.assertEqual(len(at.dataframe[0].value), 1)
+        self.assertFalse(any(b.label == "Save note" for b in at.button))
+        at = pick(at, 0)
+        self.assertTrue(any(b.label == "Save note" for b in at.button))
+        at.session_state["history_rows"] = {"selection": {"rows": [1], "columns": [], "cells": []}}
+        at = at.segmented_control(key="history_tag").set_value("Not tagged").run()
+        self.assertEqual(len(at.dataframe[0].value), 2)
+        # row 1 of the old list would be another match in this one: nothing's picked
+        self.assertFalse(any(b.label == "Save note" for b in at.button))
+        with StatsDB() as db:
+            db.save_note(newest)  # its only tag cleared, from another window, say
+        at = at.segmented_control(key="history_tag").set_value("Scrim").run()
+        self.assertFalse(at.exception)
+        self.assertFalse(at.segmented_control)  # no tags left: no filter, every match
+        self.assertEqual(len(at.dataframe[0].value), 3)
+
     def test_build_a_team_starts_with_you_and_your_teammates(self):
         from sample_data import TEAM0
 
@@ -376,6 +432,67 @@ class TestAnalyticsPages(unittest.TestCase):
         self.assertEqual(dict(zip(table["Player"], table["All-time EPS"])), {p: str(eps[p]) for p in players})
         self.assertIn("Nobody", at.warning[0].value)
         self.assertEqual(at.selectbox(key="team_choice").value, "Liquid")  # saved, and Ask knows it now
+
+    def test_map_pool(self):
+        from stats_db import StatsDB
+
+        at = with_matches(run_app())
+        at.switch_page("teams.py").run()
+        self.assertFalse(at.exception)
+        self.assertEqual(at.selectbox(key="pool_whose").value, "\x00you")  # you, to start with
+
+        def pool(at: AppTest):
+            return next(d.value for d in at.dataframe if "Best defense site" in d.value.columns)
+
+        table = pool(at)
+        self.assertEqual(list(table["Map"]), ["Bank"])
+        self.assertEqual((table["Maps"][0], table["Map W–L"][0]), (2, "2–0"))  # see test_map_pool for the numbers
+        self.assertEqual(table["Best attack site"][0], "CCTV/Archives (6–0)")
+        sites = next(d.value for d in at.dataframe if "Site" in d.value.columns)
+        self.assertEqual(set(sites["Site"]), {"Kids/Rooms", "CCTV/Archives"})
+        self.assertEqual(at.selectbox(key="pool_map_\x00you").value, "Bank")
+        # a built team, with how many of it must have played
+        with StatsDB() as db:
+            db.save_roster("Liquid", ["Fabian", "Kanto", "Sens"])
+            db.save_roster("Solo", ["Bosco"])
+        at = at.run()
+        at = at.selectbox(key="pool_whose").set_value("Liquid").run()
+        self.assertFalse(at.exception)
+        self.assertEqual(at.slider(key="pool_need_Liquid").value, 3)
+        self.assertEqual(pool(at)["Map W–L"][0], "2–0")
+        at = at.selectbox(key="pool_whose").set_value("Solo").run()  # one player: nothing to slide
+        self.assertFalse(at.exception)
+        self.assertFalse(any(s.key == "pool_need_Solo" for s in at.slider))
+        self.assertEqual(pool(at)["Map W–L"][0], "0–2")  # Bosco was on the other side
+        with StatsDB() as db:
+            db.delete_roster("Solo")
+        at = at.run()  # the team picked is gone: back to you
+        self.assertFalse(at.exception)
+        self.assertEqual(at.selectbox(key="pool_whose").value, "\x00you")
+        at = at.selectbox(key="pool_whose").set_value("Liquid").run()
+        at = at.slider(key="pool_need_Liquid").set_value(3).run()
+        with StatsDB() as db:
+            db.save_roster("Liquid", ["Fabian", "Nobody", "Else"])  # now only one of them played
+        at = at.run()
+        self.assertFalse(at.exception)
+        self.assertTrue(any("No matches with that many" in i.value for i in at.info))
+
+    def test_map_pool_strongest_and_weakest(self):
+        from stats_db import StatsDB
+
+        at = with_matches(run_app())  # two wins on Bank
+        lost = demo_matches(4)
+        with StatsDB() as db:
+            for name in list(lost)[2:]:  # and two losses on Oregon_ (a name with Markdown in it)
+                match = lost[name]
+                match.update(map="Oregon_", final_score=list(reversed(match["final_score"])))
+                for rnd in match["rounds"]:
+                    rnd["winner_team"] = 1 - rnd["winner_team"]
+                db.import_match(name, match, files=1)
+        at.switch_page("teams.py").run()
+        line = next(m.value for m in at.markdown if "Strongest map" in m.value)
+        self.assertTrue(line.startswith("**Strongest map:** Bank, 67% of rounds won over 2 maps."), line)
+        self.assertIn("**Weakest:** Oregon\\_, 33% over 2 maps.", line)  # bold kept, the name escaped
 
     def test_operators_over_all_matches(self):
         from metrics_engine import compute_match_metrics
@@ -585,7 +702,7 @@ class TestAnalyticsPages(unittest.TestCase):
         at = run_app()
         at.switch_page("teams.py").run()
         self.assertFalse(at.exception)
-        self.assertEqual([t.label for t in at.tabs], ["Build a team", "Season teams"])
+        self.assertEqual([t.label for t in at.tabs], ["Build a team", "Season teams", "Map pool"])
 
     def test_a_season_team_of_one_player(self):
         """A one-player season team has no "at least this many of the team" to choose: the page

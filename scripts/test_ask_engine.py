@@ -582,5 +582,57 @@ class TestUnderstanding(EngineTest):
             self.assertFalse(ask("my kd", empty).ok)
 
 
+class TestTags(unittest.TestCase):
+    """Matches tagged on Match History: "my K/D in scrims"."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.db = StatsDB(":memory:")
+        for name, match in MATCHES.items():
+            cls.db.import_match(name, match, files=len(match["rounds"]))
+        cls.scrims = list(MATCHES)[:3]
+        for name in cls.scrims:
+            cls.db.save_note(MATCHES[name]["match_id"], "Scrim")
+        cls.db.save_note(MATCHES[list(MATCHES)[3]]["match_id"], "Official", "a note doesn't change anything")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.db.close()
+
+    def ask(self, question):
+        return ask(question, self.db, now=NOW)
+
+    def test_in_scrims(self):
+        me = truth(["Alpha.TAG"], self.scrims)["Alpha.TAG"]
+        for question in ("my kd in scrims", "What's my K/D in scrimmages?", "my k/d scrim"):
+            with self.subTest(question=question):
+                answer = self.ask(question)
+                self.assertEqual(answer.rows[0]["K/D"], round(kd(me), 2))
+                self.assertIn("in scrims", answer.understood)
+                self.assertFalse(any("to mean" in n for n in answer.notes))  # never a player called Scrim-something
+
+    def test_in_official_matches(self):
+        official = list(MATCHES)[3:4]
+        answer = self.ask("how many kills do I have in official matches")
+        self.assertEqual(answer.rows[0]["Kills"], truth(["Alpha.TAG"], official)["Alpha.TAG"].kills)
+        self.assertIn("in official matches", answer.understood)
+
+    def test_a_tag_nothing_has(self):
+        answer = self.ask("my kd in practice")
+        self.assertFalse(answer.rows)
+        self.assertTrue(any("No match is tagged Practice" in n for n in answer.notes))
+
+    def test_two_tags_at_once(self):
+        answer = self.ask("my kills in scrims and official matches")
+        self.assertEqual(answer.rows[0]["Kills"], truth(["Alpha.TAG"])["Alpha.TAG"].kills)  # every match
+        self.assertTrue(any("one tag at a time" in n for n in answer.notes))
+
+    def test_round_level_questions_and_rankings(self):
+        answer = self.ask("best map in scrims")
+        maps = {MATCHES[n]["map"] for n in self.scrims}
+        self.assertTrue({r["Map"] for r in answer.rows} <= maps, answer.rows)
+        self.assertIn("in scrims", self.ask("my attack win rate in scrims").understood)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -25,6 +25,7 @@ from metrics_engine import (
     round_player_rows, round_rows, rounds_text, rows_csv, running_scores, scoreboard_text, side_split, team_side,
     win_condition_label,
 )
+from branding import current_theme
 from parser import (
     ReplayParseError, find_replay_folders, load_demo_match, r6_dissect_available, raw_shape_preview, save_uploads,
 )
@@ -34,7 +35,8 @@ from sources import (
     DemoSource, LoadedSource, ReplaySource, can_read_local_files, folder_source, load_source, save_replay_folder,
     saved_replay_folder, start_workdir_sweeper,
 )
-from stats_db import NotAdded
+from scoreboard_image import scoreboard_png
+from stats_db import NotAdded, nice_time
 from tab import Tab
 from ui import md
 
@@ -70,6 +72,12 @@ def scoreboard_html(team_name: str, won: bool, rows: list[dict]) -> str:
     badge = '<span class="won">WIN</span>' if won else ""
     return (f'<div class="pl-wrap"><table class="pl"><caption>{html.escape(team_name)}{badge}</caption>'
             f"<thead><tr>{head}</tr></thead><tbody>{''.join(body)}</tbody></table></div>")
+
+
+@st.cache_data(max_entries=8, show_spinner=False)
+def _scoreboard_image(key: tuple, _match: dict, _rows: list[dict], accent: str) -> bytes:
+    """The scoreboard picture, drawn once per scoreboard (key: everything it shows) and theme color."""
+    return scoreboard_png(_match, _rows, accent, nice_time(_match.get("played_at")))
 
 
 def side_badge(side: str | None) -> str:
@@ -517,7 +525,7 @@ class DashboardTab(Tab):
     def exports(self, match: dict, stats: dict, rows: list[dict]) -> None:
         team_names, score = match["team_names"], match["final_score"]
         rounds = round_rows(match, stats)
-        c1, c2, c3, c4, _ = st.columns([1, 1, 1, 1.4, 2])
+        c1, c2, c3, c4, c5 = st.columns([1, 1, 1, 1.4, 2])
         c1.download_button("⬇ CSV", rows_csv([{"Player": r["Player"], "Team Name": team_names[r["Team"]], **r}
                                                for r in leaderboard_rows(stats)]).encode("utf-8"),
                            file_name=f"{match['match_id']}_stats.csv", mime="text/csv")
@@ -531,6 +539,14 @@ class DashboardTab(Tab):
         c4.download_button("⬇ Rounds CSV", rows_csv(round_player_rows(rounds)).encode("utf-8"),
                            file_name=f"{match['match_id']}_rounds.csv", mime="text/csv",
                            help="One row per player per round: side, operator, result, K-D-A and highlights.")
+        accent = current_theme()["primary"]
+        # everything the picture shows: the cache is shared by every visitor to the website
+        key = (match.get("match_id"), match.get("played_at"), match.get("map"), match.get("match_type"),
+               len(match["rounds"]), tuple(match["team_names"][:2]), tuple(match["final_score"]),
+               tuple(tuple(r.values()) for r in rows))
+        c5.download_button("⬇ Scoreboard image", _scoreboard_image(key, match, rows, accent),
+                           file_name=f"{match['match_id']}_scoreboard.png", mime="image/png",
+                           help="The scoreboard as a picture, in your Team Theme's color, to post in a team chat.")
 
     def breakdown(self, match: dict, stats: dict, rows: list[dict]) -> None:
         team_names = match["team_names"]
