@@ -30,7 +30,7 @@ HOW_IT_WORKS = ("It only reads match replay files the game has already saved. It
                 "and gives no advantage in a match.")
 # the Windows build stamps the release's version (its tag without the "v") next to this file
 _stamped_version = _HERE / "version.txt"
-APP_VERSION = (_stamped_version.read_text().strip() if _stamped_version.is_file() else "") or "1.6.2"
+APP_VERSION = (_stamped_version.read_text().strip() if _stamped_version.is_file() else "") or "1.6.21"
 
 # the Windows app, as attached to each GitHub release by .github/workflows/windows-app.yaml
 WINDOWS_INSTALLER = "R6MatchStats-Setup.exe"
