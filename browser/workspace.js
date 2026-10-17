@@ -31,7 +31,7 @@
       if(!teams || typeof teams!=="object")throw Error("Invalid season match choices.");
       for(const ids of Object.values(teams))if(!Array.isArray(ids)||ids.some(id=>typeof id!=="string"))throw Error("Invalid season match list.");
     }
-    return {version: 1, matches: value.matches, teams: value.teams, seasonTeams, removedSeasonTeams, seasonTeamMatches};
+    return {version: 1, matches: value.matches, teams: value.teams, seasonTeams, removedSeasonTeams, seasonTeamMatches, matchday:value.matchday || {fixtures:[],availability:{},notes:""}};
   }
   const storage = new Promise((resolve, reject) => {
     const request = indexedDB.open("r6-match-stats", 1);
@@ -62,6 +62,7 @@
     status();
   }
   function status() {
+    document.dispatchEvent(new CustomEvent("r6workspace"));
     $("workspace-status").textContent = sample ? "Demo season · separate from your saved stats" : `${real.matches.length} confirmed matches · saved on this device`;
     $("workspace-demo").textContent = sample ? "Leave the demo season" : "Try the demo season";
   }
@@ -278,6 +279,7 @@
     if(real.matches.length&&!confirm("Replace this browser's saved workspace with the backup? Export the current workspace first if you need it."))return;
     real=incoming;sample=null;await save();if(raw.theme)applyTheme(raw.theme);if(raw.league)ui.saveLeague(raw.league);notify("Workspace restored.");if(pages[activeTab])await pages[activeTab]();$("workspace-file").value="";
   });
+  window.R6Workspace={state,isDemo:()=>!!sample,save,engine,notify,download};
   applyTheme(ui.store.get("r6web.theme",defaultTheme));
   read().then(value=>{if(value)real=validate(value);}).catch(e=>notify(e.message,true)).finally(()=>{
     ready=true;status();enhanceReport(currentReport,currentMeta);

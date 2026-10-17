@@ -86,7 +86,8 @@ table.pl caption .cap-sub { margin-left:10px; color:var(--dim); font:500 11px va
 STREAMLIT_OVERRIDES = """
 
 .stApp {background:radial-gradient(ellipse at 92% 0%,#52d5f221,transparent 42%),var(--bg);}
-.stMainBlockContainer {max-width:1240px;padding-top:1.1rem;}
+.stMainBlockContainer {max-width:none;width:100%;padding:1.1rem clamp(16px,2.2vw,48px) 4rem;}
+@media(max-width:1100px){[data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"] .matchday-panel){flex-wrap:wrap;}[data-testid="stColumn"]:has(.matchday-panel),[data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"] .matchday-panel)>[data-testid="stColumn"]{width:100%!important;flex:1 1 100%!important;}}
 h1,h2,h3,h4 {text-transform:uppercase;letter-spacing:.03em!important;line-height:1.1!important;}
 h1 {font-size:2rem!important;}
 header[data-testid="stHeader"] {background:#080e19e8;}
@@ -101,7 +102,9 @@ button:focus-visible,a:focus-visible {outline:2px solid var(--accent);outline-of
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
 """
 
-STREAMLIT_CSS = FONT_CSS + TOKENS_CSS + COMPONENT_CSS + STREAMLIT_OVERRIDES
+MATCHDAY_CSS = '.matchday-panel section {background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:16px;margin-bottom:16px;}\n.matchday-panel h3 {font-size:1.2rem!important;margin:0 0 8px;}\n.md-label,.md-empty,.md-notes {font-size:.82rem!important;color:var(--dim);}\n.md-label {margin-bottom:12px!important;}\n.md-fixture {padding:12px 0;border-bottom:1px solid var(--border);}\n.md-fixture b,.md-fixture small {display:block;}\n.md-fixture small {color:var(--dim);font-size:.75rem;}\n.md-fixture b {margin:5px 0;}\n.md-recent,.md-person {display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);font-size:.82rem;}\n.md-recent small {display:block;color:var(--dim);font-size:.72rem;}\n.md-result {color:var(--accent);font-family:var(--mono);}\n.md-person small {color:var(--secondary);font-size:.73rem;}\n.md-notes {overflow-wrap:anywhere;}\n'
+
+STREAMLIT_CSS = FONT_CSS + TOKENS_CSS + COMPONENT_CSS + STREAMLIT_OVERRIDES + MATCHDAY_CSS
 
 
 def render_styles():

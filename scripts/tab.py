@@ -23,7 +23,7 @@ from ui import md
 
 # each tab's page file, for links between tabs
 PAGES = {"dashboard": "report.py", "ask": "ask.py", "history": "history.py", "teams": "teams.py",
-         "operators": "operators.py", "league": "league.py", "theme": "appearance.py", "download": "download.py"}
+         "operators": "operators.py", "matchday": "matchday.py", "league": "league.py", "theme": "appearance.py", "download": "download.py"}
 
 
 class Tab(ABC):

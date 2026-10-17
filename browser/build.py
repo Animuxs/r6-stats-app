@@ -35,7 +35,7 @@ SCRIPTS = ROOT / "scripts"
 sys.path[:0] = [str(SCRIPTS), str(HERE)]
 
 import events  # noqa: E402
-from presentation import TOKENS_CSS
+from presentation import TOKENS_CSS, MATCHDAY_CSS
 from app_info import APP_VERSION, RELEASES_URL  # noqa: E402
 
 PYODIDE_VERSION = "0.27.7"
@@ -43,7 +43,7 @@ PYODIDE_CDN = f"https://cdn.jsdelivr.net/pyodide/v{PYODIDE_VERSION}/full/"
 PYODIDE_FILES = ("pyodide.js", "pyodide.asm.js", "pyodide.asm.wasm", "pyodide-lock.json", "sqlite3-1.0.0-cp312-cp312-pyodide_2024_0_wasm32.whl")  # + python_stdlib.zip, inlined
 # the app's own Python the page runs: the parser's normalizer and the stats engine, unchanged
 PYTHON = {name: SCRIPTS / name for name in ("parser.py", "file_guard.py", "metrics_engine.py", "sample_data.py",
-                                           "stats_db.py", "operator_stats.py", "team_tables.py", "season_stats.py", "ask_engine.py", "demo_season.py")}
+                                           "stats_db.py", "operator_stats.py", "team_tables.py", "season_stats.py", "ask_engine.py", "demo_season.py", "matchday_data.py")}
 PYTHON["bridge.py"] = HERE / "bridge.py"
 LIGHT_EVENT_KEYS = ("id", "name", "source", "tier", "kind", "organizer", "location", "region", "mode", "start", "end",
                     "prize_usd", "team_count", "teams", "url", "website")
@@ -52,6 +52,7 @@ LIGHT_EVENT_KEYS = ("id", "name", "source", "tier", "kind", "organizer", "locati
 def config(share: bool, wasm: bytes, stdlib: bytes = b"", version: str = APP_VERSION) -> dict:
     import bridge
     import demo_season
+    from matchday_data import demo_workspace
 
     catalog = events.load_catalog(events.BUNDLED) or {"events": [], "captured_at": ""}
     cutoff = date.today()
@@ -75,6 +76,7 @@ def config(share: bool, wasm: bytes, stdlib: bytes = b"", version: str = APP_VER
         "demo": json.loads(bridge.demo()),
         "demoSeason": [{"key": key, "data": match, "players": demo_season.ROSTER, "season": ""}
                        for key, match in demo_season.season().items()],
+        "matchdayDemo": demo_workspace().to_dict(),
         "demoTeam": {demo_season.TEAM: demo_season.ROSTER},
         "rosters": json.loads((SCRIPTS / "necc_rosters.json").read_text(encoding="utf-8"))["teams"],
     }
@@ -87,8 +89,9 @@ def page(share: bool, wasm: bytes, stdlib: bytes = b"", version: str = APP_VERSI
     settings = json.dumps(config(share, wasm, stdlib, version), ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     html = (template.replace("/*@@CONFIG@@*/", f"window.R6 = {settings};")
             .replace("/*@@WASM_EXEC@@*/", goroot_exec.replace("</", "<\\/"))
-            .replace("/*@@THEME@@*/", TOKENS_CSS)
+            .replace("/*@@THEME@@*/", TOKENS_CSS + MATCHDAY_CSS)
             .replace("/*@@WORKSPACE@@*/", (HERE / "workspace.js").read_text(encoding="utf-8").replace("</", "<\\/")))
+    html += "<script>" + (HERE / "matchday.js").read_text(encoding="utf-8").replace("</", "<\\/") + "</script>"
     if share:  # the host wraps the page in its own document
         return html
     head, body = html.split("</style>", 1)
