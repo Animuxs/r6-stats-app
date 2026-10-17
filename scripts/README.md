@@ -502,7 +502,7 @@ go test ./...                            # the Go replay parser
   build; add its ID to `dissect/header.go` and re-run `stringer -type=Map`.
 
 
-### Full-width match-day workspace (1.6.22)
+### Full-width match-day workspace (1.6.3)
 
 The app uses the available window width. Its companion rail shows manually entered upcoming fixtures, recent confirmed results, roster availability and preparation notes. Open **Match day** to manage fixtures and time-zone labels, record availability, edit notes, export or restore planning JSON, or turn the rail off for a full-width statistics-only view. Smaller windows stack the panels below the main content.
 
