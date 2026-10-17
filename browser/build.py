@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import hashlib
 import json
 import os
 import shutil
@@ -131,6 +132,15 @@ def main() -> None:
     cloudflare = out / "cloudflare"
     cloudflare.mkdir(exist_ok=True)
     shutil.copyfile(single, cloudflare / "index.html")
+    portable = cloudflare / "R6MatchStats-School-PIN-Pilot.html"
+    shutil.copyfile(single, portable)
+    checksum = hashlib.sha256(portable.read_bytes()).hexdigest()
+    (cloudflare / "SHA256SUMS.txt").write_text(f"{checksum}  {portable.name}\n", encoding="utf-8")
+    (cloudflare / "_headers").write_text(
+        "/R6MatchStats-School-PIN-Pilot.html\n"
+        "  Content-Disposition: attachment; filename=R6MatchStats-School-PIN-Pilot.html\n"
+        "  X-Content-Type-Options: nosniff\n", encoding="utf-8")
+
 
     share = out / "share"
     (share / "pyodide").mkdir(parents=True, exist_ok=True)

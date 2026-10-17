@@ -34,5 +34,6 @@
       "enabled": true,
       "head_sampling_rate": 0.1
     }
-  }
+  },
+  "preview_urls": false
 }
