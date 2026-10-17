@@ -92,7 +92,7 @@ h1,h2,h3,h4 {text-transform:uppercase;letter-spacing:.03em!important;line-height
 h1 {font-size:2rem!important;}
 header[data-testid="stHeader"] {background:#080e19e8;}
 [data-testid="stTopNav"] {border-bottom:1px solid var(--border);background:var(--bg);}
-[data-testid="stTopNav"] a {font-family:var(--display);text-transform:uppercase;letter-spacing:.06em;}
+[data-testid="stTopNav"] a, [data-testid="stTopNavSection"] p {font-family:var(--display);text-transform:uppercase;letter-spacing:.06em;}
 [data-testid="stMetric"] {border-top:3px solid var(--school);background:linear-gradient(125deg,#17283b,#0c1624);}
 .scorecard {background:var(--panel);border-left:3px solid var(--school);box-shadow:none;padding:16px 22px;}
 .map-pill {background:var(--row);}
