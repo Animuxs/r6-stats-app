@@ -18,7 +18,8 @@ APP_FILES = ["app.py", "report.py", "dock.py", "ask.py", "history.py", "operator
              "download.py", "app_info.py", "ui.py", "presentation.py", "operator_stats.py", "team_tables.py", "branding.py", "appearance.py", "necc_data.py",
              "necc_season.json", "season_stats.py", "sources.py", "stats_db.py", "ask_engine.py",
              "parser.py", "file_guard.py", "metrics_engine.py", "sample_data.py", "demo_season.py", "session.py", "tab.py", "matchday.py", "matchday_data.py", "matchday_hub.py",
-             "desktop_settings.py", "team_accounts.py", "team_runtime.py", "team_hub.py", "map_pool.py", "scoreboard_image.py", "icon.png"]
+             "desktop_settings.py", "team_accounts.py", "team_runtime.py", "team_hub.py", "map_pool.py", "scoreboard_image.py",
+             "assistant.py", "assistant_knowledge.py", "assistant_ui.py", "question_reports.py", "icon.png"]
 datas = [(str(ROOT / "scripts" / name), "scripts") for name in APP_FILES]
 for stamp in ("repo.txt", "version.txt"):
     if (ROOT / "build" / stamp).is_file():
@@ -36,8 +37,8 @@ hiddenimports = (
        "PIL.ImageDraw", "PIL.ImageFont"]  # the Dashboard's scoreboard image (scripts/scoreboard_image.py)
     # standard library modules the app files use, which PyInstaller can't see in plain files
     # (scripts/test_app.py checks this list against their imports)
-    + ["abc", "base64", "calendar", "collections", "collections.abc", "concurrent.futures", "contextlib", "csv", "dataclasses", "datetime",
-       "difflib", "functools", "gzip", "html", "http.client", "io", "ipaddress", "itertools", "json", "logging", "os", "pathlib",
+    + ["abc", "ast", "base64", "calendar", "collections", "collections.abc", "concurrent.futures", "contextlib", "csv", "dataclasses", "datetime",
+       "difflib", "functools", "gzip", "html", "http.client", "io", "ipaddress", "itertools", "json", "logging", "operator", "os", "pathlib",
        "random", "re", "shutil", "sqlite3", "subprocess", "sys", "tempfile", "threading", "time", "typing", "unicodedata",
        "urllib.parse", "urllib.request", "uuid", "zipfile", "hashlib", "hmac", "secrets"]
 )

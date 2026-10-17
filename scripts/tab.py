@@ -28,6 +28,11 @@ PAGES = {"dashboard": "report.py", "ask": "ask.py", "history": "history.py", "te
          "dock": "dock.py"}
 
 
+def switch_to(tab: str) -> None:
+    """Show another tab (a key of PAGES): the one place the app changes page."""
+    st.switch_page(PAGES[tab])
+
+
 class Tab(ABC):
     """One tab of the app."""
 
@@ -75,7 +80,7 @@ class Tab(ABC):
             getattr(st, note[0])(md(note[1]))
 
     def go_to(self, tab: str) -> None:
-        st.switch_page(PAGES[tab])
+        switch_to(tab)
 
     def open_on_dashboard(self, match_name: str) -> None:
         self.session.open_on_dashboard(match_name)

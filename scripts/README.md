@@ -111,6 +111,9 @@ The other pages work from every match you've added, not just the one on the
 Dashboard:
 
 - **Ask**: type a question, or tap one of the examples (see below).
+- **The assistant**: the **Assistant** button in the bottom-right corner of every
+  page opens a chat (see below). Turn it off with the **Assistant** switch in the
+  sidebar.
 - **Match History**: every match you've added, newest first, with your record,
   K/D and EPS, and who's **Tracked** in each. Select a match to open its
   scoreboards on the Dashboard, to remove it from your stats, or to write about
@@ -197,6 +200,31 @@ It understands:
 It always says how it read the question, and when it guesses (a misspelled
 name, or a name that's both a player and an operator) it says so. It works with
 its own word lists and rules: no AI model, and no internet connection.
+
+Ask also answers what isn't a stats query: an **analysis** ("analyze my stats",
+"analyze Paltry", "analyze my team", "analyze my last match", "what should I
+work on?"), what a stat means ("what is KOST?"), how to use the app ("how do I
+add my matches?"), streaks, when you last played and who you win most with.
+Anything it can't read still gets an answer: what it could work out, and the
+closest questions it can answer.
+
+**Report**: when Ask or the assistant can't answer a question, or answers it the
+wrong way, press **Report** (or **Not what I asked**) and say what you expected.
+The report is saved on this computer (`question-reports.jsonl` in the app's data
+folder; only for the session on the public website) and listed under **Reported
+questions** on Ask. **Send** opens a GitHub issue filled in with it, labeled
+`ask-report`, which you see and can edit before sending; no stats are included.
+Developers can list a PC's reports with `python scripts/question_reports.py`.
+
+**The assistant** is a chat in the corner of every page that answers everything
+Ask does, plus small talk and follow-ups: it remembers the conversation, so
+"what about on defense?", "and Sacri?", "how does he do on Bank?", "why?" and
+"kills instead" work after a question. It suggests what to ask next, starts with
+questions about the page you're on, and links to the right tab. It's a Streamlit
+fragment, so chatting redraws only the panel, and the conversation stays when you
+change tabs. The Windows app remembers whether it's switched on. Like Ask, it runs
+on your computer with no AI model or online service (`assistant.py`,
+`assistant_knowledge.py`, `assistant_ui.py`).
 
 ### Leagues and tournaments
 
@@ -414,9 +442,9 @@ certain what it allows:
   been publicly documented for years isn't permission. If you want certainty,
   ask Ubisoft before publishing widely.
 - **Don't feed replays to AI tools** (Terms 1.3): the Terms forbid using game
-  content as input to AI tools. The app doesn't: **Ask** reads questions with
-  its own rules and word lists, on your computer, with no AI model or online
-  service. Keep that in mind when asking an assistant for help with replay data.
+  content as input to AI tools. The app doesn't: **Ask** and the assistant read
+  questions with their own rules and word lists, on your computer, with no AI
+  model or online service. Keep that in mind when asking an assistant for help with replay data.
 
 ## Architecture
 
