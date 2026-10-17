@@ -59,6 +59,7 @@ def config(share: bool, wasm: bytes, stdlib: bytes = b"", version: str = APP_VER
     return {
         "version": version,
         "share": share,
+        "teamServerUrl": os.environ.get("R6_TEAM_SERVER_URL", ""),
         "releasesUrl": RELEASES_URL,
         "pyodideBase": "pyodide/" if share else PYODIDE_CDN,
         "pyodideScript": "pyodide/pyodide.js" if share else PYODIDE_CDN + "pyodide.js",
@@ -127,6 +128,9 @@ def main() -> None:
     single = out / "R6MatchStats.html"
     single.write_text(page(False, wasm, version=args.version), encoding="utf-8")
     print(f"{single}  ({single.stat().st_size / 1e6:.1f} MB)")
+    cloudflare = out / "cloudflare"
+    cloudflare.mkdir(exist_ok=True)
+    shutil.copyfile(single, cloudflare / "index.html")
 
     share = out / "share"
     (share / "pyodide").mkdir(parents=True, exist_ok=True)

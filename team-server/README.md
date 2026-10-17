@@ -27,9 +27,12 @@ Use Node 22+ with npm. Stay on Workers Free; no paid plan or custom domain is ne
 Put the returned database ID into wrangler.jsonc, then:
 
     npx wrangler d1 migrations apply r6-team-workspace --remote
+    # First, from the repository root: .venv\Scripts\python browser/build.py
     npx wrangler deploy
 
-Use the returned HTTPS workers.dev URL in the browser edition's Team hub. Everyone uses
+The returned HTTPS workers.dev URL also serves the browser app. Set R6_TEAM_SERVER_URL
+to that URL and rebuild browser/build.py before a follow-up deploy to prefill the connection.
+Use that same URL in a downloaded browser edition's Team hub. Everyone uses
 that same server. Create a school workspace, privately save the PIN/recovery download, then
 sign in. On another computer use another email at the same school plus that PIN. No real team
 or credentials are preloaded. Do not upload local .wrangler state, account DBs or preview data.

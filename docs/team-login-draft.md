@@ -111,3 +111,22 @@ Pilot limits: 1.5 MB shared JSON; needs chunked/per-match storage for larger lib
 Desktop/Streamlit cloud integration and personal stats migration remain incomplete. League
 selection is included in next save/backup but does not trigger its own remote save yet.
 No version bump, merge, release or public login. Preserve the prior release checklist.
+
+
+### Cloudflare setup checkpoint
+
+Wrangler OAuth is authenticated to the account supplied by the user. D1 database
+r6-team-workspace (6d411864-62a3-4613-97c8-7fadfed902cb) was created and the remote
+schema migration was applied and inspected. Deployment to Workers was rejected with
+Cloudflare code 10034: account email verification required. No live service yet.
+The asset upload contained the generated app only, never local preview data or credentials.
+
+Installed all 19 skills from cloudflare/skills into the user's Codex skills directory.
+Registered https://mcp.cloudflare.com/mcp as cloudflare in the user Codex config. MCP OAuth
+is awaiting user browser authorization with scopes restricted to account/user read,
+Workers scripts/routes and D1. Restart/reload Codex after setup to load the MCP tools.
+Wrangler is pinned at 4.151.1 in team-server/package.json and package-lock.json.
+Free D1 account ID and resource ID are in config; OAuth credentials remain outside Git.
+Workers static assets serve the browser app; R6_TEAM_SERVER_URL prefills the connection.
+A second deployment after knowing the final workers.dev URL is needed to set that default.
+Constant-time credential digest comparisons and sampled logs/traces are configured.

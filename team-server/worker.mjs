@@ -1,3 +1,4 @@
+import {timingSafeEqual} from 'node:crypto';
 /* Free-tier, app-owned team-code service. No external identity or email service.
  * Deploy separately; never put a database, code or session in the public repository.
  */
@@ -55,6 +56,7 @@ export default {
     if(request.method==='OPTIONS')return new Response(null,{status:204,headers});
     try{
       if(path==='/health'&&request.method==='GET')return json({service:'r6-team-workspace',version:1,maxWorkspaceBytes:1500000});
+      if(request.method==='GET'&&!['/workspace'].includes(path)&&env.ASSETS)return env.ASSETS.fetch(request);
       const db=env.DB;
       const client=await digest(request.headers.get('CF-Connecting-IP')||'local');
       if(path==='/create'&&request.method==='POST'){
@@ -72,7 +74,8 @@ export default {
         const row=await db.prepare('SELECT id,code_hash,recovery_hash FROM teams WHERE email=?').bind(address).first();
         const secret=path==='/login'?input.code:input.recovery;
         const hashed=await digest((row?.id||'missing')+':'+(typeof secret==='string'&&secret.length<=256?secret:''));
-        if(!row||hashed!==(path==='/login'?row.code_hash:row.recovery_hash))throw new Problem('Invalid email or team credentials.',401);
+        const valid=timingSafeEqual(encoder.encode(hashed),encoder.encode(row?(path==='/login'?row.code_hash:row.recovery_hash):'0'.repeat(64)));
+        if(!row||!valid)throw new Problem('Invalid email or team credentials.',401);
         if(path==='/recover'){
           const code=random(12),recovery=random(24);
           const changed=await db.batch([
@@ -102,6 +105,6 @@ export default {
         return json({revision:input.revision+1});
       }
       return json({error:'Route not found.'},404);
-    }catch(error){return json({error:error instanceof Problem?error.message:'Team service unavailable. Try again later.'},error instanceof Problem?error.status:503);}
+    }catch(error){if(!(error instanceof Problem))console.error(JSON.stringify({event:'team_service_failure',path,status:503}));return json({error:error instanceof Problem?error.message:'Team service unavailable. Try again later.'},error instanceof Problem?error.status:503);}
   }
 };
