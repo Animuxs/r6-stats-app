@@ -18,7 +18,7 @@ APP_FILES = ["app.py", "report.py", "dock.py", "ask.py", "history.py", "operator
              "download.py", "app_info.py", "ui.py", "presentation.py", "operator_stats.py", "team_tables.py", "branding.py", "appearance.py", "necc_data.py",
              "necc_season.json", "season_stats.py", "sources.py", "stats_db.py", "ask_engine.py",
              "parser.py", "file_guard.py", "metrics_engine.py", "sample_data.py", "demo_season.py", "session.py", "tab.py", "matchday.py", "matchday_data.py", "matchday_hub.py",
-             "icon.png"]
+             "desktop_settings.py", "icon.png"]
 datas = [(str(ROOT / "scripts" / name), "scripts") for name in APP_FILES]
 for stamp in ("repo.txt", "version.txt"):
     if (ROOT / "build" / stamp).is_file():
