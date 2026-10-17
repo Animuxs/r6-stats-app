@@ -10,13 +10,16 @@ Where every page's replays come from, so the pages don't each load them their ow
   added only when it's confirmed on the Dashboard, with the players picked there;
 - the demo season (start_demo, stop_demo): a made-up season in a stats database of its
   own for the session, so every page has something to show and no real stats are touched;
-- the cleanup of extracted uploads nobody has used for an hour.
+- the cleanup of extracted uploads nobody has used for an hour;
+- ReplaySource: one interface over all of them (FolderSource, UploadSource, DemoSource), so the
+  pages work with whatever the session's replays are without asking what kind they are.
 """
 
 from __future__ import annotations
 
 import contextlib
 import json
+from abc import ABC, abstractmethod
 import os
 import shutil
 import tempfile
@@ -274,3 +277,142 @@ def no_matches_yet(db: StatsDB) -> None:
             "it'll show up here."
             + (f" {waiting} match{'es' if waiting != 1 else ''} added by an earlier version "
                f"{'are' if waiting != 1 else 'is'} waiting to be checked on **Match History**." if waiting else ""))
+
+
+# ------------------------------------------------------------ replay sources --
+
+class ReplaySource(ABC):
+    """Where a session's matches come from: the replays it holds, newest first, each opened
+    (parsed) at most once. The Dashboard, Match History, Operator Analytics and Team Analytics
+    work with any source the same way; each kind says how it finds and names its matches."""
+
+    @abstractmethod
+    def matches(self) -> list[str]:
+        """Its matches (replay folder names), newest first."""
+
+    @abstractmethod
+    def open(self, name: str) -> tuple[dict, dict, list[str]] | ReplayParseError:
+        """(MatchData, raw JSON, warnings) for match `name`, or why it couldn't be read."""
+
+    def has(self, name: str) -> bool:
+        return name in self.matches()
+
+    def newest(self) -> str | None:
+        found = self.matches()
+        return found[0] if found else None
+
+    def round_files(self, name: str) -> int:
+        """How many round files match `name` was read from."""
+        return 0
+
+    def needs_reading(self, name: str) -> bool:
+        """Whether opening match `name` means parsing its replay (slow), not just looking it up."""
+        return False
+
+    @property
+    def error(self) -> str | None:
+        """Why the source couldn't be read at all (None if it could)."""
+        return None
+
+    @property
+    def skipped(self) -> str | None:
+        """The files left out as not replays (None if none were)."""
+        return None
+
+    # what the Dashboard shows for this kind of source
+    adds_to_stats = True  # its matches can be confirmed into your stats
+
+    def picker_label(self, count: int) -> str:
+        return f"{count} matches"
+
+    def describe(self, name: str, row: dict | None) -> str:
+        """Match `name` in the Dashboard's picker; `row` is its StatsDB.match_list row, if added."""
+        return match_label(name, row) + (" · ✓ added" if row else "")
+
+    def note(self) -> str | None:
+        """A line under the picker about where these matches come from."""
+        return None
+
+
+class LoadedSource(ReplaySource):
+    """Replays found on disk or uploaded, as load_source keeps them in the session: the state
+    dict stays the source of truth, so a rerun or a page reload finds it unchanged."""
+
+    def __init__(self, state: dict[str, Any]):
+        self.state = state
+
+    def matches(self) -> list[str]:
+        return sorted(self.state.get("groups") or {}, key=lambda n: match_time(n) or n, reverse=True)
+
+    def open(self, name: str):
+        return parse(self.state, name)
+
+    def round_files(self, name: str) -> int:
+        return len((self.state.get("groups") or {}).get(name, []))
+
+    def needs_reading(self, name: str) -> bool:
+        return name not in self.state.get("parsed", {})
+
+    @property
+    def error(self) -> str | None:
+        return self.state.get("error")
+
+    @property
+    def skipped(self) -> str | None:
+        return self.state.get("skipped")
+
+    @staticmethod
+    def of(state: dict[str, Any] | None) -> "LoadedSource | None":
+        """The right kind of source for a session's state dict."""
+        if not state:
+            return None
+        return FolderSource(state) if state["sig"][0] == "path" else UploadSource(state)
+
+
+class FolderSource(LoadedSource):
+    """A folder or zip on this PC: found again whenever the game saves another replay to it."""
+
+    @property
+    def path(self) -> Path:
+        return Path(self.state["sig"][1])
+
+
+class UploadSource(LoadedSource):
+    """Files uploaded on the Dashboard, extracted to a folder swept an hour after it's last used."""
+
+
+class DemoSource(ReplaySource):
+    """The demo season's made-up matches: already in the demo's stats, so nothing to add."""
+
+    adds_to_stats = False
+
+    def __init__(self):
+        import demo_season
+
+        self._season = demo_season.season()
+
+    def matches(self) -> list[str]:
+        return sorted(self._season, reverse=True)
+
+    def open(self, name: str):
+        return self._season[name], {}, []
+
+    def round_files(self, name: str) -> int:
+        return len(self._season[name]["rounds"])
+
+    def picker_label(self, count: int) -> str:
+        return f"{count} demo season matches"
+
+    def describe(self, name: str, row: dict | None) -> str:
+        return match_label(name, row) + f" · vs {self._season[name]['team_names'][1]}"
+
+    def note(self) -> str:
+        return "A made-up match from the demo season. Turn off demo mode in the sidebar to load a real replay."
+
+
+def replay_source() -> ReplaySource | None:
+    """This session's replays: the demo season while it's on, else what the Dashboard loaded or,
+    on this PC, the replay folder (None if there's nothing to read)."""
+    if demo_active():
+        return DemoSource()
+    return LoadedSource.of(current_source())
