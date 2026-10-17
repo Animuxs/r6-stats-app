@@ -5,7 +5,8 @@ Entry point of the R6 Match Stats website and Windows app (Streamlit).
 Pages: report.py (Dashboard: one match's scoreboards), ask.py (plain-English questions about
 every match), history.py (every match), teams.py (build a team; season teams), operators.py,
 league.py (your league or tournament: Liquipedia events, NECC divisions, or your own; NECC's school
-directory), appearance.py (team colors and logo) and download.py (get the Windows app). The sidebar's
+directory), appearance.py (team colors and logo) and download.py (get the Windows app). The assistant
+(assistant_ui.py) floats in the corner of every page. The sidebar's
 demo season (or ?demo in the address) fills every page with made-up matches (demo_season.py).
 
 Run with:  streamlit run scripts/app.py   (from the repo root)
@@ -94,7 +95,10 @@ if "demo" in st.query_params and not Session().get("demo_from_link"):
     Session().set("demo_from_link", True)
     if not demo_active():
         start_demo()
+from assistant_ui import render_assistant, sidebar_toggle
+
 with st.sidebar:
+    sidebar_toggle(Session())
     st.page_link('team_hub.py', label='Team hub · ' + (_signed_team['name'] if _signed_team else 'sign in'), icon=':material/badge:')
     if demo_active():
         st.caption("You're looking at the **demo season**: made-up matches, not your own.")
@@ -119,6 +123,8 @@ if demo_active():
             "Team Analytics and the rest without replays. Your own stats aren't touched. Leave it from the sidebar.",
             icon=":material/science:")
 session = Session()
+# the assistant floats over every page, and keeps its conversation when the page changes
+render_assistant(session, page.title)
 if session.get("show_matchday", True) and page.title != 'Team hub':
     content, companion = st.columns([4, 1.15], gap="large")
     # Draw the companion first: a page can legitimately stop (e.g. demo season tracker).

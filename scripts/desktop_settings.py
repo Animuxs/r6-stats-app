@@ -5,15 +5,16 @@ import tempfile
 from pathlib import Path
 
 
-def launch_chime_enabled(folder):
+def setting(folder, name, default=True):
+    """A yes/no preference from desktop-settings.json, or `default` when it isn't saved (or can't be read)."""
     try:
         value = json.loads((Path(folder) / "desktop-settings.json").read_text(encoding="utf-8"))
-        return value.get("launch_chime", True) is not False if isinstance(value, dict) else True
+        return value.get(name, default) is not False if isinstance(value, dict) else default
     except (OSError, ValueError):
-        return True
+        return default
 
 
-def save_launch_chime(folder, enabled):
+def save_setting(folder, name, enabled):
     folder = Path(folder)
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / "desktop-settings.json"
@@ -23,7 +24,7 @@ def save_launch_chime(folder, enabled):
         value = {}
     if not isinstance(value, dict):
         value = {}
-    value["launch_chime"] = bool(enabled)
+    value[name] = bool(enabled)
     temporary = None
     try:
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=folder, delete=False) as file:
@@ -33,3 +34,11 @@ def save_launch_chime(folder, enabled):
     finally:
         if temporary and os.path.exists(temporary):
             os.unlink(temporary)
+
+
+def launch_chime_enabled(folder):
+    return setting(folder, "launch_chime")
+
+
+def save_launch_chime(folder, enabled):
+    save_setting(folder, "launch_chime", enabled)

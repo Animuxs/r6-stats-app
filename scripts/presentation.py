@@ -104,7 +104,27 @@ button:focus-visible,a:focus-visible {outline:2px solid var(--accent);outline-of
 
 MATCHDAY_CSS = '.matchday-panel section {background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:16px;margin-bottom:16px;}\n.matchday-panel h3 {font-size:1.2rem!important;margin:0 0 8px;}\n.md-label,.md-empty,.md-notes {font-size:.82rem!important;color:var(--dim);}\n.md-label {margin-bottom:12px!important;}\n.md-fixture {padding:12px 0;border-bottom:1px solid var(--border);}\n.md-fixture b,.md-fixture small {display:block;}\n.md-fixture small {color:var(--dim);font-size:.75rem;}\n.md-fixture b {margin:5px 0;}\n.md-recent,.md-person {display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);font-size:.82rem;}\n.md-recent small {display:block;color:var(--dim);font-size:.72rem;}\n.md-result {color:var(--accent);font-family:var(--mono);}\n.md-person small {color:var(--secondary);font-size:.73rem;}\n.md-notes {overflow-wrap:anywhere;}\n'
 
-STREAMLIT_CSS = FONT_CSS + TOKENS_CSS + COMPONENT_CSS + STREAMLIT_OVERRIDES + MATCHDAY_CSS
+# the assistant's panel (assistant_ui.py), floating in the bottom-right corner of every page
+ASSISTANT_CSS = """
+.st-key-r6_assistant {position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));
+  z-index:999990;width:min(430px,calc(100vw - 32px));max-height:calc(100vh - 88px);overflow-y:auto;gap:.45rem;
+  background:var(--panel);border:1px solid var(--border);border-top:3px solid var(--accent);border-radius:6px;
+  padding:10px 12px 12px;box-shadow:0 18px 48px rgba(0,0,0,.5);}
+.st-key-r6_assistant:has(.st-key-assistant_launch) {width:auto;padding:0;background:none;border:none;box-shadow:none;overflow:visible;}
+.st-key-assistant_launch button {border-radius:999px;padding:.55rem 1.1rem;background:var(--accent);border-color:var(--accent);
+  color:#080e19;font-weight:600;box-shadow:0 10px 28px rgba(0,0,0,.45);}
+.st-key-assistant_launch button:hover {filter:brightness(1.08);color:#080e19;border-color:var(--accent);}
+.st-key-r6_assistant .r6-assistant-sub {color:var(--dim);font-size:.78rem;}
+.st-key-r6_assistant [data-testid="stChatMessage"] {padding:.45rem .55rem;background:var(--row);border-radius:6px;}
+.st-key-r6_assistant [data-testid="stChatMessage"] p, .st-key-r6_assistant [data-testid="stChatMessage"] li {font-size:.88rem;}
+.st-key-r6_assistant [data-testid="stChatMessage"] h3 {font-size:1.05rem!important;margin:0 0 .3rem;}
+.st-key-r6_assistant button[kind="secondary"] {font-size:.8rem;min-height:0;padding:.25rem .6rem;text-align:left;}
+.st-key-r6_assistant [data-testid="stChatInput"] textarea {font-size:.9rem;}
+@media(max-width:640px){.st-key-r6_assistant {max-height:calc(100vh - 72px);}}
+@media print {.st-key-r6_assistant {display:none;}}
+"""
+
+STREAMLIT_CSS = FONT_CSS + TOKENS_CSS + COMPONENT_CSS + STREAMLIT_OVERRIDES + MATCHDAY_CSS + ASSISTANT_CSS
 
 
 def render_styles():

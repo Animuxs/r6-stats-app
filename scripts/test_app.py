@@ -46,6 +46,11 @@ def tearDownModule():
     shutil.rmtree(_DB_FOLDER, ignore_errors=True)
 
 
+def demo_toggle(at):
+    """The Dashboard's "Use demo match" switch (the sidebar has a switch of its own, for the assistant)."""
+    return next(t for t in at.toggle if t.label.startswith("Use demo match"))
+
+
 def run_app(local_visitor: bool = True, **env: str) -> AppTest:
     # AppTest has no real visitor IP; env and the visitor apply to this first run only
     with mock.patch.dict(os.environ, env), \
@@ -78,7 +83,7 @@ class TestReportPage(unittest.TestCase):
 
     def test_demo_match_can_be_downloaded_as_csv_json_txt_and_a_picture(self):
         at = run_app(R6_HOSTED="1")
-        at.toggle[0].set_value(True).run()
+        demo_toggle(at).set_value(True).run()
         buttons = at.get("download_button")
         self.assertEqual([b.proto.label for b in buttons],
                          ["⬇ CSV", "⬇ JSON", "⬇ TXT", "⬇ Rounds CSV", "⬇ Scoreboard image"])
@@ -89,14 +94,14 @@ class TestReportPage(unittest.TestCase):
 
     def test_the_demo_match_is_never_added_to_your_stats(self):
         at = run_app(R6_HOSTED="1")
-        at.toggle[0].set_value(True).run()
+        demo_toggle(at).set_value(True).run()
         self.assertFalse(at.exception)
         self.assertTrue(any("can't be added to your stats" in c.value for c in at.caption))
         self.assertFalse([b for b in at.button if "Confirm" in b.label])
 
     def test_demo_match_renders_both_scoreboards(self):
         at = run_app(R6_HOSTED="1")
-        at.toggle[0].set_value(True).run()
+        demo_toggle(at).set_value(True).run()
         self.assertFalse(at.exception)
         tables = [m.value for m in at.markdown if 'class="pl"' in m.value]
         self.assertEqual(len(tables), 2)
@@ -105,7 +110,7 @@ class TestReportPage(unittest.TestCase):
 
     def test_round_by_round_shows_sides_and_operators(self):
         at = run_app(R6_HOSTED="1")
-        at.toggle[0].set_value(True).run()
+        demo_toggle(at).set_value(True).run()
         self.assertFalse(at.exception)
         tables = [m.value for m in at.markdown if 'class="pl rounds"' in m.value]
         self.assertEqual(len(tables), 2)  # the match's rounds, then the picked player's
@@ -133,7 +138,7 @@ class TestReportPage(unittest.TestCase):
         match["rounds"][1]["players"] = [n for n in TEAM0 + TEAM1 if n != "Fabian"]  # left for a round
         with mock.patch.object(replay_parser, "load_demo_match", return_value=match):
             at = run_app(R6_HOSTED="1")
-            at.toggle[0].set_value(True).run()
+            demo_toggle(at).set_value(True).run()
             at.selectbox(key="r6_round_player").set_value("Fabian").run()
         self.assertFalse(at.exception)
         player = [m.value for m in at.markdown if 'class="pl rounds"' in m.value][1]
