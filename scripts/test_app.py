@@ -567,6 +567,18 @@ class TestAnalyticsPages(unittest.TestCase):
         self.assertFalse(at.exception)
         self.assertEqual([t.label for t in at.tabs], ["Build a team", "Season teams"])
 
+    def test_a_season_team_of_one_player(self):
+        """A one-player season team has no "at least this many of the team" to choose: the page
+        shows its matches instead of crashing on a slider from 1 to 1."""
+        from season_stats import StatsManager
+
+        with StatsManager(season="current") as tracker:
+            tracker.add_players(["Solo"], team="Solo Squad")
+        at = run_app()
+        at.switch_page("teams.py").run()
+        self.assertFalse(at.exception, [e.value for e in at.exception])
+        self.assertFalse([s for s in at.slider if s.label.startswith("Show matches with at least")])
+
 
 class TestAddingMatches(unittest.TestCase):
     """Nothing goes into the stats database on its own: a match is added only once it's confirmed on
