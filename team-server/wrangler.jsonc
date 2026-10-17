@@ -1,0 +1,12 @@
+{
+  "name": "r6-team-workspace",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-10-16",
+  "workers_dev": true,
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "r6-team-workspace",
+    "database_id": "REPLACE_WITH_CREATED_DATABASE_ID",
+    "migrations_dir": "migrations"
+  }]
+}

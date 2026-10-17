@@ -90,7 +90,7 @@ def page(share: bool, wasm: bytes, stdlib: bytes = b"", version: str = APP_VERSI
     html = (template.replace("/*@@CONFIG@@*/", f"window.R6 = {settings};")
             .replace("/*@@WASM_EXEC@@*/", goroot_exec.replace("</", "<\\/"))
             .replace("/*@@THEME@@*/", TOKENS_CSS + MATCHDAY_CSS)
-            .replace("/*@@WORKSPACE@@*/", (HERE / "workspace.js").read_text(encoding="utf-8").replace("</", "<\\/")))
+            .replace("/*@@WORKSPACE@@*/", "\n".join((HERE / name).read_text(encoding="utf-8") for name in ("team_profiles.js", "workspace.js")).replace("</", "<\\/")))
     html += "<script>" + (HERE / "matchday.js").read_text(encoding="utf-8").replace("</", "<\\/") + "</script>"
     if share:  # the host wraps the page in its own document
         return html

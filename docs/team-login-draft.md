@@ -82,3 +82,32 @@ No Supabase, external identity provider, email codes or email sender.
 
 Set R6_DISSECT_BIN to a built parser for parser-dependent tests. No new Python runtime
 package is required. New modules are included in the Windows packaging manifest.
+
+## October 16 continuation — free school PIN pilot
+
+User clarified: free services only; users on different computers enter any email at their
+school domain plus the same team PIN to see the same school data. A local PIN alone is not
+sufficient. Cloudflare Workers Free + D1 chosen as the draft persistent backend.
+
+Implemented browser Team hub profiles, per-tab viewing identity, explicit shared-server
+login/create/recovery, optional remembered 12-hour session, shared saves/refresh with stale
+revision rejection, credential-free workspace exports, personal/demo separation. Added
+team-server/worker.mjs, D1 migration, Wrangler configuration, deployment README and service
+lifecycle tests. Exact school domains resolve together; subdomains are separate. PIN is a
+random 24-character hex code, not a guessable short numeric PIN. No email ownership checks.
+
+NOT deployed. Cloudflare sign-in fails in the in-app browser even after Apple authentication.
+User reports other sign-ins also fail. Wrangler is not authenticated. Opened restricted-scope
+Wrangler OAuth in the default system browser so user can finish there. Do not accept account
+terms or enter new credentials for the user. No Cloudflare account ID, D1 ID or endpoint yet.
+
+Validation: 303 application tests pass after building a Windows-native parser with the saved
+Go runtime; 29 desktop tests pass. Portable profile/URL tests and Node service lifecycle
+checks pass. Actual Wrangler local D1 migration and runtime verified; two separate browser
+tabs signed in with different @preview.edu addresses and saw the same saved profile.
+All sample accounts remain in ignored local .wrangler state; never publish that state.
+
+Pilot limits: 1.5 MB shared JSON; needs chunked/per-match storage for larger libraries.
+Desktop/Streamlit cloud integration and personal stats migration remain incomplete. League
+selection is included in next save/backup but does not trigger its own remote save yet.
+No version bump, merge, release or public login. Preserve the prior release checklist.
