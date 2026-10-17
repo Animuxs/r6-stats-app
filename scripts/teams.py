@@ -118,8 +118,9 @@ def _season_matches(season: str, team: str, players: list[str], counted: set[str
                    "when you added each one on the Dashboard. Adding a match needs its replay on this PC; taking "
                    "one out doesn't. A match is in the season or not, so one between two of your tracked teams "
                    "counts for both.")
-        need = st.slider("Show matches with at least this many of the team on one side", 1, max(1, len(players)),
-                         min(3, max(1, len(players))), key=f"season_need_{season}_{team}")
+        # a slider needs two ends: with one player there's nothing to choose (a slider from 1 to 1 crashes)
+        need = st.slider("Show matches with at least this many of the team on one side", 1, len(players),
+                         min(3, len(players)), key=f"season_need_{season}_{team}") if len(players) > 1 else 1
         with Session().stats() as db:
             every = db.team_matches(players)
         # a counted match always shows, even with fewer of the team than asked for
