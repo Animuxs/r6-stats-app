@@ -203,6 +203,7 @@ body.matchday-off #matchday-panel {display:none;}
     <div class="league-chip" id="league-chip"><span>YOUR LEAGUE</span><b>Not picked yet</b><span>Pick it on League &amp; Team</span></div>
   </header>
   <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" id="tab-team-hub" aria-selected="false" aria-controls="team-hub">Team hub</button>
     <button class="tab" role="tab" id="tab-report" aria-selected="true" aria-controls="report">Dashboard</button>
     <button class="tab" role="tab" id="tab-ask" aria-selected="false" aria-controls="ask">Ask</button>
     <button class="tab" role="tab" id="tab-history" aria-selected="false" aria-controls="history">Match History</button>
@@ -292,6 +293,7 @@ body.matchday-off #matchday-panel {display:none;}
 <section class="panel workspace-panel" id="operators" role="tabpanel" aria-labelledby="tab-operators" hidden><h2>Operator Analytics</h2><div id="operators-content"></div></section>
 <section class="panel workspace-panel" id="season" role="tabpanel" aria-labelledby="tab-season" hidden><h2>Season Tracker</h2><div id="season-content"></div></section>
 <section class="panel workspace-panel" id="theme" role="tabpanel" aria-labelledby="tab-theme" hidden><h2>Team Theme</h2><div id="theme-content"></div></section>
+<section class="panel workspace-panel" id="team-hub" role="tabpanel" aria-labelledby="tab-team-hub" hidden><h2>Team hub</h2><div id="team-hub-content"></div></section>
     <section class="panel" id="about" role="tabpanel" aria-labelledby="tab-about" hidden>
       <div class="about">
         <h2>What this is</h2>
@@ -334,7 +336,7 @@ body.matchday-off #matchday-panel {display:none;}
   if (R6.releasesUrl) $("releases-link").href = R6.releasesUrl;
 
   // ------------------------------------------------------------ tabs ----
-  const tabs = ["report", "ask", "history", "teams", "operators", "season", "matchday", "league", "theme", "about"];
+  const tabs = ["team-hub", "report", "ask", "history", "teams", "operators", "season", "matchday", "league", "theme", "about"];
   function showTab(name) {
     for (const t of tabs) {
       $(`tab-${t}`).setAttribute("aria-selected", String(t === name));
@@ -696,7 +698,7 @@ body.matchday-off #matchday-panel {display:none;}
     if (!name) { $("custom-name").focus(); return; }
     save({ source: "custom", id: "", name, tier: "", team: $("custom-team").value.trim(), url: "" });
   });
-  function save(value) { saved = value; store.set("r6web.league", value); renderChip(); }
+  function save(value) { saved = value; if(!window.R6Workspace?.isShared()&&!window.R6Workspace?.isDemo())store.set("r6web.league", value); renderChip(); }
   function renderChip() {
     const chip = $("league-chip");
     chip.innerHTML = saved
@@ -710,7 +712,7 @@ body.matchday-off #matchday-panel {display:none;}
   $("attribution").innerHTML = `${esc(R6.attribution)} <a href="https://liquipedia.net/rainbowsix/Liquipedia:Copyrights" target="_blank" rel="noopener">License</a>. Your pick is saved in this browser only.`;
   renderChip();
   renderEvents();
-  window.R6UI = {bridge:loadPython, renderReport, showTab, current:()=>current, saveLeague:save, store, esc};
+  window.R6UI = {bridge:loadPython, renderReport, showTab, current:()=>current, saveLeague:save, currentLeague:()=>saved, store, esc};
 })();
 </script>
 

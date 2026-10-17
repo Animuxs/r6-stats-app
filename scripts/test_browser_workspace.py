@@ -91,3 +91,11 @@ class TestBrowserWorkspace(unittest.TestCase):
         self.assertGreater(self.run_engine("season", season="Practice")["rounds_logged"], 0)
         self.state["seasonTeamMatches"]["Fall"]["Test team"] = [self.entry["data"]["match_id"]]
         self.assertGreater(self.run_engine("season", season="Fall")["rounds_logged"], 0)
+
+    def test_profile_perspective_is_not_replay_ownership(self):
+        original = self.entry["data"].get("recorder")
+        self.state["viewer"] = self.entry["players"][1]
+        self.assertEqual(self.run_engine()["me"].casefold(), self.entry["players"][1].casefold())
+        self.assertEqual(self.entry["data"].get("recorder"), original)
+        self.state["demo"] = True
+        self.assertNotEqual(self.run_engine()["me"], self.entry["players"][1])

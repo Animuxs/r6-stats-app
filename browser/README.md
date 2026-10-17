@@ -49,3 +49,17 @@ NECC's divisions, since the page carries a copy of both.
 ## Match-day planning
 
 The full-width layout includes a responsive companion rail and a **Match day** page. Fixtures and their time-zone labels, availability and prep notes are entered manually; the demo season displays labeled examples. Turn off the companion panels for a statistics-only view. Planning data is saved on this device in the same IndexedDB workspace, included in workspace backups, and can also be exported/restored as match-day JSON compatible with the desktop app.
+
+## Shared school PIN pilot
+
+Team hub now supports portable member profiles and the optional free Cloudflare team-code
+service in `team-server/`. Any email at the same exact school domain plus that school's PIN
+opens the same shared browser workspace. The school address is a format check only. The
+captain creates the PIN and distributes it privately; email alone never reveals it.
+
+Personal, shared and demo workspaces are separate. Shared saves use optimistic revisions;
+refresh explicitly to see teammates' changes. A remembered login stores a revocable 12-hour
+session on this device, not the PIN. Workspace exports exclude credentials and include
+profiles, confirmed-player choices, seasons and planning. The initial service has a 1.5 MB
+workspace limit and is not a replacement for desktop/Streamlit login yet. See the service
+README for deployment, testing and remaining integration work.

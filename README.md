@@ -203,3 +203,17 @@ func main() {
 
 #
 I would like to thank [stnokott](https://github.com/stnokott) for their work on r6-dissect, along with [draguve](https://github.com/draguve) & other contributors at [draguve/R6-Replays](https://github.com/draguve/R6-Replays) for their additional reverse engineering work.
+
+
+## Shared school workspace — browser pilot
+
+[Open the school-PIN browser pilot](https://r6-team-workspace.team-server.workers.dev/#team-hub)
+or [download its portable HTML](https://r6-team-workspace.team-server.workers.dev/R6MatchStats-School-PIN-Pilot.html)
+([SHA-256 checksum](https://r6-team-workspace.team-server.workers.dev/SHA256SUMS.txt)).
+
+A captain creates a school workspace and shares its PIN privately. People using the same
+exact .edu domain plus that PIN see the same school data. Email ownership is not verified.
+The free pilot uses persistent Cloudflare D1 storage and currently limits a shared workspace
+to 1.5 MB. Export backups and refresh to load teammates' changes. Desktop password-login
+workspaces remain separate. This pilot does not change the stable Windows release or claim
+trusted Windows code signing. See [deployment and limits](team-server/README.md).

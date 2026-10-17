@@ -486,6 +486,9 @@ class StatsDB:
 
     def me(self) -> str | None:
         """The player who recorded most of the replays: the app's user."""
+        if getattr(self, 'viewer', None):
+            # A selected team profile changes the viewing perspective, never replay ownership.
+            return self.players().get(self.viewer.casefold(), self.viewer)
         row = self._conn.execute(
             "SELECT recorder, COUNT(*) AS n FROM matches WHERE recorder IS NOT NULL "
             "GROUP BY recorder COLLATE NOCASE ORDER BY n DESC, MAX(played_at) DESC LIMIT 1"

@@ -2,7 +2,11 @@
 (() => {
   "use strict";
   const ui = window.R6UI, R6 = window.R6, $ = id => document.getElementById(id), esc = ui.esc;
-  const empty = () => ({version: 1, matches: [], teams: {}, seasonTeams: {}, removedSeasonTeams: {}, seasonTeamMatches: {}});
+  const profiles = window.R6Profiles;
+  let online = null, personal = null, pendingShared = 0, activeTheme;
+  let viewingAs = ""; // Viewing identity is private to this tab and never enters a backup.
+  const selectedPlayer = () => sample ? undefined : real.directory?.find(p => p.id === viewingAs)?.player || undefined;
+  const empty = () => ({directory: [], version: 1, matches: [], teams: {}, seasonTeams: {}, removedSeasonTeams: {}, seasonTeamMatches: {}});
   let real = empty(), sample = null, activeTab = "report", ready = false, revision = 0;
   let currentReport = ui.current(), currentMeta = window.R6ReportMeta;
   const state = () => sample || real;
@@ -31,7 +35,7 @@
       if(!teams || typeof teams!=="object")throw Error("Invalid season match choices.");
       for(const ids of Object.values(teams))if(!Array.isArray(ids)||ids.some(id=>typeof id!=="string"))throw Error("Invalid season match list.");
     }
-    return {version: 1, matches: value.matches, teams: value.teams, seasonTeams, removedSeasonTeams, seasonTeamMatches, matchday:value.matchday || {fixtures:[],availability:{},notes:""}};
+    return {directory: profiles.directory(value.directory), version: 1, matches: value.matches, teams: value.teams, seasonTeams, removedSeasonTeams, seasonTeamMatches, matchday:value.matchday || {fixtures:[],availability:{},notes:""}};
   }
   const storage = new Promise((resolve, reject) => {
     const request = indexedDB.open("r6-match-stats", 1);
@@ -55,15 +59,24 @@
   }
   async function save() {
     revision++;
-    if (!sample) {
-      try { await write(real); }
+    if (!sample && online) {
+      if (pendingShared) {online.blocked=true;throw Error("Another save is in progress. Export your pending changes, then refresh before saving again.");}
+      if (online.blocked) throw Error("Shared save is blocked. Export your pending workspace, then refresh or sign in again.");
+      pendingShared++;
+      try {
+        const result = await teamRequest(online.server, "/workspace", "PUT", {revision:online.revision,workspace:portable()}, online.token);
+        online.revision=result.revision;
+      } catch(error) {online.blocked=true;notify(error.message+" Export your pending workspace before refreshing.",true);throw error;}
+      finally {pendingShared--;status();}
+    } else if (!sample) {
+      try { await write(portable()); }
       catch { notify("Your changes are only in memory: browser storage could not save them. Export a workspace backup now.", true); }
     }
     status();
   }
   function status() {
     document.dispatchEvent(new CustomEvent("r6workspace"));
-    $("workspace-status").textContent = sample ? "Demo season · separate from your saved stats" : `${real.matches.length} confirmed matches · saved on this device`;
+    $("workspace-status").textContent = sample ? "Demo season · separate from your saved stats" : online ? `${online.name} · ${real.matches.length} confirmed matches · ${online.blocked?"pending changes — export before refresh":"shared server workspace"}` : `${real.matches.length} confirmed matches · saved on this device`;
     $("workspace-demo").textContent = sample ? "Leave the demo season" : "Try the demo season";
   }
   function download(name, data, type = "application/json") {
@@ -92,7 +105,7 @@
   }
   let pythonQueue = Promise.resolve();
   function engine(action, args = {}) {
-    const payload = JSON.stringify({...state(), demo:!!sample});
+    const payload = JSON.stringify({...state(), viewer: selectedPlayer(), demo:!!sample});
     const run = pythonQueue.then(async () => JSON.parse((await ui.bridge()).workspace(payload, action, JSON.stringify(args))));
     pythonQueue = run.catch(() => {}); return run;
   }
@@ -188,7 +201,7 @@
   }
   async function operatorsPage() {
     const info=await engine("overview");
-    $("operators-content").innerHTML=`<div class="workspace-form"><label>Scope<select id="operator-scope"><option>All matches</option><option>This match</option></select></label><label>Player<select id="operator-player">${info.players.map(n=>`<option>${esc(n)}</option>`).join("")}</select></label><button class="btn" id="operator-show">Show operators</button></div><div id="operator-results"></div>`;
+    $("operators-content").innerHTML=`<div class="workspace-form"><label>Scope<select id="operator-scope"><option>All matches</option><option>This match</option></select></label><label>Player<select id="operator-player">${info.players.map(n=>`<option ${n.toLowerCase()===selectedPlayer()?.toLowerCase()?"selected":""}>${esc(n)}</option>`).join("")}</select></label><button class="btn" id="operator-show">Show operators</button></div><div id="operator-results"></div>`;
     const show=()=>safely(async()=>{if($("operator-scope").value==="This match"){const match=ui.current()?.data;if(!match)throw Error("Open a match on Dashboard first.");const result=JSON.parse((await ui.bridge()).match_operators(JSON.stringify(match)));$("operator-results").innerHTML=table(result.operators)+"<h3>Site performance</h3>"+table(result.sites);return;}const rows=await engine("operators",{player:$("operator-player").value});$("operator-results").innerHTML=table(rows)+`<button class="btn small" id="operator-csv">Download CSV</button>`;$("operator-csv").onclick=()=>download("r6-operators.csv",csv(rows),"text/csv");});
     $("operator-scope").onchange=show;$("operator-show").onclick=show;$("operator-player").onchange=show;show();
   }
@@ -235,7 +248,7 @@
     return theme;
   }
   function applyTheme(value) {
-    const theme=cleanTheme(value);ui.store.set("r6web.theme",theme);
+    const theme=cleanTheme(value);activeTheme=theme;if(!online&&!sample)ui.store.set("r6web.theme",theme);
     const accent="#"+[1,3,5].map(n=>Math.max(145,parseInt(theme.primary.slice(n,n+2),16)).toString(16)).join("");
     for(const [k,v] of Object.entries({school:theme.primary,accent,secondary:theme.secondary,gold:theme.secondary}))document.documentElement.style.setProperty(`--${k}`,v);
     document.querySelector(".brand h1").textContent=theme.name;
@@ -247,17 +260,100 @@
     return theme;
   }
   function themePage() {
-    const theme=cleanTheme(ui.store.get("r6web.theme",defaultTheme));
+    const theme=cleanTheme(activeTheme||defaultTheme);
     $("theme-content").innerHTML=`<div class="workspace-form"><label>Team preset<select id="theme-preset">${R6.rosters.map((t,i)=>`<option value="${i}">${esc(t.name)} · ${esc(t.school)}</option>`).join("")}</select></label><button class="btn primary" id="theme-use">Use this team's colors and logo</button></div><form id="theme-form"><label>Organization<input id="theme-name" maxlength="180" value="${esc(theme.name)}"></label><label>Team<input id="theme-team" maxlength="180" value="${esc(theme.team)}"></label><label>Primary color<input type="color" id="theme-primary" value="${theme.primary}"></label><label>Secondary color<input type="color" id="theme-secondary" value="${theme.secondary}"></label><label>Logo<input type="file" id="theme-logo" accept="image/png,image/jpeg,image/webp"></label><button class="btn primary">Save my theme</button></form><button class="btn" id="theme-reset">Restore the default theme</button><p class="dim">Your colors and logo apply throughout this workspace. Dark team colors are lightened for readable text.</p>`;
-    $("theme-use").onclick=()=>{const t=R6.rosters[Number($("theme-preset").value)];applyTheme({name:t.school||t.name,team:t.name,primary:t.color,secondary:t.color_alt,logo:t.logo_url});themePage();};
+    $("theme-use").onclick=()=>safely(async()=>{const t=R6.rosters[Number($("theme-preset").value)];applyTheme({name:t.school||t.name,team:t.name,primary:t.color,secondary:t.color_alt,logo:t.logo_url});await save();themePage();});
     $("theme-form").onsubmit=e=>{e.preventDefault();safely(async()=>{
       let logo=theme.logo;const file=$("theme-logo").files[0];
       if(file){if(file.size>2*1024*1024)throw Error("Choose a logo smaller than 2 MB.");logo=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file);});}
-      applyTheme({name:$("theme-name").value,team:$("theme-team").value,primary:$("theme-primary").value,secondary:$("theme-secondary").value,logo});notify("Team theme applied.");
+      applyTheme({name:$("theme-name").value,team:$("theme-team").value,primary:$("theme-primary").value,secondary:$("theme-secondary").value,logo});await save();notify("Team theme applied.");
     });};
-    $("theme-reset").onclick=()=>{applyTheme(defaultTheme);themePage();};
+    $("theme-reset").onclick=()=>safely(async()=>{applyTheme(defaultTheme);await save();themePage();});
   }
-  const pages={ask:askPage,history,teams:teamsPage,operators:operatorsPage,season:seasonPage,theme:themePage};
+  const portable = () => ({...real,theme:activeTheme||defaultTheme,league:ui.currentLeague()});
+  async function teamRequest(server,path,method="GET",data=null,token=null) {
+    const response=await fetch(server.replace(/\/$/,"")+path,{method,headers:{...(data?{"Content-Type":"application/json"}:{}),...(token?{Authorization:"Bearer "+token}:{})},...(data?{body:JSON.stringify(data)}:{})});
+    const value=await response.json();if(!response.ok)throw Error(value.error||"Shared team request failed.");return value;
+  }
+  function clearReport() {
+    viewingAs="";sample=null;chosenSeason="current";chosenSeasonTeam="";revision++;
+    ui.renderReport(R6.demo,{label:"Demo match — separate from saved stats",demo:true});
+    for(const id of ["answer","operator-results","team-results","season-results","history-content"])if($(id))$(id).replaceChildren();
+  }
+  async function connect(server,token,remember) {
+    if(pendingShared)throw Error("Wait for the shared save to finish.");
+    const result=await teamRequest(server,"/workspace","GET",null,token);
+    const incoming=result.workspace.version?validate(result.workspace):empty();
+    if(!online){personal=portable();await write(personal);}
+    real=incoming;online={server,token,revision:result.revision,name:result.name};
+    ui.store.set("r6web.teamSession",remember?{server,token}:null);
+    ui.store.set("r6web.teamServer",server);
+    clearReport();applyTheme(result.workspace.theme||defaultTheme);ui.saveLeague(result.workspace.league||null);status();teamHubPage();
+  }
+  function teamHubPage() {
+    const box = $("team-hub-content");
+    if (sample) { box.innerHTML = '<p class="notice">Leave the demo season to manage your own member profiles or open a shared workspace.</p>'; return; }
+    const people = real.directory || [];
+    if (!people.some(p => p.id === viewingAs)) viewingAs = "";
+    const downloadBase = R6.teamServerUrl?.startsWith("https://") ? profiles.serverUrl(R6.teamServerUrl).replace(/\/$/, "") : null;
+    box.innerHTML = `<p class="notice">${online?`School workspace: ${esc(online.name)}. Everyone with an email at this school and the team PIN sees the same saved data. Refresh to load teammates' changes.`:"Personal workspace on this device. Sign in below to open shared school data. Personal and demo data stay separate."}</p>
+      <p class="dim">School-PIN browser pilot: shared workspaces currently support up to 1.5 MB of data. Keep exported backups. Desktop password-login workspaces are separate.</p>
+      ${downloadBase?`<p><a href="${esc(downloadBase)}/R6MatchStats-School-PIN-Pilot.html">Download the portable browser pilot</a> · <a href="${esc(downloadBase)}/SHA256SUMS.txt" target="_blank" rel="noopener">SHA-256 checksum</a></p>`:""}
+      <p class="dim">Any address at the same school domain (for example @csp.edu) opens the same school workspace with its PIN. Email format is checked, not ownership or school affiliation. The captain creates the workspace and shares its PIN privately. Knowing an email address alone does not reveal the PIN.</p>
+      ${online?'<button class="btn" id="team-refresh">Refresh shared workspace</button><button class="btn" id="team-logout">Sign out and return to personal</button>':`<form id="team-server-form"><label>Free team server URL<input id="team-server-url" type="url" required value="${esc(ui.store.get("r6web.teamServer",R6.teamServerUrl||""))}" placeholder="https://your-team-worker.workers.dev"></label><label>Your school email<input id="team-email" type="email" required placeholder="team@csp.edu" maxlength="254"></label><label>Team PIN<input id="team-code" type="password" autocomplete="off" maxlength="256"></label><label><input id="team-remember" type="checkbox"> Remember this login on this device for up to 12 hours</label><button class="btn primary">Sign in to school workspace</button><label>Team name (for a new workspace)<input id="team-new-name" maxlength="100"></label><button class="btn" type="button" id="team-create">Create school workspace and PIN</button><label>Saved recovery code<input id="team-recovery" type="password" autocomplete="off" maxlength="256"></label><button class="btn" type="button" id="team-recover">Reset PIN with recovery code</button></form><div id="team-credentials"></div><p class="dim">Use the same server URL on every computer. This connects to the free team-code service, separate from the desktop's password login. No data uploads until you sign in and save or explicitly import a backup.</p>`}
+      <h3>${online?"Shared school profiles":"Profiles on this device"}</h3><p class="dim">Roles describe responsibilities and give everyone equal access. Choosing a profile changes Ask and all-match Operators, never the replay recorder or scoreboard. With no linked player, analytics use the replay recorder.</p>
+      <label>Who are you viewing as?<select id="profile-view"><option value="">Team overview / replay recorder perspective</option>${people.map(p=>`<option value="${p.id}" ${p.id===viewingAs?"selected":""}>${esc(p.name)}</option>`).join("")}</select></label>
+      ${table(people.map(p=>({Name:p.name,Player:p.player||"—",Roles:p.roles.map(r=>r==="Other"?p.custom_role:r).join(", ")})))}
+      <label>Member to edit<select id="profile-edit"><option value="">Add a member</option>${people.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("")}</select></label><div id="profile-editor"></div>`;
+    if(online){
+      $("team-refresh").onclick=()=>safely(async()=>{
+        if(pendingShared)throw Error("Wait for the shared save to finish.");
+        if(!confirm("Load the server's latest workspace? Export a backup first if you have pending changes. Unsaved changes will be discarded."))return;
+        await connect(online.server,online.token,!!ui.store.get("r6web.teamSession",null));notify("Shared school workspace refreshed.");
+      });
+      $("team-logout").onclick=()=>safely(async()=>{
+        if(pendingShared)throw Error("Wait for the shared save to finish.");
+        if(online.blocked&&!confirm("Pending changes have not reached the server. Export them first if needed. Return to personal workspace?"))return;
+        await teamRequest(online.server,"/logout","POST",{},online.token).catch(()=>{});
+        online=null;ui.store.set("r6web.teamSession",null);const previous=personal||empty();real={...validate(previous),theme:previous.theme,league:previous.league};personal=null;
+        clearReport();applyTheme(real.theme||defaultTheme);ui.saveLeague(real.league||null);status();teamHubPage();
+      });
+    }else{
+      const input=()=>({server:profiles.serverUrl($("team-server-url").value.trim()),email:$("team-email").value.trim()});
+      $("team-server-form").onsubmit=e=>{e.preventDefault();safely(async()=>{
+        const {server,email}=input(),remember=$("team-remember").checked;
+        const result=await teamRequest(server,"/login","POST",{email,code:$("team-code").value.trim()});
+        await connect(server,result.token,remember);notify("Signed in to shared school workspace.");
+      });};
+      const credentials=result=>{
+        const box=$("team-credentials");box.replaceChildren();
+        const text=`Team PIN: ${result.code}\nRecovery code: ${result.recovery}`;
+        const guidance=document.createElement("p");guidance.textContent="Save the PIN privately for teammates. Keep the recovery code in a separate private backup: it can replace the PIN and sign out all devices. There is no email recovery.";
+        const pre=document.createElement("pre");pre.textContent=text;
+        const downloadButton=document.createElement("button");downloadButton.className="btn";downloadButton.textContent="Download private login backup";downloadButton.onclick=()=>download("R6-Team-Login-PRIVATE.txt",text,"text/plain");
+        const dismiss=document.createElement("button");dismiss.className="btn";dismiss.textContent="I saved the codes";dismiss.onclick=()=>box.replaceChildren();
+        box.append(guidance,pre,downloadButton,dismiss);$("team-code").value=result.code;$("team-recovery").value="";
+      };
+      $("team-create").onclick=()=>safely(async()=>{const {server,email}=input();credentials(await teamRequest(server,"/create","POST",{email,name:$("team-new-name").value}));});
+      $("team-recover").onclick=()=>safely(async()=>{const {server,email}=input();credentials(await teamRequest(server,"/recover","POST",{email,recovery:$("team-recovery").value.trim()}));});
+    }
+    $("profile-view").onchange = () => {viewingAs=$("profile-view").value;revision++;status();notify("Viewing identity changed for this tab.");};
+    const edit = () => {
+      const id = $("profile-edit").value, person = people.find(p=>p.id===id) || {name:"",player:"",roles:["Player"],custom_role:""};
+      $("profile-editor").innerHTML=`<form id="profile-form"><label>Display name<input id="profile-name" maxlength="100" required value="${esc(person.name)}"></label><label>Player username (optional for staff)<input id="profile-player" maxlength="100" value="${esc(person.player)}"></label><fieldset><legend>Roles</legend>${profiles.roles.map(r=>`<label><input type="checkbox" name="profile-role" value="${r}" ${person.roles.includes(r)?"checked":""}>${r}</label>`).join("")}</fieldset><label>Custom role when Other is selected<input id="profile-custom" maxlength="100" value="${esc(person.custom_role)}"></label><button class="btn primary">Save member</button></form>${id?'<button class="btn" id="profile-delete">Remove member profile</button>':""}`;
+      $("profile-form").onsubmit=e=>{e.preventDefault();safely(async()=>{
+        const bytes=crypto.getRandomValues(new Uint8Array(16));
+        const person={id:id||Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join(""),name:$("profile-name").value,player:$("profile-player").value,custom_role:$("profile-custom").value,roles:[...box.querySelectorAll('[name="profile-role"]:checked')].map(n=>n.value)};
+        real.directory=profiles.directory([...people.filter(p=>p.id!==id),person]);await save();teamHubPage();notify(online?"Member profile saved to the school workspace.":"Member profile saved on this device.");
+      });};
+      if(id)$("profile-delete").onclick=()=>safely(async()=>{
+        if(!confirm("Remove this profile? Match stats are kept."))return;
+        real.directory=people.filter(p=>p.id!==id);if(viewingAs===id)viewingAs="";await save();teamHubPage();
+      });
+    };
+    $("profile-edit").onchange=edit;edit();
+  }
+  const pages={"team-hub":teamHubPage,ask:askPage,history,teams:teamsPage,operators:operatorsPage,season:seasonPage,theme:themePage};
   document.addEventListener("r6tab",e=>{activeTab=e.detail;if(ready&&pages[activeTab])safely(pages[activeTab]);});
   document.querySelector(".tabs").addEventListener("keydown",e=>{
     if(!["ArrowLeft","ArrowRight","Home","End"].includes(e.key))return;
@@ -270,19 +366,22 @@
     else{sample={version:1,matches:structuredClone(R6.demoSeason),teams:structuredClone(R6.demoTeam)};openSaved(sample.matches.at(-1));}
     revision++;status();if(pages[activeTab])await pages[activeTab]();
   });
-  $("workspace-export").onclick=()=>download("R6MatchStats-Workspace.json",JSON.stringify({...real,theme:ui.store.get("r6web.theme",defaultTheme),league:ui.store.get("r6web.league",null)},null,2));
+  $("workspace-export").onclick=()=>download("R6MatchStats-Workspace.json",JSON.stringify(portable(),null,2));
   $("workspace-import").onclick=()=>$("workspace-file").click();
   $("workspace-file").onchange=()=>safely(async()=>{
+    if(sample)throw Error("Leave the demo before importing a workspace.");
     const file=$("workspace-file").files[0];if(!file)return;if(file.size>150*1024*1024)throw Error("Choose a workspace backup under 150 MB.");
     const raw=JSON.parse(await file.text()),incoming=validate(raw);
     JSON.parse((await ui.bridge()).workspace(JSON.stringify(incoming)));
-    if(real.matches.length&&!confirm("Replace this browser's saved workspace with the backup? Export the current workspace first if you need it."))return;
-    real=incoming;sample=null;await save();if(raw.theme)applyTheme(raw.theme);if(raw.league)ui.saveLeague(raw.league);notify("Workspace restored.");if(pages[activeTab])await pages[activeTab]();$("workspace-file").value="";
+    if((real.matches.length||online)&&!confirm(online?"Replace the shared school workspace with this backup? Every teammate will see the replacement. Export the current workspace first if needed.":"Replace this browser's saved workspace with the backup? Export the current workspace first if you need it."))return;
+    real=incoming;viewingAs="";sample=null;if(raw.theme)applyTheme(raw.theme);if(raw.league)ui.saveLeague(raw.league);await save();notify("Workspace restored.");if(pages[activeTab])await pages[activeTab]();$("workspace-file").value="";
   });
-  window.R6Workspace={state,isDemo:()=>!!sample,save,engine,notify,download};
+  window.R6Workspace={state,isShared:()=>!!online,isDemo:()=>!!sample,save,engine,notify,download};
   applyTheme(ui.store.get("r6web.theme",defaultTheme));
-  read().then(value=>{if(value)real=validate(value);}).catch(e=>notify(e.message,true)).finally(()=>{
+  read().then(value=>{if(value){real=validate(value);if(value.theme)applyTheme(value.theme);if(value.league)ui.saveLeague(value.league);}}).catch(e=>notify(e.message,true)).finally(()=>{
     ready=true;status();enhanceReport(currentReport,currentMeta);
     activeTab=ui.store.get("r6web.tab","report");if(pages[activeTab])safely(pages[activeTab]);
+    const remembered=ui.store.get("r6web.teamSession",null);
+    if(remembered)safely(async()=>{try{await connect(profiles.serverUrl(remembered.server),remembered.token,true);ui.showTab("team-hub");}catch(error){ui.store.set("r6web.teamSession",null);throw error;}});
   });
 })();

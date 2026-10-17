@@ -87,6 +87,8 @@ def workspace(payload: str, action: str = "overview", argument: str = "{}") -> s
                                     files=len(entry["data"].get("rounds", [])))
             for name, players in teams.items():
                 db.save_roster(name, players)
+            if not state.get("demo") and isinstance(state.get("viewer"), str):
+                db.viewer = state["viewer"][:100]
             if action == "ask":
                 answer = asdict(ask(str(args.get("question", "")), db))
                 answer.pop("query", None)

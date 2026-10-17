@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import hashlib
 import json
 import os
 import shutil
@@ -59,6 +60,7 @@ def config(share: bool, wasm: bytes, stdlib: bytes = b"", version: str = APP_VER
     return {
         "version": version,
         "share": share,
+        "teamServerUrl": os.environ.get("R6_TEAM_SERVER_URL", ""),
         "releasesUrl": RELEASES_URL,
         "pyodideBase": "pyodide/" if share else PYODIDE_CDN,
         "pyodideScript": "pyodide/pyodide.js" if share else PYODIDE_CDN + "pyodide.js",
@@ -90,7 +92,7 @@ def page(share: bool, wasm: bytes, stdlib: bytes = b"", version: str = APP_VERSI
     html = (template.replace("/*@@CONFIG@@*/", f"window.R6 = {settings};")
             .replace("/*@@WASM_EXEC@@*/", goroot_exec.replace("</", "<\\/"))
             .replace("/*@@THEME@@*/", TOKENS_CSS + MATCHDAY_CSS)
-            .replace("/*@@WORKSPACE@@*/", (HERE / "workspace.js").read_text(encoding="utf-8").replace("</", "<\\/")))
+            .replace("/*@@WORKSPACE@@*/", "\n".join((HERE / name).read_text(encoding="utf-8") for name in ("team_profiles.js", "workspace.js")).replace("</", "<\\/")))
     html += "<script>" + (HERE / "matchday.js").read_text(encoding="utf-8").replace("</", "<\\/") + "</script>"
     if share:  # the host wraps the page in its own document
         return html
@@ -127,6 +129,21 @@ def main() -> None:
     single = out / "R6MatchStats.html"
     single.write_text(page(False, wasm, version=args.version), encoding="utf-8")
     print(f"{single}  ({single.stat().st_size / 1e6:.1f} MB)")
+    cloudflare = out / "cloudflare"
+    cloudflare.mkdir(exist_ok=True)
+    shutil.copyfile(single, cloudflare / "index.html")
+    portable = cloudflare / "R6MatchStats-School-PIN-Pilot.html"
+    shutil.copyfile(single, portable)
+    checksum = hashlib.sha256(portable.read_bytes()).hexdigest()
+    (cloudflare / "SHA256SUMS.txt").write_text(f"{checksum}  {portable.name}\n", encoding="utf-8")
+    (cloudflare / "_headers").write_text(
+        "/R6MatchStats-School-PIN-Pilot.html\n"
+        "  Content-Disposition: attachment; filename=R6MatchStats-School-PIN-Pilot.html\n"
+        "  X-Content-Type-Options: nosniff\n"
+        "/R6MatchStats-School-PIN-Pilot\n"
+        "  Content-Disposition: attachment; filename=R6MatchStats-School-PIN-Pilot.html\n"
+        "  X-Content-Type-Options: nosniff\n", encoding="utf-8")
+
 
     share = out / "share"
     (share / "pyodide").mkdir(parents=True, exist_ok=True)

@@ -17,6 +17,28 @@ import launcher
 HERE = Path(__file__).resolve().parent
 
 
+class TestLaunchChime(unittest.TestCase):
+    def test_chime_is_async_and_mute_and_smoke_runs_are_silent(self):
+        import desktop_settings
+
+        sound = mock.Mock(SND_ALIAS=1, SND_ASYNC=2, SND_NODEFAULT=4)
+        with mock.patch.object(launcher, 'IS_WINDOWS', True), \
+                mock.patch.dict(sys.modules, {'winsound': sound}), \
+                mock.patch.dict(launcher.os.environ, {}, clear=True), \
+                mock.patch.object(desktop_settings, 'launch_chime_enabled', return_value=True) as enabled:
+            launcher.play_launch_chime()
+            sound.PlaySound.assert_called_once_with('SystemAsterisk', 7)
+            enabled.return_value = False
+            launcher.play_launch_chime()
+            self.assertEqual(sound.PlaySound.call_count, 1)
+            enabled.return_value = True
+            with mock.patch.dict(launcher.os.environ, {'R6_SMOKE_TEST': '1'}):
+                launcher.play_launch_chime()
+            self.assertEqual(sound.PlaySound.call_count, 1)
+            sound.PlaySound.side_effect = RuntimeError('no sound device')
+            launcher.play_launch_chime()  # audio failures never stop the app
+
+
 @unittest.skipUnless(sys.platform == "win32", "console windows are a Windows thing")
 class TestHideConsoleWindows(unittest.TestCase):
     def test_every_program_started_gets_no_console_window(self):

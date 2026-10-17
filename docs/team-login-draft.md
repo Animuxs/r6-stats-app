@@ -1,0 +1,150 @@
+# Team login checkpoint - draft PR 31
+
+Branch: feat/team-login. App version stays 1.6.3. No merge or new release yet.
+No Supabase, external identity provider, email codes or email sender.
+
+## User decisions
+
+- One shared team login using an address ending in .edu. This is a format check,
+  NOT ownership verification or proof of school affiliation.
+- Each person selects a profile. Multiple descriptive roles: Player, Captain,
+  Coach, Analyst, Staff, Other/custom. Everyone sharing the login has equal access.
+- Preserve desktop, hosted and standalone features; keep team/personal/demo data apart.
+- Windows launch chime with an off switch.
+- Continue until around/below 10% usage remains, then save; do not use the free reset.
+- Keep this handoff current across conversation compaction.
+
+## Implemented and wired in desktop/Streamlit
+
+- Team hub navigation, sign-in, account creation, password recovery and sign-out.
+- Recovery code download/display with explicit private-backup guidance and dismissal.
+- Member add/edit/remove, multiple roles, custom titles, per-session viewing identity.
+- Account switching clears cached replay/theme/planning/player state and query params.
+- Shared account DB paths for stats and seasons; player perspective for History,
+  Ask and Operators without changing the replay recorder. Existing Dashboard scoreboard
+  and replay identity remain accurate to the original replay.
+- Shared planning/theme/competition documents and optimistic revisions; explicit Refresh
+  shared workspace discards stale form state. Stale writes produce a recoverable message.
+- Team overview caption, no companion rail on Team hub, personal/demo isolation.
+- PBKDF2-SHA256 (600,000 rounds/random salts), hashed random session tokens, 12-hour expiry,
+  revoked sessions on logout/recovery, rotating recovery codes. Signup/login/recovery limits.
+- Per-account server folders resolved only through authenticated opaque sessions.
+- Local storage defaults beside the stats DB. Hosted deployments require an explicit
+  R6_TEAM_DATA_DIR pointing at a genuinely persistent volume. Merely setting the variable
+  does not create persistence. Existing Community Cloud demo has NO persistent team
+  storage, so login is intentionally unavailable there until durable hosting is chosen.
+- Windows SystemAsterisk chime after successful startup; asynchronous, muted for smoke
+  tests, errors ignored. Team Theme > Desktop options > Play a launch chime persists the
+  setting in desktop-settings.json. Windows sound scheme/volume settings apply.
+
+## Checks and preview
+
+- Latest full application and desktop test results are in work/team-login-final-tests.log.
+- Account lifecycle tests plus eight integrated Team hub tests cover sign-in/out, two-session
+  stats sharing, team isolation, profile roles, selected-player Operators, revoked sessions,
+  concurrent-document rejection, demo isolation, signup and password-recovery UI. Desktop tests cover audio behavior.
+- Preview server: http://127.0.0.1:8504/team_hub (local machine only), logs in
+  work/team-login-preview.log and work/team-login-preview-error.log.
+- Preview data is OUTSIDE the repo in work/team-login-preview-data, includes only a
+  clearly labeled sample team. Do not publish it, its account DB or its test credentials.
+- Team hub screenshot saved in outputs/team-hub-preview.jpg.
+- No authenticated bearer tokens or real credentials are committed to Git.
+- Latest checks: full 299-test application suite and 29 desktop tests passed; the
+  expanded eight-test Team hub suite also passed (includes two added signup/recovery cases).
+
+## Required work before release
+
+1. Standalone browser parity: profile management, identities, shared server connection,
+   portable import/export. An offline HTML file cannot host shared authentication alone.
+   Use an explicit online workspace workflow; do not imply local browser storage is shared.
+2. A durable public team host/storage decision. Local team accounts on separate PCs are
+   separate databases. Everyone must use the same server URL to share. Do not expose an
+   HTTP local server to the internet as an automatic setup step. HTTPS is required outside
+   localhost/trusted deployment. The current public demo has no account persistence.
+3. Safe shared team backup/restore (exclude passwords/session/recovery credentials),
+   migration/import of existing personal/browser stats with selected-player preservation.
+4. More concurrent planning/theme edits,
+   selected-profile deletion/change across sessions, account expiry mid-operation, responsive
+   visuals, packaged chime playback. Check duplicate/stale widget behavior carefully.
+5. Review the role labels and team-overview perspective: no chosen linked player falls
+   back to the recorder for per-player analytics; roles are never authorization boundaries.
+6. Recheck other branches/PRs (especially fix/season-team-slider) before integration. Preserve
+   OOP tabs, full stats in both team views, roster controls, independent team deletion,
+   selected imports, Ask, history, seasons, exports, themes, docking and replay controls.
+7. Run final app/desktop/browser checks, bump the next version only when complete, merge,
+   publish, wait for Windows build/Defender/install/launch/uninstall and verify download hashes.
+
+## Verification commands
+
+    .venv\Scripts\python -m unittest discover -s scripts
+    .venv\Scripts\python -m unittest discover -s desktop
+    git diff --check
+
+Set R6_DISSECT_BIN to a built parser for parser-dependent tests. No new Python runtime
+package is required. New modules are included in the Windows packaging manifest.
+
+## October 16 continuation — free school PIN pilot
+
+User clarified: free services only; users on different computers enter any email at their
+school domain plus the same team PIN to see the same school data. A local PIN alone is not
+sufficient. Cloudflare Workers Free + D1 chosen as the draft persistent backend.
+
+Implemented browser Team hub profiles, per-tab viewing identity, explicit shared-server
+login/create/recovery, optional remembered 12-hour session, shared saves/refresh with stale
+revision rejection, credential-free workspace exports, personal/demo separation. Added
+team-server/worker.mjs, D1 migration, Wrangler configuration, deployment README and service
+lifecycle tests. Exact school domains resolve together; subdomains are separate. PIN is a
+random 24-character hex code, not a guessable short numeric PIN. No email ownership checks.
+
+NOT deployed. Cloudflare sign-in fails in the in-app browser even after Apple authentication.
+User reports other sign-ins also fail. Wrangler is not authenticated. Opened restricted-scope
+Wrangler OAuth in the default system browser so user can finish there. Do not accept account
+terms or enter new credentials for the user. No Cloudflare account ID, D1 ID or endpoint yet.
+
+Validation: 303 application tests pass after building a Windows-native parser with the saved
+Go runtime; 29 desktop tests pass. Portable profile/URL tests and Node service lifecycle
+checks pass. Actual Wrangler local D1 migration and runtime verified; two separate browser
+tabs signed in with different @preview.edu addresses and saw the same saved profile.
+All sample accounts remain in ignored local .wrangler state; never publish that state.
+
+Pilot limits: 1.5 MB shared JSON; needs chunked/per-match storage for larger libraries.
+Desktop/Streamlit cloud integration and personal stats migration remain incomplete. League
+selection is included in next save/backup but does not trigger its own remote save yet.
+No version bump, merge, release or public login. Preserve the prior release checklist.
+
+
+### Cloudflare setup checkpoint
+
+Wrangler OAuth is authenticated to the account supplied by the user. D1 database
+r6-team-workspace (6d411864-62a3-4613-97c8-7fadfed902cb) was created and the remote
+schema migration was applied and inspected. Deployment to Workers was rejected with
+Cloudflare code 10034: account email verification required. No live service yet.
+The asset upload contained the generated app only, never local preview data or credentials.
+
+Installed all 19 skills from cloudflare/skills into the user's Codex skills directory.
+Registered https://mcp.cloudflare.com/mcp as cloudflare in the user Codex config. MCP OAuth
+is awaiting user browser authorization with scopes restricted to account/user read,
+Workers scripts/routes and D1. Restart/reload Codex after setup to load the MCP tools.
+Wrangler is pinned at 4.151.1 in team-server/package.json and package-lock.json.
+Free D1 account ID and resource ID are in config; OAuth credentials remain outside Git.
+Workers static assets serve the browser app; R6_TEAM_SERVER_URL prefills the connection.
+A second deployment after knowing the final workers.dev URL is needed to set that default.
+Constant-time credential digest comparisons and sampled logs/traces are configured.
+
+
+### Finalized browser pilot — October 16
+
+The free school-PIN browser service is now deployed and checked at:
+https://r6-team-workspace.team-server.workers.dev/#team-hub
+The successful deployment supersedes the earlier Cloudflare verification blocker.
+Live PowerShell tests confirmed health, two different emails at the same school sharing
+a saved roster, stale-save rejection, logout and revoked access. Synthetic test data and
+sessions were removed. Browser rendering and the default service URL were verified.
+
+The Windows app remains version 1.6.3, and this branch remains a draft. No merge or Windows
+release was performed. User chose to add SignPath later. Do not create or distribute a
+self-signed certificate as a substitute for trusted public signing. The SignPath application
+contains draft factual fields only; no terms accepted, application submitted or certificate
+issued. Ordinary app/desktop tests passed (303 / 29), and browser-profile/service tests and
+Cloudflare packaging checks passed. Remaining pilot limits and desktop integration gaps
+above still apply; this is not full cross-edition parity.

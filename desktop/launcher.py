@@ -513,6 +513,22 @@ def set_jump_list_quietly() -> None:
 
 
 # ------------------------------------------------------------------- window --
+def play_launch_chime() -> None:
+    """A quiet Windows system chime, once after successful startup; never blocks launch."""
+    if not IS_WINDOWS or os.environ.get("R6_SMOKE_TEST"):
+        return
+    from desktop_settings import launch_chime_enabled
+
+    if not launch_chime_enabled(DATA_DIR):
+        return
+    try:
+        import winsound
+
+        winsound.PlaySound("SystemAsterisk", winsound.SND_ALIAS | winsound.SND_ASYNC | winsound.SND_NODEFAULT)
+    except (OSError, RuntimeError):
+        pass  # a missing sound device or muted system scheme must never prevent launch
+
+
 def run_window(server: Server, dock: str | None = None) -> int:
     """The app window. `dock` (from --dock) docks it on opening; otherwise it opens the way it was
     last closed, docked or not."""
@@ -556,6 +572,7 @@ def run_window(server: Server, dock: str | None = None) -> int:
             threading.Thread(target=docking.follow_commands, name="window-commands", daemon=True).start()
         else:
             window.load_url(server.url)
+        play_launch_chime()
         if smoke_file:
             result.update(smoke_test(window))
             if docking and result["ok"]:

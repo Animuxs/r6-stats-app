@@ -53,6 +53,9 @@ class Session:
 
     def tracker(self, season: str | None = None) -> StatsManager:
         """The season tracker, for `season` or the session's."""
+        from team_runtime import current_team
+        if current_team() or self.demo:
+            return StatsManager(db_path=sources.stats_db_path(), season=season or self.season)
         return StatsManager(season=season or self.season)
 
     @property
@@ -124,6 +127,11 @@ class Session:
         from matchday_data import MatchdayWorkspace, demo_workspace
         from app_info import desktop_data_dir, is_windows_app
         import json
+        from team_runtime import current_team, store
+        if not self.demo and current_team():
+            value, revision = store().document(self.get('team_token'), 'planning')
+            self.setdefault('team_planning_revision', revision)
+            return MatchdayWorkspace.from_dict(value)
         key = "matchday_demo" if self.demo else "matchday_real"
         if key not in self._state:
             value = demo_workspace().to_dict() if self.demo else {}
@@ -148,6 +156,12 @@ class Session:
         import os
         import tempfile
         value = MatchdayWorkspace.from_dict(workspace.to_dict()).to_dict()
+        from team_runtime import current_team, store
+        if not self.demo and current_team():
+            store().save_document(self.get('team_token'), 'planning', value,
+                                  self.get('team_planning_revision', 0))
+            self.set('team_planning_revision', self.get('team_planning_revision', 0) + 1)
+            return
         if not self.demo and is_windows_app():
             folder = desktop_data_dir()
             folder.mkdir(parents=True, exist_ok=True)
