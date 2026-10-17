@@ -17,6 +17,13 @@ rejected, and failed saves remain exportable in memory. Personal and demo worksp
 separate. Workspace backups allowlist data fields and exclude authentication/session/recovery
 fields; the private login backup is a separate deliberately labeled download.
 
+## Current pilot
+
+https://r6-team-workspace.team-server.workers.dev/#team-hub
+
+Live HTTPS health and two-email shared-workspace behavior were verified. This browser pilot
+keeps the 1.5 MB limit and integration gaps described below. It is not a Windows release.
+
 ## Deployment
 
 Use Node 22+ with npm. Stay on Workers Free; no paid plan or custom domain is needed.

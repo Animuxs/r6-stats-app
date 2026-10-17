@@ -130,3 +130,21 @@ Free D1 account ID and resource ID are in config; OAuth credentials remain outsi
 Workers static assets serve the browser app; R6_TEAM_SERVER_URL prefills the connection.
 A second deployment after knowing the final workers.dev URL is needed to set that default.
 Constant-time credential digest comparisons and sampled logs/traces are configured.
+
+
+### Finalized browser pilot — October 16
+
+The free school-PIN browser service is now deployed and checked at:
+https://r6-team-workspace.team-server.workers.dev/#team-hub
+The successful deployment supersedes the earlier Cloudflare verification blocker.
+Live PowerShell tests confirmed health, two different emails at the same school sharing
+a saved roster, stale-save rejection, logout and revoked access. Synthetic test data and
+sessions were removed. Browser rendering and the default service URL were verified.
+
+The Windows app remains version 1.6.3, and this branch remains a draft. No merge or Windows
+release was performed. User chose to add SignPath later. Do not create or distribute a
+self-signed certificate as a substitute for trusted public signing. The SignPath application
+contains draft factual fields only; no terms accepted, application submitted or certificate
+issued. Ordinary app/desktop tests passed (303 / 29), and browser-profile/service tests and
+Cloudflare packaging checks passed. Remaining pilot limits and desktop integration gaps
+above still apply; this is not full cross-edition parity.
