@@ -1,1 +1,2 @@
 streamlit>=1.50
+pillow>=10.1  # the scoreboard image's fonts (Streamlit installs it too)

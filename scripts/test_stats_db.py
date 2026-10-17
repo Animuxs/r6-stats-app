@@ -11,7 +11,8 @@ from pathlib import Path
 from metrics_engine import compute_match_metrics
 from parser import normalize_from_r6_dissect
 from sample_data import SAMPLE_MATCH, TEAM0, TEAM1
-from stats_db import NotAdded, StatsDB, nice_day, nice_time, played_at_from_folder, team_rounds
+from stats_db import (MAX_NOTE, NOTE_TAGS, BadNote, NotAdded, StatsDB, clean_vod, nice_day, nice_time,
+                      played_at_from_folder, team_rounds)
 
 SUMMED = {  # match_players column -> PlayerStats attribute
     "rounds": "rounds_played", "kills": "kills", "deaths": "deaths", "assists": "assists", "headshots": "headshots",
@@ -335,6 +336,57 @@ class TestAddedByAnEarlierVersion(unittest.TestCase):
         StatsDB(self.path).close()  # the one-time move into review_*
         with StatsDB(self.path) as db:
             self.assertEqual(db._conn.total_changes, 0)
+
+
+class TestMatchNotes(unittest.TestCase):
+    """A match's tag, note and video link, from Match History."""
+
+    def setUp(self):
+        self.db = StatsDB(":memory:")
+        self.addCleanup(self.db.close)
+        for i in range(2):
+            match = copy.deepcopy(SAMPLE_MATCH)
+            match.update(match_id=f"m{i}", played_at=f"2026-09-2{i} 20:00:00")
+            self.db.import_match(f"Match-{i}", match, files=1)
+
+    def test_save_change_and_clear(self):
+        self.db.save_note("m0", "Scrim", "  good retakes  ", "youtu.be/abc")
+        self.assertEqual(self.db.notes(), {"m0": {"tag": "Scrim", "note": "good retakes", "vod": "https://youtu.be/abc"}})
+        self.db.save_note("m0", "Official", "", "")
+        self.assertEqual(self.db.notes()["m0"], {"tag": "Official", "note": "", "vod": ""})
+        self.db.save_note("m1", "Scrim")
+        self.assertEqual(self.db.tags(), ["Official", "Scrim"])  # in NOTE_TAGS' order, not the order used
+        self.db.save_note("m0")
+        self.assertEqual(set(self.db.notes()), {"m1"})
+        self.assertEqual(self.db.tags(), ["Scrim"])
+
+    def test_what_cant_be_saved(self):
+        for args in (("m0", "Ranked"), ("m0", "", "x" * (MAX_NOTE + 1)), ("m0", "", "", "javascript:alert(1)"),
+                     ("m0", "", "", "file:///C:/Windows"), ("m0", "", "", "not a link"), ("m0", "", "", "localhost"),
+                     ("m0", "", "", "https://" + "a" * 600 + ".com"), ("gone", "Scrim")):
+            with self.subTest(args=args), self.assertRaises(BadNote):
+                self.db.save_note(*args)
+        self.assertEqual(self.db.notes(), {})
+
+    def test_links(self):
+        self.assertEqual(clean_vod(""), "")
+        self.assertEqual(clean_vod(" https://www.twitch.tv/videos/1 "), "https://www.twitch.tv/videos/1")
+        self.assertEqual(clean_vod("HTTP://example.com/v"), "HTTP://example.com/v")
+        self.assertEqual(clean_vod("youtube.com/watch?v=x"), "https://youtube.com/watch?v=x")
+        for bad in ("https://", "https://exa mple.com", "ftp://example.com", "https://[::1"):
+            with self.subTest(link=bad), self.assertRaises(BadNote):
+                clean_vod(bad)
+
+    def test_a_note_stays_when_the_match_is_added_again_and_goes_with_it(self):
+        self.db.save_note("m0", NOTE_TAGS[0], "keep me")
+        match = copy.deepcopy(SAMPLE_MATCH)
+        match.update(match_id="m0", played_at="2026-09-20 20:00:00")
+        self.db.import_match("Match-0", match, files=1, players=TEAM0[:1])  # confirmed again, other players
+        self.assertEqual(self.db.notes()["m0"]["note"], "keep me")
+        self.db.remove_match("m0")
+        self.assertEqual(self.db.notes(), {})
+        self.db.import_match("Match-0", match, files=1)
+        self.assertEqual(self.db.notes(), {})  # removing it took the note too
 
 
 if __name__ == "__main__":

@@ -10,6 +10,7 @@ import re
 import streamlit as st
 
 from ask_engine import rate, team_report, team_summary
+from map_pool import MIN_SITE_ROUNDS, MIN_VETO_MAPS, map_pool, site_table, veto_hint
 from metrics_engine import rows_csv
 from team_tables import player_table, season_player_table
 from season_stats import StatsError
@@ -22,6 +23,7 @@ from ui import md
 ROSTER_SIZE = 5   # players on the field
 MAX_ROSTER = 10   # a team's whole roster, subs and all
 NEW = "New team"
+YOU = "\x00you"  # the map pool's "you" (a team can't be named this)
 
 
 def _fmt_eps(eps: int | None) -> str:
@@ -182,11 +184,13 @@ class TeamsTab(Tab):
     title, name = "Team Analytics", "teams"
 
     def render(self) -> None:
-        build_tab, season_tab = st.tabs(["Build a team", "Season teams"])
+        build_tab, season_tab, pool_tab = st.tabs(["Build a team", "Season teams", "Map pool"])
         with build_tab:
             self.build_a_team()
         with season_tab:
             self.season_teams()
+        with pool_tab:
+            self.map_pool()
 
     def build_a_team(self) -> None:
         st.caption("Pick your players (up to ten, subs included). Every match you've added with enough of them tracked on the same side is "
@@ -348,6 +352,63 @@ class TeamsTab(Tab):
                 } for m in saved], hide_index=True)
         st.download_button("Export season report", json.dumps(snapshot, indent=2).encode("utf-8"),
                            file_name=f"{season}_team_report.json", mime="application/json")
+
+    def map_pool(self) -> None:
+        st.caption("How you, or a team you built, do on each map: the record, the rounds won on attack and defense, "
+                   "and the bomb sites won most and least often. Use it to pick and ban maps.")
+        with self.stats() as db:
+            me = db.me()
+            teams = db.rosters()
+        options = ([YOU] if me else []) + list(teams)
+        if not options:
+            st.info("No matches yet. Add some on **Dashboard** and your maps show up here.")
+            return
+        if self.session.get("pool_whose") not in options:  # a team deleted since, or a new session
+            self.session.pop("pool_whose")
+        whose = st.selectbox("Whose maps", options, key="pool_whose",
+                             format_func=lambda o: f"You ({me})" if o == YOU else o)
+        players = [me] if whose == YOU else teams[whose]
+        need = 1
+        if whose != YOU and len(players) > 1:  # a slider from 1 to 1 crashes
+            need = st.slider("Count a match when at least this many of them were on the same side", 1,
+                             min(ROSTER_SIZE, len(players)), min(3, len(players)), key=f"pool_need_{whose}")
+        with self.stats() as db:
+            pool = map_pool(db, players, need)
+            if not pool:
+                st.info("No matches with that many of the team on one side yet. Lower the number above, or add "
+                        "matches on **Dashboard**, picking these players.")
+                return
+            picked = None
+            hint = veto_hint(pool)
+            if hint:
+                best, worst = hint
+                st.markdown(f"**Strongest map:** {md(best['map'])}, {best['round_win']:.0f}% of rounds won over "
+                            f"{best['maps']} maps. **Weakest:** {md(worst['map'])}, {worst['round_win']:.0f}% over "
+                            f"{worst['maps']} maps.")
+            table = [{"Map": p["map"], "Maps": p["maps"], "Map W–L": f"{p['maps_won']}–{p['maps_lost']}",
+                      "Round win %": p["round_win"], "Attack win %": p["attack_win"], "Defense win %": p["defense_win"],
+                      "Best defense site": p["best_defense"], "Worst defense site": p["worst_defense"],
+                      "Best attack site": p["best_attack"], "Worst attack site": p["worst_attack"]} for p in pool]
+            percent = {c: st.column_config.ProgressColumn(c, format="%.0f%%", min_value=0, max_value=100)
+                       for c in ("Round win %", "Attack win %", "Defense win %")}
+            st.dataframe(table, hide_index=True, column_config=percent)
+            st.caption(f"Every round counts once for the whole team. A site is where the defenders set up. Strongest "
+                       f"and weakest need {MIN_VETO_MAPS}+ maps played, and a best or worst site {MIN_SITE_ROUNDS}+ "
+                       "rounds on that side: a few rounds say little, so check how many before a veto.")
+            picked = st.selectbox("Sites on", [p["map"] for p in pool], key=f"pool_map_{whose}")
+            sites = site_table(db, players, picked, need)
+        if sites:
+            st.dataframe([{"Site": s["site"], "Attack rounds": s["attack"],
+                           "Attack W–L": f"{s['attack_won']}–{s['attack'] - s['attack_won']}",
+                           "Attack win %": rate(s["attack_won"], s["attack"]), "Defense rounds": s["defense"],
+                           "Defense W–L": f"{s['defense_won']}–{s['defense'] - s['defense_won']}",
+                           "Defense win %": rate(s["defense_won"], s["defense"])} for s in sites],
+                         hide_index=True, column_config=percent)
+        else:
+            st.caption(f"The replays of {md(picked)} don't say which sites were played.")
+        safe_name = re.sub(r"[^\w\- ]+", "", me if whose == YOU else whose).strip() or "team"
+        st.download_button("⬇ CSV", rows_csv(table).encode("utf-8"), file_name=f"{safe_name}_map_pool.csv",
+                           mime="text/csv", key="pool_csv")
 
 
 TeamsTab().run()

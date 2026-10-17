@@ -198,7 +198,8 @@ today top total trend trending up us versus vs was we week weeks were what when 
 worst year yesterday you your team teams teammate teammates opponent opponents enemy enemies side sides map maps
 operator operators op ops attack attacking defense defending defence defend ranked unranked mode summary overview
 profile improving improve improved changed change progress history lately chart graph most played favorite
-favourite main play better worse doing
+favourite main play better worse doing official officials scrim scrims scrimmage scrimmages practice practices
+practicing casual casuals tag tagged
 """.split())
 
 _WORDS = {  # each idea's wordings, matched as whole words in the cleaned question
@@ -240,6 +241,9 @@ _GROUP_WORDS = {  # the first that matches decides the grouping
 # the match types a question can name (parser.py's names), to say when there are none of one
 _MATCH_TYPE_WORDS = {"ranked": ("Ranked", "Ranked matches"), "unranked": ("Unranked", "Unranked matches"),
                      "quick": ("Quick Match", "Quick Matches"), "custom": ("Custom game", "custom games")}
+# the tags a match can have on Match History (stats_db.NOTE_TAGS), as a question names them: "in scrims"
+_TAG_WORDS = {"Official": r"\bofficials?\b", "Scrim": r"\bscrim(s|mage|mages)?\b",
+              "Practice": r"\bpractic(e|es|ing)\b", "Casual": r"\bcasuals?\b"}
 # words before a name that make it an operator: "as Rook", "playing Rook"
 _AS_OPERATOR = {"as", "play", "plays", "playing", "played", "pick", "picks", "picking", "picked", "main", "mains",
                 "maining", "using"}
@@ -297,6 +301,7 @@ class Vocab:
     operators: list[str]
     match_types: list[str]
     aliases: dict[str, list[tuple[str, str]]] = field(default_factory=dict)  # loose text -> [(kind, value)]
+    tags: list[str] = field(default_factory=list)  # the tags given to matches on Match History
 
     @classmethod
     def from_db(cls, db: StatsDB) -> "Vocab":
@@ -304,7 +309,7 @@ class Vocab:
         vocab = cls(players=db.players(), me=me.casefold() if me else None,
                     rosters={t: [p.casefold() for p in ps] for t, ps in db.rosters().items()},
                     maps=db.distinct("map"), operators=db.distinct("operator"),
-                    match_types=db.distinct("match_type"))
+                    match_types=db.distinct("match_type"), tags=db.tags())
         vocab.build_aliases()
         return vocab
 
@@ -478,6 +483,7 @@ class Query:
     side: str | None = None
     match_type: str | None = None
     match_types: list[str] = field(default_factory=list)  # the two compared in "ranked vs custom"
+    tag: str | None = None       # only matches tagged this on Match History ("in scrims")
     won: int | None = None       # only matches won (1) or lost (0)
     since: str | None = None     # "YYYY-MM-DD HH:MM:SS", inclusive
     until: str | None = None     # exclusive
@@ -632,6 +638,13 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
                if match_type not in vocab.match_types and _has(r"\b" + word + r"s?\b", types)]
     q.match_type = named_types[-1] if named_types else missing[-1][0] if missing else None
     q.notes += [f"There are no {phrase} in your stats." for _, phrase in missing]
+    tags = [tag for tag, pattern in _TAG_WORDS.items() if _has(pattern, text)]
+    q.tag = tags[0] if len(tags) == 1 else None
+    if len(tags) > 1:
+        q.notes.append(f"Ask looks at one tag at a time, so this is every match: ask about {' and '.join(tags)} "
+                       "matches separately.")
+    if q.tag and q.tag not in vocab.tags:  # finds nothing, and says why
+        q.notes.append(f"No match is tagged {q.tag} yet: tag your matches on Match History.")
     # only wins / losses: the words go once read, so "wins" isn't also taken as the thing to count
     for won, pattern in ((1, r"\b(in|from|during|only) (my |our |the )?(wins|victories)\b|\bwhen (i|we) (won|win)\b|"
                              r"\bmatches (i|we) won\b"),
@@ -758,7 +771,7 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
         q.kind = "summary"
     elif not q.metrics and q.last_matches:
         q.kind = "matches"
-    elif not q.metrics and (entities or wants_me or wants_we or q.side or q.match_type):
+    elif not q.metrics and (entities or wants_me or wants_we or q.side or q.match_type or q.tag):
         q.kind = "summary"
     elif q.metrics:
         q.kind = "value"
@@ -874,6 +887,9 @@ class _SQL:
         if q.match_type:
             self.where.append("m.match_type = ?")
             self.params.append(q.match_type)
+        if q.tag:
+            self.where.append("m.match_id IN (SELECT match_id FROM match_notes WHERE tag = ?)")
+            self.params.append(q.tag)
         if q.won is not None:
             if self.level == "round":  # the match's result, not the round's
                 self.where.append("EXISTS (SELECT 1 FROM match_players w WHERE w.match_id = t.match_id"
@@ -1070,6 +1086,8 @@ def _filters_text(q: Query, *, conditions: bool = True) -> str:
         bits.append(f"on {q.side}")
     if q.match_type:  # "in Ranked", "in Quick Match", "in custom games"
         bits.append(f"in {q.match_type.lower()}s" if q.match_type.endswith(" game") else f"in {q.match_type}")
+    if q.tag:  # "in scrims", "in official matches", "in practice"
+        bits.append({"Scrim": "in scrims", "Practice": "in practice"}.get(q.tag, f"in {q.tag.lower()} matches"))
     if q.won is not None:
         bits.append("in wins" if q.won else "in losses")
     if q.last_matches:
@@ -1497,6 +1515,17 @@ TEAM_PLAYER_METRICS = ["eps", "kills", "deaths", "assists", "entry_kills", "entr
                        "clutches", "multikills", "objectives", "traded", "trade_kills"]
 
 
+def team_sides(keys: list[str], min_players: int = 3, match_ids: list[str] | None = None) -> tuple[str, list]:
+    """The SQL (and its parameters) for a team's side in each of its matches: (match_id, team) where
+    at least min_players of the player keys `keys` were on one side, the side with the most of them.
+    match_ids limits it to those matches. Build a team and the map pool both count matches this way."""
+    only = f" AND match_id IN ({', '.join('?' * len(match_ids))})" if match_ids is not None else ""
+    sql = (f"SELECT match_id, team FROM (SELECT match_id, team, COUNT(*) AS n, ROW_NUMBER() OVER (PARTITION BY "
+           f"match_id ORDER BY COUNT(*) DESC, team) AS pick FROM match_players WHERE player_key IN "
+           f"({', '.join('?' * len(keys))}){only} GROUP BY match_id, team) WHERE pick = 1 AND n >= ?")
+    return sql, keys + list(match_ids or []) + [max(1, min(min_players, len(keys)))]
+
+
 def team_summary(db: StatsDB, players: list[str], min_players: int = 3, match_ids: list[str] | None = None,
                  side: str | None = None) -> dict[str, Any]:
     """A team's stats as a team, never added up from its players: the maps it played (at least
@@ -1514,11 +1543,7 @@ def team_summary(db: StatsDB, players: list[str], min_players: int = 3, match_id
                            "defense_rounds", "enemy_plants", "retakes", "retakes_won", "maps_without_rounds"), 0)
     if not keys or match_ids == []:
         return empty
-    only = f" AND match_id IN ({', '.join('?' * len(match_ids))})" if match_ids is not None else ""
-    sides = (f"SELECT match_id, team FROM (SELECT match_id, team, COUNT(*) AS n, ROW_NUMBER() OVER (PARTITION BY "
-             f"match_id ORDER BY COUNT(*) DESC, team) AS pick FROM match_players WHERE player_key IN "
-             f"({', '.join('?' * len(keys))}){only} GROUP BY match_id, team) WHERE pick = 1 AND n >= ?")
-    params = keys + list(match_ids or []) + [max(1, min(min_players, len(keys)))]
+    sides, params = team_sides(keys, min_players, match_ids)
     maps = db.query(
         f"WITH sides AS ({sides}) SELECT COUNT(*) AS maps,"
         " SUM(CASE WHEN s.team = 0 THEN m.score0 > m.score1 ELSE m.score1 > m.score0 END) AS maps_won,"

@@ -80,8 +80,9 @@ Below the scoreboards you'll find the downloads and a round-by-round section:
   disables and clutches. Rounds they weren't in say so. Above it, their attack
   and defense split: rounds, rounds won, K-D and the operators they played.
 - **Downloads**: CSV (the scoreboard's numbers), JSON (the scoreboard plus every
-  round), TXT (the scoreboard and the round list as plain text) and Rounds CSV
-  (one row per player per round, for spreadsheets).
+  round), TXT (the scoreboard and the round list as plain text), Rounds CSV
+  (one row per player per round, for spreadsheets) and **Scoreboard image** (a
+  PNG of the scoreboard in your Team Theme's color, to post in a team chat).
 
 Operator Analytics also shows which side each operator is played on.
 
@@ -112,7 +113,11 @@ Dashboard:
 - **Ask**: type a question, or tap one of the examples (see below).
 - **Match History**: every match you've added, newest first, with your record,
   K/D and EPS, and who's **Tracked** in each. Select a match to open its
-  scoreboards on the Dashboard, or to remove it from your stats.
+  scoreboards on the Dashboard, to remove it from your stats, or to write about
+  it: a **tag** (Official, Scrim, Practice or Casual), a note and a link to its
+  video. Once a match is tagged, **Show** lists just one tag's matches, and Ask
+  understands the tags ("my K/D in scrims"). Notes stay when a match is added
+  again and go when it's removed.
 - **Team Analytics > Build a team**: up to five players, filled in with you and
   the four teammates you play with most. Every match where enough of them (you
   choose how many) were tracked on the same side is found. Teams are saved: pick one
@@ -140,6 +145,11 @@ Dashboard:
   read from its replay and saved; an unticked one is taken out and the
   season's totals are worked out again without it. Teams you've tracked show
   up here before any of their matches are saved.
+- **Team Analytics > Map pool**: how you, or a team you built, do on each map:
+  maps played and record, round win % overall and on attack and defense, and
+  the bomb sites won most and least often on each side (a site needs 3+ rounds
+  on a side to be called best or worst). Its strongest and weakest maps (2+ maps
+  played) help with a veto, and **Sites on** breaks one map down site by site.
 - **Operator Analytics**: each operator's rounds, round win rate, K/D, KPR and
   headshot rate over **All matches** (for any player), or picks and site win
   rates for every player in **This match** (the Dashboard's match, or your
@@ -174,7 +184,8 @@ It understands:
   part of it ("Paltry" for Paltry.FBRD; typos are forgiven), your teammates,
   your opponents, everyone, or a team you built;
 - **filters**: a map, an operator ("as Ash"), attack or defense, Ranked,
-  Unranked, Quick Match or custom games, wins or losses, dates ("this week",
+  Unranked, Quick Match or custom games, a Match History tag ("in scrims",
+  "in official matches"), wins or losses, dates ("this week",
   "since Sep 20", "in September", "yesterday"), your last or first N matches,
   and conditions ("matches where I had at least 3 kills");
 - **answers**: a single number, rankings ("top 5 players by EPS", "best map",
