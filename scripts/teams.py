@@ -70,38 +70,39 @@ def _team_stats(summary: dict) -> None:
 def _names(choice: str) -> list[str]:
     """The player names typed into the form for `choice`, without blanks or repeats (any case)."""
     seen: dict[str, str] = {}
-    for i in range(st.session_state.get(f"roster_size_{choice}", ROSTER_SIZE)):
-        name = st.session_state.get(f"roster_{choice}_{i}", "").strip()
+    session = Session()
+    for i in range(session.get(f"roster_size_{choice}", ROSTER_SIZE)):
+        name = session.get(f"roster_{choice}_{i}", "").strip()
         if name and name.casefold() not in seen:
             seen[name.casefold()] = name
     return list(seen.values())
 
 
 def _save_team(choice: str) -> None:
-    team = st.session_state.get(f"team_name_{choice}", "").strip()
+    session = Session()
+    team = session.get(f"team_name_{choice}", "").strip()
     names = _names(choice)
     if not team or not names:
-        st.session_state["team_error"] = "Enter a team name and at least one player."
+        session.set("team_error", "Enter a team name and at least one player.")
         return
-    with Session().stats() as db:
+    with session.stats() as db:
         db.save_roster(team, names)
-    st.session_state["team_shown"] = (team, st.session_state.get(f"roster_min_{choice}", 3))
-    Session().team_choice = team  # the saved team is what's shown and selected now
+    session.set("team_shown", (team, session.get(f"roster_min_{choice}", 3)))
+    session.team_choice = team  # the saved team is what's shown and selected now
 
 
 def _delete_team(team: str) -> None:
     with Session().stats() as db:
         db.delete_roster(team)
     Session().team_choice = NEW
-    st.session_state.pop("team_shown", None)
+    Session().pop("team_shown")
 
 
 def _delete_season_team(season: str, team: str) -> None:
     with Session().tracker(season) as manager:
         manager.delete_team(team)
-    for key in [k for k in st.session_state if str(k).startswith(f"in_season_{season}_")]:
-        del st.session_state[key]
-    st.session_state["season_message"] = (f"Deleted {team} from {season}. Other seasons and built teams are kept.", [])
+    Session().drop(f"in_season_{season}_")
+    Session().set("season_message", (f"Deleted {team} from {season}. Other seasons and built teams are kept.", []))
 
 
 def _picker_key(season: str, match_id: str) -> str:
@@ -142,7 +143,7 @@ def _season_matches(season: str, team: str, players: list[str], counted: set[str
                              value=True, key=_picker_key(season, match_id))
             saved = st.form_submit_button("Save season matches", type="primary", disabled=bool(Session().tracker_off))
         if saved:
-            ticked = {m for m in listed | set(gone) if st.session_state.get(_picker_key(season, m))}
+            ticked = {m for m in listed | set(gone) if Session().get(_picker_key(season, m))}
             _apply_season_matches(season, [r for r in rows if r["match_id"] in ticked - counted],
                                   sorted((listed | set(gone)) & counted - ticked))
 
@@ -168,11 +169,10 @@ def _apply_season_matches(season: str, add: list[dict], remove: list[str]) -> No
                 manager.log_match(parsed[0], players=picked.get(r["match_id"], []))
             except StatsError:
                 failed.append(label)
-    for key in [k for k in st.session_state if str(k).startswith(f"in_season_{season}_")]:
-        del st.session_state[key]  # the boxes show what's saved again
+    session.drop(f"in_season_{season}_")  # the boxes show what's saved again
     done = " and ".join(d for d in (f"added {len(add) - len(failed)}" if add else "",
                                     f"took out {len(remove)}" if remove else "") if d)
-    st.session_state["season_message"] = (f"Season matches saved: {done}." if done else "Nothing changed.", failed)
+    session.set("season_message", (f"Season matches saved: {done}." if done else "Nothing changed.", failed))
     st.rerun()
 
 
@@ -208,7 +208,7 @@ class TeamsTab(Tab):
             name, players = ("", [me, *mates] if me else []) if choice == NEW else (choice, teams[choice])
             # the whole roster, subs and all, and a spare box for one more
             size = min(MAX_ROSTER, max(ROSTER_SIZE, len(players) + (choice != NEW)))
-            st.session_state[f"roster_size_{choice}"] = size
+            self.session.set(f"roster_size_{choice}", size)
             players = (players + [""] * size)[:size]
             with st.form(f"roster_form_{choice}"):
                 st.text_input("Team name", value=name, placeholder="e.g. Varsity", key=f"team_name_{choice}")
@@ -220,12 +220,12 @@ class TeamsTab(Tab):
                 st.slider("Count a match when at least this many of them were on the same side", 1, ROSTER_SIZE, 3,
                           key=f"roster_min_{choice}")
                 st.form_submit_button("Show team stats", type="primary", on_click=_save_team, args=(choice,))
-            if error := st.session_state.pop("team_error", None):
+            if error := self.session.pop("team_error"):
                 st.error(error)
             if choice != NEW:
                 st.button(f"Delete {md(choice)}", on_click=_delete_team, args=(choice,), type="tertiary")
 
-            shown = st.session_state.get("team_shown")
+            shown = self.session.get("team_shown")
             if shown and shown[0] in teams:
                 with self.stats() as db:
                     report = team_report(db, *shown)
@@ -278,7 +278,7 @@ class TeamsTab(Tab):
             counted_by = {name: {m["match_id"] for m in manager.match_history(players)} for name, players in rosters.items()}
             saved = manager.match_history()
             snapshot = manager.export_json()
-        if message := st.session_state.pop("season_message", None):
+        if message := self.session.pop("season_message"):
             st.success(message[0])
             if message[1]:
                 st.warning("These couldn't be added, because their replays aren't on this PC anymore: "

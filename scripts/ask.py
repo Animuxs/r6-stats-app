@@ -10,6 +10,7 @@ from ask_engine import Answer, Vocab, ask, suggestions
 from metrics_engine import rows_csv
 from stats_db import nice_day
 from branding import current_theme, readable_accent
+from session import Session
 from tab import Tab
 from ui import md
 
@@ -19,8 +20,9 @@ MUTED = "#5d7894"  # the other bars: a quiet blue that sits on the school theme'
 
 
 def _set_question(text: str) -> None:
-    st.session_state["ask_question"] = text
-    st.session_state["ask_now"] = True
+    session = Session()
+    session.set("ask_question", text)
+    session.set("ask_now", True)
 
 
 def _chart(answer: Answer, me: str | None) -> None:

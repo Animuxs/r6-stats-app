@@ -20,7 +20,7 @@ class ThemeTab(Tab):
     def render(self) -> None:
         st.write('Make every match report and analytics page feel like home.')
         theme = current_theme()
-        schools = st.session_state.get('necc_schools') or bundled_school_catalog()
+        schools = self.session.get('necc_schools') or bundled_school_catalog()
         team_css()
         left, right = st.columns([2, 1], gap='large')
         with left:

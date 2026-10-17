@@ -1,0 +1,5 @@
+# for running the tests the way CI does: python scripts/run_tests.py --lint --coverage
+-r requirements-api.txt
+coverage>=7.6
+pyflakes>=3.2
+httpx>=0.27  # the REST API tests' TestClient

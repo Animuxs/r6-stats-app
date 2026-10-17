@@ -131,7 +131,11 @@ def apply_theme(value):
 def uploaded_logo(raw):
     if len(raw) > 2 * 1024 * 1024:
         raise ValueError('Choose an image smaller than 2 MB.')
-    with Image.open(io.BytesIO(raw)) as image:
+    try:
+        opened = Image.open(io.BytesIO(raw))
+    except Image.DecompressionBombError:  # a small file that says it's an enormous image
+        raise ValueError('Use a PNG, JPEG or WebP image up to 4096 pixels.') from None
+    with opened as image:
         if image.format not in ('PNG', 'JPEG', 'WEBP') or max(image.size) > 4096:
             raise ValueError('Use a PNG, JPEG or WebP image up to 4096 pixels.')
         image = image.convert('RGBA')

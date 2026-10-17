@@ -35,6 +35,7 @@ _PATCHES = [
 
 
 def setUpModule():
+    os.makedirs(_DB_FOLDER, exist_ok=True)  # again, if an earlier tearDownModule removed it
     for patch in _PATCHES:
         patch.start()
 
@@ -161,6 +162,25 @@ class TestSchoolCatalog(unittest.TestCase):
         self.assertEqual(schools[0]["teams"][0]["roster"], ["Ash", "Thermite"])
         self.assertEqual([team["name"] for team in schools[0]["teams"]], ["Varsity"])
 
+    def test_the_configured_feed(self):
+        """The school feed a deployment can set (NECC_R6_DATA_URL): HTTPS only, at most 2 MB, JSON."""
+        catalog = {"schools": [{"name": "North University", "teams": [{"name": "Varsity", "roster": ["Ash"]}]}]}
+
+        def served(body: bytes):
+            response = mock.MagicMock()
+            response.__enter__.return_value.read.side_effect = lambda n: body[:n]
+            return mock.patch("necc_data.urlopen", return_value=response)
+
+        for url in ("", "http://example.org/feed.json", "ftp://example.org/x", "file:///C:/feed.json"):
+            with self.subTest(url=url), served(b"{}") as fetch, self.assertRaises(ValueError):
+                necc_data.fetch_school_catalog(url)
+            fetch.assert_not_called()  # nothing is fetched from a link that isn't HTTPS
+        with served(json.dumps(catalog).encode()):
+            self.assertEqual(necc_data.fetch_school_catalog("https://example.org/feed.json")[0]["name"], "North University")
+        for body in (b"not json", b"\xff\xfe", b" " * (necc_data.MAX_CATALOG_BYTES + 1), b'{"schools": []}'):
+            with self.subTest(body=body[:12]), served(body), self.assertRaises(ValueError):
+                necc_data.fetch_school_catalog("https://example.org/feed.json")
+
     def test_rejects_catalog_without_schools(self):
         with self.assertRaises(ValueError):
             necc_data.normalize_school_catalog({"schools": []})
@@ -277,9 +297,9 @@ class TestAnalyticsPages(unittest.TestCase):
         self.addCleanup(patch.stop)  # every test starts with an empty database
 
     def test_pages_without_matches_say_where_to_start(self):
+        at = run_app()
         for page in ("ask.py", "history.py", "operators.py", "teams.py", "league.py", "appearance.py"):
             with self.subTest(page=page):
-                at = run_app()
                 at.switch_page(page).run()
                 self.assertFalse(at.exception)
                 if page not in ("league.py", "appearance.py"):

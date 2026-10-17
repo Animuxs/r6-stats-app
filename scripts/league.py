@@ -44,7 +44,7 @@ TIER_HELP = ("Liquipedia's tiers: S is the top international events (Majors, the
 def _default(key: str, index: int) -> int | None:
     """A widget's starting choice, unless "This is my team" has already set it (Streamlit warns
     when a widget gets both)."""
-    return None if key in st.session_state else index
+    return None if Session().has(key) else index
 
 
 def _dates(event: dict) -> str:
@@ -169,8 +169,8 @@ def pick_team(event: dict, saved: dict) -> str:
             school = schools.get(team)
             return f"{team} · {school}" if school and school.casefold() not in team.casefold() else team
         key = f"league_team:{_team_key(event)}"
-        if st.session_state.get(key) not in (None, *options):
-            del st.session_state[key]  # a team that isn't in this list (anymore)
+        if Session().get(key) not in (None, *options):
+            Session().pop(key)  # a team that isn't in this list (anymore)
         team = st.selectbox(f"Your team ({len(teams)} listed)", options, index=_default(key, index), format_func=label,
                             key=key)
         if team != NOT_LISTED:
@@ -186,7 +186,7 @@ def _team_key(event: dict) -> str:
 def save(event: dict) -> None:
     """The Save button's callback. It reads the widgets' values now: arguments bound when the
     button was drawn would miss what was typed just before clicking it."""
-    state = st.session_state
+    state = Session()
     if event["source"] == "custom":
         url = (state.get("league_custom_url") or "").strip()
         event = dict(event, name=(state.get("league_custom_name") or event["name"]).strip(),
@@ -220,7 +220,7 @@ def save(event: dict) -> None:
 
 def _extra_players() -> list[str]:
     """Players typed under "Add players who aren't listed" (a sub, a new signing)."""
-    raw = st.session_state.get("league_extra_players") or ""
+    raw = Session().get("league_extra_players") or ""
     return [n.strip() for n in re.split(r"[\n,]", raw) if n.strip()][:20]
 
 
@@ -247,7 +247,7 @@ def roster_from_replays(team: str) -> None:
     session = Session()
     source = session.replays  # any kind: your folder, uploads, the demo season
     names = source.matches() if source and not source.error else []
-    scan = st.session_state.get("league_replay_scan")
+    scan = session.get("league_replay_scan")
     if not names:
         st.caption("Open your replay folder on the **Dashboard** and come back: the app finds your players in "
                    "your custom games (your scrims and league matches), so you don't type their names.")
@@ -260,7 +260,7 @@ def roster_from_replays(team: str) -> None:
             found = rosters.from_replays(names, source.open, me,
                                          progress=lambda done, total: bar.progress(min(done / max(total, 1), 1.0)))
             bar.empty()
-            st.session_state["league_replay_scan"] = found
+            session.set("league_replay_scan", found)
             st.rerun()
     else:
         if not scan:
@@ -268,24 +268,25 @@ def roster_from_replays(team: str) -> None:
         else:
             looked = scan[0][2]
             regulars = [name for name, n, _ in scan if n >= max(2, looked // 2)]
-            st.session_state.setdefault(FOUND_KEY, regulars)
+            session.setdefault(FOUND_KEY, regulars)
             st.multiselect(f"Played on your side in your last {looked} custom game{'s' if looked != 1 else ''}",
                            [name for name, _, _ in scan], key=FOUND_KEY,
                            format_func=lambda name: f"{name} ({next(n for x, n, _ in scan if x == name)} games)",
                            help=f"Picked: everyone who played in at least half of them. These become {team}'s "
                                 "players when you save.")
         if st.button("Look again", type="tertiary", key="league_rescan"):
-            st.session_state.pop("league_replay_scan", None)
-            st.session_state.pop(FOUND_KEY, None)
+            session.pop("league_replay_scan")
+            session.pop(FOUND_KEY)
             st.rerun()
 
 
 def _choose(team: dict) -> None:
     """Find a team's "This is my team": pick its division and team above."""
-    st.session_state["league_source"] = NECC
-    st.session_state["league_necc_event"] = f"necc:{team['event_id']}"
-    st.session_state[f"league_team:necc:{team['event_id']}"] = team["name"]
-    Session().leave_note("league", "info", f"Picked {team['name']}: check it below and save.")
+    session = Session()
+    session.set("league_source", NECC)
+    session.set("league_necc_event", f"necc:{team['event_id']}")
+    session.set(f"league_team:necc:{team['event_id']}", team["name"])
+    session.leave_note("league", "info", f"Picked {team['name']}: check it below and save.")
 
 
 def find_a_team() -> None:
@@ -338,10 +339,11 @@ def refresh_liquipedia() -> None:
 def necc_directory() -> None:
     """NECC's school directory: every Rainbow Six registration in the LeagueOS season, with each
     school's colors and logo, and roster tracking."""
-    if "necc_schools" not in st.session_state:
-        st.session_state["necc_schools"] = bundled_school_catalog()
-        st.session_state["necc_catalog_source"] = "LeagueOS · Rainbow Six Signups · September 26, 2026 snapshot"
-    all_schools = st.session_state["necc_schools"]
+    session = Session()
+    if not session.has("necc_schools"):
+        session.set("necc_schools", bundled_school_catalog())
+        session.set("necc_catalog_source", "LeagueOS · Rainbow Six Signups · September 26, 2026 snapshot")
+    all_schools = session.get("necc_schools")
     a, b = st.columns(2)
     a.metric("Schools", len(all_schools))
     b.metric("Teams", sum(len(school["teams"]) for school in all_schools))
@@ -351,8 +353,8 @@ def necc_directory() -> None:
         with feed_column:
             if st.button("Sync NECC feed", disabled=not feed_configured, type="primary"):
                 try:
-                    st.session_state["necc_schools"] = fetch_school_catalog()
-                    st.session_state["necc_catalog_source"] = "Configured NECC feed"
+                    session.set("necc_schools", fetch_school_catalog())
+                    session.set("necc_catalog_source", "Configured NECC feed")
                     st.rerun()
                 except (OSError, ValueError) as error:
                     st.error(f"School feed unavailable: {error}")
@@ -363,12 +365,12 @@ def necc_directory() -> None:
                     raw = uploaded.getvalue()
                     if len(raw) > MAX_CATALOG_BYTES:
                         raise ValueError("The school catalog exceeds the 2 MB limit.")
-                    st.session_state["necc_schools"] = normalize_school_catalog(json.loads(raw))
-                    st.session_state["necc_catalog_source"] = uploaded.name
+                    session.set("necc_schools", normalize_school_catalog(json.loads(raw)))
+                    session.set("necc_catalog_source", uploaded.name)
                 except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as error:
                     st.error(f"Could not import catalog: {error}")
 
-    schools = st.session_state.get("necc_schools", [])
+    schools = session.get("necc_schools", [])
     query = st.text_input("Search school or team", placeholder="School, university, or team name").strip().casefold()
     if query:
         schools = [s for s in schools if query in s["name"].casefold()
@@ -379,7 +381,7 @@ def necc_directory() -> None:
     if not schools:
         st.info("No school catalog is loaded. Import a school JSON export to browse rosters.")
         return
-    st.caption(f"Catalog: {st.session_state.get('necc_catalog_source', 'loaded this session')}")
+    st.caption(f"Catalog: {session.get('necc_catalog_source', 'loaded this session')}")
     school = st.selectbox("School", schools, format_func=lambda s: s["name"], key="necc_school")
     teams = school.get("teams", [])
     if not teams:

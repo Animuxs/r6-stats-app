@@ -20,11 +20,12 @@ from app_info import can_dock, send_window_command
 from metrics_engine import SIDE_ICONS, SIDE_NAMES, eps_from_rating
 from sources import current_source, match_time, open_stats_db
 from stats_db import nice_time
+from tab import Tab
 
 REFRESH_SECONDS = 15
 FORM_MATCHES = 5
 
-st.markdown("""<style>
+STYLE = """<style>
 header[data-testid="stHeader"] { display:none; }
 [data-testid="stElementContainer"]:has(style) { display:none; }  /* the pages' <style> rows: no gaps for them */
 .stMainBlockContainer { padding:.7rem .9rem 1.2rem !important; }
@@ -60,19 +61,7 @@ header[data-testid="stHeader"] { display:none; }
 .dk-new { border:1px dashed var(--school, var(--accent)); border-radius:4px; padding:10px 12px; margin-top:4px;
           color:var(--dim); font-size:.8rem; line-height:1.45; }
 .dk-new b { color:var(--text); font-weight:600; }
-</style>""", unsafe_allow_html=True)
-
-edge = st.query_params.get("edge", "right")
-other = "left" if edge == "right" else "right"
-with st.container(horizontal=True, gap="small"):
-    if can_dock() and st.button(f"⇄ Dock {other}", key="dock_other"):
-        send_window_command("dock", edge=other)
-    if st.button("⇱ Full window", key="undock", type="primary"):
-        if can_dock():
-            send_window_command("undock")
-        else:  # outside the Windows app there's no window to change: just go back to the full app
-            st.query_params.clear()
-            st.rerun()
+</style>"""
 
 
 def _side_icon(side: str | None) -> str:
@@ -180,4 +169,27 @@ def panel() -> None:
                 unsafe_allow_html=True)
 
 
-panel()
+class DockTab(Tab):
+    """The docked view: no heading, just the buttons that move or undock the window, then the panel."""
+
+    title, name = "Docked", "dock"
+
+    def heading(self) -> None:
+        st.markdown(STYLE, unsafe_allow_html=True)
+        edge = st.query_params.get("edge", "right")
+        other = "left" if edge == "right" else "right"
+        with st.container(horizontal=True, gap="small"):
+            if can_dock() and st.button(f"⇄ Dock {other}", key="dock_other"):
+                send_window_command("dock", edge=other)
+            if st.button("⇱ Full window", key="undock", type="primary"):
+                if can_dock():
+                    send_window_command("undock")
+                else:  # outside the Windows app there's no window to change: just go back to the full app
+                    st.query_params.clear()
+                    st.rerun()
+
+    def render(self) -> None:
+        panel()
+
+
+DockTab().run()
