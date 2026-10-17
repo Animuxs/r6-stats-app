@@ -204,7 +204,13 @@ def stats_db_path() -> Path:
         _touch(folder)
         return folder / "stats.db"
     if not app_info.is_public_host():
+        from team_runtime import team_folder
+        if folder := team_folder():
+            return folder / 'stats.db'
         return default_path()
+    from team_runtime import team_folder
+    if folder := team_folder():
+        return folder / 'stats.db'
     folder = st.session_state.get("stats_db_folder")
     if not folder or not Path(folder).is_dir():
         folder = st.session_state["stats_db_folder"] = tempfile.mkdtemp(prefix=WORKDIR_PREFIX)
@@ -213,7 +219,11 @@ def stats_db_path() -> Path:
 
 
 def open_stats_db() -> StatsDB:
-    return StatsDB(stats_db_path())
+    from team_runtime import selected_player
+    viewer = selected_player()
+    db = StatsDB(stats_db_path())
+    db.viewer = viewer
+    return db
 
 
 DEMO_KEY = "demo_season_folder"
@@ -264,7 +274,8 @@ def tracker_off() -> str:
     if demo_active():
         return ("Season tracking is off in the demo season: its matches are made up, so nothing goes into a "
                 "real season. Leave the demo from the sidebar to track your own.")
-    if app_info.is_public_host():
+    from team_runtime import current_team
+    if app_info.is_public_host() and not current_team():
         return ("Season tracking is off on the public website, to keep visitors' stats apart. Use the Windows "
                 "app or run the app on your own computer.")
     return ""

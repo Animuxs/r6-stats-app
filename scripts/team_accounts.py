@@ -79,6 +79,8 @@ class TeamStore:
                   expires REAL NOT NULL);
                 CREATE TABLE IF NOT EXISTS attempts (key TEXT PRIMARY KEY, count INTEGER NOT NULL,
                   until REAL NOT NULL);
+                CREATE TABLE IF NOT EXISTS documents (account TEXT NOT NULL, name TEXT NOT NULL,
+                  payload TEXT NOT NULL, revision INTEGER NOT NULL, PRIMARY KEY(account,name));
             """)
 
     @contextmanager
@@ -91,10 +93,20 @@ class TeamStore:
         finally:
             db.close()
 
-    def create(self, email, password, name):
+    def create(self, email, password, name, client='local'):
         email, password, name = school_email(email), _password(password), str(name).strip()
         if not name or len(name) > 100:
             raise AccountError("Enter a team name of 1–100 characters.")
+        now = time.time()
+        key = 'signup:' + hashlib.sha256(str(client).encode()).hexdigest()
+        with self._db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            row = db.execute('SELECT count,until FROM attempts WHERE key=?', (key,)).fetchone()
+            if row and row['until'] > now and row['count'] >= 10:
+                raise AccountError('Too many account creations. Try again in 15 minutes.')
+            db.execute('INSERT INTO attempts VALUES(?,1,?) ON CONFLICT(key) DO UPDATE SET '
+                       'count=CASE WHEN until < ? THEN 1 ELSE count+1 END, until=?',
+                       (key, now + 900, now, now + 900))
         salt, recovery, ident = secrets.token_hex(16), secrets.token_urlsafe(24), secrets.token_hex(16)
         encoded, recovered = _hash(password, salt), _hash(recovery, salt)
         try:
@@ -187,3 +199,26 @@ class TeamStore:
         folder = self.folder / "teams" / self.account(token)["id"]
         folder.mkdir(parents=True, exist_ok=True)
         return folder
+
+    def document(self, token, name):
+        account = self.account(token)
+        with self._db() as db:
+            row = db.execute("SELECT payload,revision FROM documents WHERE account=? AND name=?",
+                             (account['id'], name)).fetchone()
+        return (json.loads(row['payload']), row['revision']) if row else ({}, 0)
+
+    def save_document(self, token, name, value, revision):
+        if name not in ('planning', 'theme', 'competition'):
+            raise AccountError('Unknown team document.')
+        payload = json.dumps(value, ensure_ascii=False, allow_nan=False)
+        if len(payload.encode()) > 4_000_000:
+            raise AccountError('Team settings are too large.')
+        account = self.account(token)
+        with self._db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            row = db.execute('SELECT revision FROM documents WHERE account=? AND name=?',
+                             (account['id'], name)).fetchone()
+            if (row['revision'] if row else 0) != revision:
+                raise AccountError('Someone else updated these settings. Refresh before saving your changes.')
+            db.execute('INSERT OR REPLACE INTO documents VALUES(?,?,?,?)',
+                       (account['id'], name, payload, revision + 1))

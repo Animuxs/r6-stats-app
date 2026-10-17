@@ -51,3 +51,21 @@ def selected_player():
     account = current_team()
     chosen = st.session_state.get("team_person")
     return next((p["player"] or None for p in account["directory"] if p["id"] == chosen), None)
+
+
+def read_document(name):
+    value, revision = store().document(st.session_state['team_token'], name)
+    st.session_state.setdefault('team_revision_' + name, revision)
+    return value
+
+
+def write_document(name, value):
+    key = 'team_revision_' + name
+    if key not in st.session_state:
+        read_document(name)
+    store().save_document(st.session_state['team_token'], name, value, st.session_state[key])
+    st.session_state[key] += 1
+
+
+def shared_active():
+    return not st.session_state.get('demo_season_folder') and bool(current_team())

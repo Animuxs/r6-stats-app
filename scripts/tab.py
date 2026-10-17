@@ -20,10 +20,11 @@ from session import Session
 from sources import no_matches_yet
 from stats_db import StatsDB
 from ui import md
+from team_accounts import AccountError
 
 # each tab's page file, for links between tabs
 PAGES = {"dashboard": "report.py", "ask": "ask.py", "history": "history.py", "teams": "teams.py",
-         "operators": "operators.py", "matchday": "matchday.py", "league": "league.py", "theme": "appearance.py", "download": "download.py"}
+         "operators": "operators.py", "matchday": "matchday.py", "team": "team_hub.py", "league": "league.py", "theme": "appearance.py", "download": "download.py"}
 
 
 class Tab(ABC):
@@ -39,7 +40,11 @@ class Tab(ABC):
         """Draw the tab: its heading, any note a callback left, then what render() puts on it."""
         self.heading()
         self.show_note()
-        self.render()
+        try:
+            self.render()
+        except AccountError as error:
+            st.error(md(str(error)))
+            st.page_link('team_hub.py', label='Open Team hub to refresh or sign in')
 
     def heading(self) -> None:
         st.title(self.title)

@@ -113,6 +113,9 @@ def local_preferences():
 
 
 def current_theme():
+    from team_runtime import shared_active, read_document
+    if shared_active():
+        return clean_theme(read_document('theme'))
     if 'appearance' not in st.session_state:
         st.session_state['appearance'] = load_theme() if local_preferences() else dict(DEFAULT_THEME)
     return clean_theme(st.session_state['appearance'])
@@ -120,7 +123,10 @@ def current_theme():
 
 def apply_theme(value):
     value = clean_theme(value)
-    if local_preferences():
+    from team_runtime import shared_active, write_document
+    if shared_active():
+        write_document('theme', value)
+    elif local_preferences():
         save_theme(value)
     st.session_state['appearance'] = value
     st.session_state['selected_school_name'] = value['name']
@@ -144,6 +150,9 @@ def uploaded_logo(raw):
 def current_competition():
     """The league or tournament this team plays in: saved on this PC in the Windows app (and a
     local checkout), kept for the browser session on the public website."""
+    from team_runtime import shared_active, read_document
+    if shared_active():
+        return clean_competition(read_document('competition'))
     if 'competition' not in st.session_state:
         st.session_state['competition'] = load_competition() if local_preferences() else dict(DEFAULT_COMPETITION)
     return clean_competition(st.session_state['competition'])
@@ -151,7 +160,10 @@ def current_competition():
 
 def apply_competition(value):
     value = clean_competition(value)
-    if local_preferences():
+    from team_runtime import shared_active, write_document
+    if shared_active():
+        write_document('competition', value)
+    elif local_preferences():
         save_competition(value)
     st.session_state['competition'] = value
     if value['season']:

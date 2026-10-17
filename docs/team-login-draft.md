@@ -1,79 +1,84 @@
-# Team login implementation checkpoint
+# Team login checkpoint - draft PR 31
 
-Status: **draft, not released or connected to the app navigation yet**. The app version
-remains 1.6.3. Do not advertise working team login until integration and end-to-end
-testing are finished. No Supabase, external account provider or email sender is used.
+Branch: feat/team-login. App version stays 1.6.3. No merge or new release yet.
+No Supabase, external identity provider, email codes or email sender.
 
-## Confirmed product decisions
+## User decisions
 
-- One shared team login, created by a coach/analyst using an address ending in `.edu`.
-- Check the email's format only. Do not label the address, school or team as verified.
-- A shared login grants identical access to everyone using it. Person selection and
-  Player, Captain, Coach, Analyst, Staff and Other/custom roles are descriptive profiles,
-  not authentication or separate permission levels. A person can have multiple roles.
-- Keep personal, team and demo workspaces separate; preserve all 1.6.3 features.
-- Add a basic Windows launch chime and a mute setting.
-- User asked to save progress before usage is exhausted; do not spend their reset.
+- One shared team login using an address ending in .edu. This is a format check,
+  NOT ownership verification or proof of school affiliation.
+- Each person selects a profile. Multiple descriptive roles: Player, Captain,
+  Coach, Analyst, Staff, Other/custom. Everyone sharing the login has equal access.
+- Preserve desktop, hosted and standalone features; keep team/personal/demo data apart.
+- Windows launch chime with an off switch.
+- Continue until around/below 10% usage remains, then save; do not use the free reset.
+- Keep this handoff current across conversation compaction.
 
-## Implemented
+## Implemented and wired in desktop/Streamlit
 
-`scripts/team_accounts.py` provides a SQLite-backed account foundation: school-format
-validation, 600,000-round PBKDF2-SHA256 with random salts, hashed random session tokens,
-12-hour session expiry, logout, failed-login/recovery throttling, one-time rotating
-recovery codes, password recovery that revokes existing sessions, per-account folders,
-validated team directories and optimistic revision checks for directory updates.
-Neither passwords nor recovery codes nor bearer tokens are stored in plaintext.
+- Team hub navigation, sign-in, account creation, password recovery and sign-out.
+- Recovery code download/display with explicit private-backup guidance and dismissal.
+- Member add/edit/remove, multiple roles, custom titles, per-session viewing identity.
+- Account switching clears cached replay/theme/planning/player state and query params.
+- Shared account DB paths for stats and seasons; player perspective for History,
+  Ask and Operators without changing the replay recorder. Existing Dashboard scoreboard
+  and replay identity remain accurate to the original replay.
+- Shared planning/theme/competition documents and optimistic revisions; explicit Refresh
+  shared workspace discards stale form state. Stale writes produce a recoverable message.
+- Team overview caption, no companion rail on Team hub, personal/demo isolation.
+- PBKDF2-SHA256 (600,000 rounds/random salts), hashed random session tokens, 12-hour expiry,
+  revoked sessions on logout/recovery, rotating recovery codes. Signup/login/recovery limits.
+- Per-account server folders resolved only through authenticated opaque sessions.
+- Local storage defaults beside the stats DB. Hosted deployments require an explicit
+  R6_TEAM_DATA_DIR pointing at a genuinely persistent volume. Merely setting the variable
+  does not create persistence. Existing Community Cloud demo has NO persistent team
+  storage, so login is intentionally unavailable there until durable hosting is chosen.
+- Windows SystemAsterisk chime after successful startup; asynchronous, muted for smoke
+  tests, errors ignored. Team Theme > Desktop options > Play a launch chime persists the
+  setting in desktop-settings.json. Windows sound scheme/volume settings apply.
 
-`scripts/team_runtime.py` is a **not-yet-wired** Streamlit adapter. Account switching
-clears session state and query parameters to prevent cross-account replay/theme/identity
-leaks. It validates server-side sessions before resolving team folders. Local storage
-defaults beside the stats database. Public hosting requires an explicitly configured
-`R6_TEAM_DATA_DIR` on a persistent volume; disposable Community Cloud disk must not be
-presented as durable account storage. Merely setting this variable does not provision
-a persistent volume or enable a finished login UI.
+## Checks and preview
 
-The Windows launcher plays `SystemAsterisk` asynchronously after successful startup.
-System sound schemes and volume settings apply. Muting is available under Team Theme
-→ Desktop options → Play a launch chime. The preference persists in the app's local
-`desktop-settings.json`. Audio errors cannot block launch; CI smoke runs remain silent.
+- Latest full application and desktop test results are in work/team-login-final-tests.log.
+- Account lifecycle tests plus eight integrated Team hub tests cover sign-in/out, two-session
+  stats sharing, team isolation, profile roles, selected-player Operators, revoked sessions,
+  concurrent-document rejection, demo isolation, signup and password-recovery UI. Desktop tests cover audio behavior.
+- Preview server: http://127.0.0.1:8504/team_hub (local machine only), logs in
+  work/team-login-preview.log and work/team-login-preview-error.log.
+- Preview data is OUTSIDE the repo in work/team-login-preview-data, includes only a
+  clearly labeled sample team. Do not publish it, its account DB or its test credentials.
+- Team hub screenshot saved in outputs/team-hub-preview.jpg.
+- No authenticated bearer tokens or real credentials are committed to Git.
+- Latest checks: full 299-test application suite and 29 desktop tests passed; the
+  expanded eight-test Team hub suite also passed (includes two added signup/recovery cases).
 
-## Remaining before release
+## Required work before release
 
-1. Build the Team hub page: create/sign in/sign out/recover, one-time recovery-code
-   presentation, shared team directory editing and per-session person selection.
-2. Wire authenticated team database paths into **both** stats and season tracking.
-   Apply player selection consistently to Dashboard, Ask, History and Operators, without
-   changing the underlying match recorder. Avoid an import cycle between stats_db,
-   sources and team_runtime (use narrow local imports or dependency injection).
-3. Scope match-day planning, league and theme to the team, with concurrent-edit checks.
-   Switching account, leaving a team and entering/leaving demo must not leak state.
-4. Plan a portable backup/restore format, protecting credentials and replay privacy.
-   Preserve imported player selections and independent season/built-team deletion.
-5. Provide the same team/profile workflow in the standalone browser edition, with a
-   clear boundary between offline data and the online shared workspace. No unsupported
-   claim that an offline HTML file alone can host shared authentication.
-6. Finish navigation/UI cleanup and responsive visual checks; retain all current tabs,
-   detailed stats, native docking, themes, exports, roster controls and replay features.
-7. Review signup abuse limits, recovery UX, account backup, concurrent writes, session
-   revocation/expiry and deployment storage. Use HTTPS for credentials outside localhost;
-   do not expose a local server publicly as part of setup without explicit configuration.
-8. Test real two-session sharing/isolation, role/profile changes, stale updates,
-   password recovery, demo isolation and desktop/hosted/browser behavior. Recheck other
-   in-flight branches (including `fix/season-team-slider`) before integrating.
-9. Only then bump the next version, create the release, wait for installer smoke checks
-   and attach verified downloads. Do not merge or publish this checkpoint as complete.
+1. Standalone browser parity: profile management, identities, shared server connection,
+   portable import/export. An offline HTML file cannot host shared authentication alone.
+   Use an explicit online workspace workflow; do not imply local browser storage is shared.
+2. A durable public team host/storage decision. Local team accounts on separate PCs are
+   separate databases. Everyone must use the same server URL to share. Do not expose an
+   HTTP local server to the internet as an automatic setup step. HTTPS is required outside
+   localhost/trusted deployment. The current public demo has no account persistence.
+3. Safe shared team backup/restore (exclude passwords/session/recovery credentials),
+   migration/import of existing personal/browser stats with selected-player preservation.
+4. More concurrent planning/theme edits,
+   selected-profile deletion/change across sessions, account expiry mid-operation, responsive
+   visuals, packaged chime playback. Check duplicate/stale widget behavior carefully.
+5. Review the role labels and team-overview perspective: no chosen linked player falls
+   back to the recorder for per-player analytics; roles are never authorization boundaries.
+6. Recheck other branches/PRs (especially fix/season-team-slider) before integration. Preserve
+   OOP tabs, full stats in both team views, roster controls, independent team deletion,
+   selected imports, Ask, history, seasons, exports, themes, docking and replay controls.
+7. Run final app/desktop/browser checks, bump the next version only when complete, merge,
+   publish, wait for Windows build/Defender/install/launch/uninstall and verify download hashes.
 
-## Validation commands
+## Verification commands
 
-```
-.venv\Scripts\python -m unittest discover -s scripts -p test_team_accounts.py
-.venv\Scripts\python -m unittest discover -s scripts
-.venv\Scripts\python -m unittest discover -s desktop
-git diff --check
-```
+    .venv\Scripts\python -m unittest discover -s scripts
+    .venv\Scripts\python -m unittest discover -s desktop
+    git diff --check
 
-Parser-dependent application tests need `R6_DISSECT_BIN` pointing at a built parser.
-The account tests cover credential hashing, session expiry/revocation, recovery rotation,
-team isolation, stale directory writes, role validation, lockout and saved chime settings.
-Desktop tests mock audio to check asynchronous playback, mute, smoke-run silence and
-audio-device failure handling. A real packaged audio/UI check remains for the release.
+Set R6_DISSECT_BIN to a built parser for parser-dependent tests. No new Python runtime
+package is required. New modules are included in the Windows packaging manifest.
