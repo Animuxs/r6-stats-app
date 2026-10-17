@@ -6,19 +6,21 @@ from __future__ import annotations
 import streamlit as st
 
 from metrics_engine import eps_from_rating, round_eps, rows_csv
-from sources import current_source, demo_active, match_label, no_matches_yet, open_stats_db
+from session import Session
+from sources import match_label
 from stats_db import NotAdded, nice_time
+from tab import Tab
 from ui import md
 
 
 def _note(kind: str, text: str) -> None:
-    st.session_state["history_note"] = (kind, text)
+    Session().leave_note("history", kind, text)
 
 
 def _keep(match_id: str) -> None:
     players = [p for team in (0, 1) for p in st.session_state.get(f"check:{match_id}:{team}", [])]
     try:
-        with open_stats_db() as db:
+        with Session().stats() as db:
             db.confirm_checked(match_id, players)
     except NotAdded as e:
         _note("error", str(e))
@@ -27,7 +29,7 @@ def _keep(match_id: str) -> None:
 
 
 def _remove(match_id: str, label: str) -> None:
-    with open_stats_db() as db:
+    with Session().stats() as db:
         db.remove_match(match_id)
     _note("success", f"Removed {label} from your stats.")
 
@@ -36,7 +38,7 @@ def _keep_recorders() -> None:
     """Every match waiting to be checked, with just the player who recorded it: that's you, and
     your own numbers from your own replay are always right."""
     kept = left = 0
-    with open_stats_db() as db:
+    with Session().stats() as db:
         for row in db.to_check():
             try:
                 db.confirm_checked(row["match_id"], [row["recorder"] or ""])
@@ -48,7 +50,7 @@ def _keep_recorders() -> None:
 
 
 def _remove_all_waiting() -> None:
-    with open_stats_db() as db:
+    with Session().stats() as db:
         waiting = db.to_check()
         for row in waiting:
             db.remove_match(row["match_id"])
@@ -92,70 +94,79 @@ def check_earlier(waiting: list[dict]) -> None:
             st.button(f"Yes, remove all {n}", on_click=_remove_all_waiting, type="primary")
 
 
-st.title("Match History")
+class HistoryTab(Tab):
+    """The matches in your stats, newest first, and the ones an earlier version added to check."""
 
-if note := st.session_state.pop("history_note", None):
-    getattr(st, note[0])(md(note[1]))
+    title, name = "Match History", "history"
 
-with open_stats_db() as db:
-    source = current_source()
-    me = db.me()
-    rows = db.match_list(me)
-    tracked = db.players_by_match()
-    waiting = db.to_check()
-    if not rows and not waiting:
-        no_matches_yet(db)
-        st.stop()
+    def render(self) -> None:
+        with self.stats() as db:
+            me = db.me()
+            rows = db.match_list(me)
+            tracked = db.players_by_match()
+            waiting = db.to_check()
+            if not rows and not waiting:
+                self.has_matches(db)
+                return
+        if waiting:
+            check_earlier(waiting)
+        if rows:
+            self.summary(rows, me)
+            self.matches(rows, tracked)
 
-if waiting:
-    check_earlier(waiting)
-if not rows:
-    st.stop()
+    def summary(self, rows: list[dict], me: str | None) -> None:
+        mine = [r for r in rows if r["player"]]
+        if mine:
+            wins, losses = sum(r["won"] == 1 for r in mine), sum(r["won"] == 0 for r in mine)
+            kills, deaths = sum(r["kills"] for r in mine), sum(r["deaths"] for r in mine)
+            rounds = sum(r["player_rounds"] for r in mine)
+            columns = st.columns(4)
+            columns[0].metric("Matches", len(mine))
+            columns[1].metric("Record", f"{wins}–{losses}", help="Wins–losses, from your team's side")
+            columns[2].metric("K/D", f"{kills / deaths if deaths else kills:.2f}")
+            eps = round_eps(100 * sum(r["rating"] * r["player_rounds"] for r in mine) / rounds) if rounds else "—"
+            columns[3].metric("EPS", eps, help="Your average EPS, weighted by rounds played")
+        st.caption((f"Your matches as **{md(me)}**, newest first. " if mine else "")
+                   + "**Tracked** is who you picked when you added the match: only their stats are kept. "
+                     "Select a match to open it on the Dashboard or remove it.")
 
-mine = [r for r in rows if r["player"]]
-if mine:
-    wins, losses = sum(r["won"] == 1 for r in mine), sum(r["won"] == 0 for r in mine)
-    kills, deaths = sum(r["kills"] for r in mine), sum(r["deaths"] for r in mine)
-    rounds = sum(r["player_rounds"] for r in mine)
-    columns = st.columns(4)
-    columns[0].metric("Matches", len(mine))
-    columns[1].metric("Record", f"{wins}–{losses}", help="Wins–losses, from your team's side")
-    columns[2].metric("K/D", f"{kills / deaths if deaths else kills:.2f}")
-    eps = round_eps(100 * sum(r["rating"] * r["player_rounds"] for r in mine) / rounds) if rounds else "—"
-    columns[3].metric("EPS", eps, help="Your average EPS, weighted by rounds played")
-st.caption((f"Your matches as **{md(me)}**, newest first. " if mine else "")
-           + "**Tracked** is who you picked when you added the match: only their stats are kept. "
-             "Select a match to open it on the Dashboard or remove it.")
+    def matches(self, rows: list[dict], tracked: dict[str, list[str]]) -> None:
+        table = []
+        for r in rows:
+            row = {"When": nice_time(r["played_at"]), "Map": r["map"] or "", "Type": r["match_type"] or ""}
+            if r["player"]:
+                own, other = (r["score0"], r["score1"]) if r["team"] == 0 else (r["score1"], r["score0"])
+                row |= {"Result": {1: "Win", 0: "Loss"}.get(r["won"], "Draw"), "Score": f"{own}–{other}",
+                        "K-D": f"{r['kills']}-{r['deaths']}", "EPS": eps_from_rating(r["rating"])}
+            else:
+                row |= {"Result": "—", "Score": f"{r['score0']}–{r['score1']}", "K-D": "", "EPS": None}
+            row["Tracked"] = ", ".join(tracked.get(r["match_id"], []))
+            table.append(row)
+        picked = st.dataframe(table, hide_index=True, on_select="rerun", selection_mode="single-row",
+                              key="history_rows")
+        chosen = picked.selection.rows if picked else []
+        if chosen:
+            self.selected(rows[chosen[0]])
+        st.download_button("⬇ CSV", rows_csv(table).encode("utf-8"), file_name="match_history.csv", mime="text/csv")
 
-table = []
-for r in rows:
-    row = {"When": nice_time(r["played_at"]), "Map": r["map"] or "", "Type": r["match_type"] or ""}
-    if r["player"]:
-        own, other = (r["score0"], r["score1"]) if r["team"] == 0 else (r["score1"], r["score0"])
-        row |= {"Result": {1: "Win", 0: "Loss"}.get(r["won"], "Draw"), "Score": f"{own}–{other}",
-                "K-D": f"{r['kills']}-{r['deaths']}", "EPS": eps_from_rating(r["rating"])}
-    else:
-        row |= {"Result": "—", "Score": f"{r['score0']}–{r['score1']}", "K-D": "", "EPS": None}
-    row["Tracked"] = ", ".join(tracked.get(r["match_id"], []))
-    table.append(row)
+    def selected(self, r: dict) -> None:
+        """What you can do with the match picked in the table: open it, or remove it."""
+        name, label = r["source"], match_label(r["source"], r)
+        source = self.session.replays  # any kind: a folder, uploads, the demo season
+        on_hand = bool(source and source.has(name))
+        opened, removed = st.columns([1, 1])
+        if on_hand:
+            if opened.button("Open on Dashboard", type="primary"):
+                self.open_on_dashboard(name)
+        else:
+            opened.caption("This match's replay isn't in your replay folder anymore (the game deletes old ones), "
+                           "but its stats are still here and on **Ask**.")
+        with removed.popover("Remove from your stats"):
+            st.write(f"Remove {md(label)} from your stats?"
+                     + (" Its replay is still in your folder, so you can add it again from the Dashboard."
+                        if on_hand and source.adds_to_stats else " Its replay is gone, so it can't be added back."
+                        if not on_hand else ""))
+            st.button("Yes, remove it", on_click=_remove, args=(r["match_id"], label), type="primary")
 
-picked = st.dataframe(table, hide_index=True, on_select="rerun", selection_mode="single-row", key="history_rows")
-chosen = picked.selection.rows if picked else []
-if chosen:
-    r = rows[chosen[0]]
-    name, label = r["source"], match_label(r["source"], r)
-    opened, removed = st.columns([1, 1])
-    if demo_active() or (source and name in (source.get("groups") or {})):  # the demo's are on the Dashboard too
-        if opened.button("Open on Dashboard", type="primary"):
-            st.session_state["open_match"] = name
-            st.switch_page("report.py")
-    else:
-        opened.caption("This match's replay isn't in your replay folder anymore (the game deletes old ones), "
-                       "but its stats are still here and on **Ask**.")
-    with removed.popover("Remove from your stats"):
-        st.write(f"Remove {md(label)} from your stats?"
-                 + (" Its replay is still in your folder, so you can add it again from the Dashboard."
-                    if source and name in (source.get("groups") or {}) else
-                    " Its replay is gone, so it can't be added back."))
-        st.button("Yes, remove it", on_click=_remove, args=(r["match_id"], label), type="primary")
-st.download_button("⬇ CSV", rows_csv(table).encode("utf-8"), file_name="match_history.csv", mime="text/csv")
+
+HistoryTab().run()

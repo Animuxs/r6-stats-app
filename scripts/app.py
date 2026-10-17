@@ -20,7 +20,8 @@ import streamlit as st
 
 import rosters
 from app_info import APP_NAME, can_dock, is_windows_app, quiet_windows_connection_resets, send_window_command
-from branding import current_competition, render_identity
+from branding import render_identity
+from session import Session
 from sources import demo_active, start_demo, stop_demo
 
 if __name__ == "__main__":
@@ -94,8 +95,7 @@ with st.sidebar:
         if st.button("Try the demo season", width="stretch", key="demo_start"):
             start_demo()
             st.rerun()
-if "r6_season" not in st.session_state and current_competition()["season"]:
-    st.session_state["r6_season"] = current_competition()["season"]  # the season named after your league
+Session().season  # the first time: the season named after your league on League & Team, if it has one
 render_identity()
 if demo_active():
     st.info("**Demo season**: twelve made-up league matches of Lakeside Varsity, so you can try Ask, Match History, "

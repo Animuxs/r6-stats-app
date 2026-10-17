@@ -19,8 +19,7 @@ from pathlib import Path
 import streamlit as st
 
 import rosters
-from app_info import APP_NAME, APP_VERSION, NOTICE, is_public_host, is_windows_app
-from branding import current_competition
+from app_info import APP_NAME, APP_VERSION, NOTICE, is_windows_app
 from metrics_engine import (
     PRO_LEAGUE_COLUMNS, SIDE_ICONS, SIDE_NAMES, compute_match_metrics, leaderboard_rows, pro_league_rows,
     round_player_rows, round_rows, rounds_text, rows_csv, running_scores, scoreboard_text, side_split, team_side,
@@ -29,12 +28,14 @@ from metrics_engine import (
 from parser import (
     ReplayParseError, find_replay_folders, load_demo_match, r6_dissect_available, raw_shape_preview, save_uploads,
 )
-from season_stats import GENERIC_TEAM_NAMES, StatsError, StatsManager
+from season_stats import GENERIC_TEAM_NAMES, StatsError
+from session import Session
 from sources import (
-    can_read_local_files, save_replay_folder, saved_replay_folder, demo_active, folder_source, load_source, match_label, match_time, open_stats_db, parse,
-    start_workdir_sweeper, tracker_off,
+    DemoSource, LoadedSource, ReplaySource, can_read_local_files, folder_source, load_source, save_replay_folder,
+    saved_replay_folder, start_workdir_sweeper,
 )
 from stats_db import NotAdded
+from tab import Tab
 from ui import md
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -159,13 +160,14 @@ def _season_key(match: dict) -> str:
 def my_team() -> tuple[str, dict[str, str], dict | None]:
     """Your team as saved on League & Team: its name, its players ({any name they go by,
     casefolded: the name tracked for them}) and its NECC roster entry, if it has one."""
-    competition = current_competition()
+    session = Session()
+    competition = session.competition
     team = competition["team"]
     if not team:
         return "", {}, None
     necc = rosters.mine(competition)
     players = rosters.aliases(necc) if necc else {}
-    with open_stats_db() as db:  # the Team Analytics team made when it was saved (and any players added since)
+    with session.stats() as db:  # the Team Analytics team made when it was saved (and any players added since)
         saved = next((names for name, names in db.rosters().items() if name.casefold() == team.casefold()), [])
     for key, name in rosters.roster_names(saved).items():
         players.setdefault(key, name)
@@ -200,21 +202,22 @@ def name_sides(match: dict, team: str, players: dict[str, str], necc: dict | Non
 def _add_match(source: str, match: dict, files: int) -> None:
     """Add the match to the stats database with the players picked for it and, when asked, save
     those same players' rounds to the season. Runs as the confirm button's callback."""
-    picked = {team: list(st.session_state.get(_picked_key(match, team), [])) for team in (0, 1)}
+    session = Session()
+    picked = {team: list(session.get(_picked_key(match, team), [])) for team in (0, 1)}
     players = picked[0] + picked[1]
     try:
-        with open_stats_db() as db:
+        with session.stats() as db:
             db.import_match(source, match, files=files, players=players)
     except NotAdded as e:
-        st.session_state["dashboard_note"] = ("error", str(e))
+        session.leave_note("dashboard", "error", str(e))
         return
     notes = [f"Added to your stats, tracking {len(players)} player{'s' if len(players) != 1 else ''}: "
              f"{', '.join(players)}."]
     kind = "success"
-    if st.session_state.get(_season_key(match)) and not tracker_off():
-        season = (st.session_state.get("r6_season_input") or "").strip() or "current"
-        st.session_state["r6_season"] = season
-        with StatsManager(season=season) as tracker:
+    if session.get(_season_key(match)) and not session.tracker_off:
+        session.season = session.get("r6_season_input") or ""
+        season = session.season
+        with session.tracker(season) as tracker:
             tracked = {u.casefold() for u in tracker.tracked_players()}
             for team in (0, 1):
                 team_name = (st.session_state.get(_team_name_key(match, team)) or "").strip()
@@ -232,19 +235,20 @@ def _add_match(source: str, match: dict, files: int) -> None:
                 notes.append(f"Saved {result.rounds_logged} player-rounds to {season}." if result.rounds_logged else
                              f"Its rounds for these players were already saved to {season}.")
                 notes += result.warnings
-    st.session_state["dashboard_note"] = (kind, " ".join(notes))
+    session.leave_note("dashboard", kind, " ".join(notes))
 
 
 def confirm_match(source: str, match: dict, files: int, team: str = "", roster: dict[str, str] | None = None,
                   mine: int | None = None) -> None:
     """The step that adds a match to your stats: a person checks the match and picks exactly whose
     stats to keep. Your team's players (saved on League & Team) are picked for you; nobody else is."""
+    session = Session()
     team_names = match["team_names"]
     roster = roster or {}
     st.subheader("Add to your stats")
-    if note := st.session_state.pop("dashboard_note", None):
+    if note := session.take_note("dashboard"):
         getattr(st, note[0])(md(note[1]))
-    with open_stats_db() as db:
+    with session.stats() as db:
         added = db.added(source)
     if added:
         st.caption(f"✓ In your stats, tracking **{md(', '.join(added['players']))}**. Change who's picked and "
@@ -275,17 +279,17 @@ def confirm_match(source: str, match: dict, files: int, team: str = "", roster: 
     # a custom game with your team in it (a scrim or a league match) is saved to the season too, unless you say not
     ours = mine is not None and len(rosters.on_roster(
         [p["name"] for p in match.get("players", []) if p.get("team") == mine], roster)) >= 3
-    st.session_state.setdefault(_season_key(match), bool(ours and not added and not tracker_off()
-                                                         and match.get("match_type") == "Custom game"))
-    season_on = st.checkbox("Also save it to the season tracker", key=_season_key(match), disabled=bool(tracker_off()),
+    off = session.tracker_off
+    session.setdefault(_season_key(match), bool(ours and not added and not off
+                                                and match.get("match_type") == "Custom game"))
+    season_on = st.checkbox("Also save it to the season tracker", key=_season_key(match), disabled=bool(off),
                             help="Adds these players' rounds to a season's totals. Only the players picked above are "
                                  "saved, even if you track others who played in this match. Ticked for you when "
                                  "your team played a custom game (a scrim or a league match): untick practice.")
-    if tracker_off():
-        st.caption("Season tracking is off on the public website, to keep visitors' stats apart. Use the Windows "
-                   "app or run the app on your own computer.")
+    if off:
+        st.caption(off)  # why: the demo season, or the public website
     elif season_on:
-        st.text_input("Season", value=st.session_state.get("r6_season", "current"), key="r6_season_input")
+        st.text_input("Season", value=session.season, key="r6_season_input")
         for side, column in enumerate(st.columns(2)):
             if not picked[side]:
                 continue
@@ -312,81 +316,118 @@ def _use_game_folder(auto: str) -> None:
     save_replay_folder(None)
 
 
-start_workdir_sweeper()
-local_files = can_read_local_files()
-if not local_files:
-    sources = [UPLOAD]
-elif is_windows_app():
-    sources = [FOLDER, UPLOAD]
-else:
-    sources = [FOLDER, UPLOAD, REPLAYS_FOLDER]
+class DashboardTab(Tab):
+    """One match's scoreboards, round by round, and the step that adds it to your stats. Its
+    matches come from any ReplaySource: your folder, uploads, the replays/ folder or the demo
+    season, all picked and opened the same way."""
 
-# ------------------------------------------------------------- sidebar ----
-with st.sidebar:
-    st.caption("Drop in a match replay for an esports-style scoreboard of every player.")
-    if not r6_dissect_available():
-        st.warning("r6-dissect not found, so real replays can't be parsed. "
-                   "See the README to build it, or use the demo match below.", icon="⚠️")
-    demo_mode = st.toggle("Use demo match (no file needed)", value=demo_active() or not r6_dissect_available())
-    st.divider()
-    st.caption("EPS · KD (+/-) · Entry · KOST · KPR · HS · SRV · Clutches · Multikills · "
-               "Objectives · Dead for trade kill · Trade kills")
-    st.caption(f"{APP_NAME} {APP_VERSION}")
-    st.caption(NOTICE)
+    title, name = "Dashboard", "dashboard"
 
-st.title("Dashboard")
+    def heading(self) -> None:
+        start_workdir_sweeper()
+        self.local_files = can_read_local_files()
+        self.demo_mode = self.sidebar()
+        st.title(self.title)
 
-# ------------------------------------------------------------- input -------
-match = raw = None
-name, files = None, 0  # the replay's match folder and its round files; none for the demo match
-my_name, my_players, sides = "", {}, {"mine": None, "logos": {}, "found": {}}
-parse_warnings: list[str] = []
+    def show_note(self) -> None:
+        pass  # shown in "Add to your stats", next to what it's about
 
-if demo_mode and demo_active():  # the demo season: any of its matches, newest first
-    import demo_season
+    def render(self) -> None:
+        if self.demo_mode and not self.session.demo:
+            match = load_demo_match()
+            st.caption("Showing the bundled demo match. Turn off demo mode in the sidebar to load a real replay.")
+            self.show_match(match, None, 0, None)
+            return
+        source = DemoSource() if self.demo_mode else self.choose_source()
+        if source is None:
+            st.info("Load a replay above, or turn on the demo match in the sidebar.")
+            return
+        if source.skipped:
+            st.warning(source.skipped, icon="🛡️")
+        if source.error:
+            st.error(source.error)
+            return
+        name = self.pick_match(source)
+        if source.needs_reading(name):
+            with st.spinner("Reading the match... long matches can take a few seconds."):
+                source.open(name)
+        result = source.open(name)
+        if isinstance(result, ReplayParseError):
+            st.error(f"{name}: {result}")
+            return
+        match, raw, warnings = result
+        if note := source.note():
+            st.caption(note)
+        mine = ("", {}, {"mine": None, "logos": {}, "found": {}})
+        if source.adds_to_stats:
+            my_name, my_players, my_necc = my_team()
+            match, sides = name_sides(match, my_name, my_players, my_necc)
+            mine = (my_name, my_players, sides)
+        for w in warnings:
+            st.warning(w, icon="⚠️")
+        if raw:
+            with st.sidebar:
+                with st.expander("🔍 Parser debug info"):
+                    st.json(raw_shape_preview(raw))
+        self.show_match(match, name, source.round_files(name), source, *mine)
 
-    season = demo_season.season()
-    with open_stats_db() as db:
-        known = {r["source"]: r for r in db.match_list(db.me())}
-    folders = sorted(season, reverse=True)
-    opening = st.session_state.pop("open_match", None)  # "Open" on Match History
-    picked = st.selectbox(f"{len(folders)} demo season matches", folders,
-                          index=folders.index(opening) if opening in folders else 0,
-                          format_func=lambda n: match_label(n, known.get(n)) + f" · vs {season[n]['team_names'][1]}")
-    match = season[picked]
-    st.caption("A made-up match from the demo season. Turn off demo mode in the sidebar to load a real replay.")
-elif demo_mode:
-    match = load_demo_match()
-    st.caption("Showing the bundled demo match. Turn off demo mode in the sidebar to load a real replay.")
-else:
-    source = sources[0]
-    if len(sources) > 1:
-        source = st.radio(
-            "Replay source", sources, horizontal=True,
-            help="On GitHub Codespaces, browser uploads over ~50 MB fail with HTTP 413; "
-                 "put big matches in replays/ instead." if os.environ.get("CODESPACES") else None,
-        )
-    state = None
-    if source == UPLOAD:
+    # ----------------------------------------------------------- input ----
+    def sidebar(self) -> bool:
+        """The sidebar's notes and the demo match switch; returns whether it's on."""
+        with st.sidebar:
+            st.caption("Drop in a match replay for an esports-style scoreboard of every player.")
+            if not r6_dissect_available():
+                st.warning("r6-dissect not found, so real replays can't be parsed. "
+                           "See the README to build it, or use the demo match below.", icon="⚠️")
+            demo_mode = st.toggle("Use demo match (no file needed)",
+                                  value=self.session.demo or not r6_dissect_available())
+            st.divider()
+            st.caption("EPS · KD (+/-) · Entry · KOST · KPR · HS · SRV · Clutches · Multikills · "
+                       "Objectives · Dead for trade kill · Trade kills")
+            st.caption(f"{APP_NAME} {APP_VERSION}")
+            st.caption(NOTICE)
+        return demo_mode
+
+    def choose_source(self) -> ReplaySource | None:
+        """Where to read replays from (a folder, an upload, the replays/ folder), as a ReplaySource."""
+        if not self.local_files:
+            kinds = [UPLOAD]
+        elif is_windows_app():
+            kinds = [FOLDER, UPLOAD]
+        else:
+            kinds = [FOLDER, UPLOAD, REPLAYS_FOLDER]
+        kind = kinds[0]
+        if len(kinds) > 1:
+            kind = st.radio(
+                "Replay source", kinds, horizontal=True,
+                help="On GitHub Codespaces, browser uploads over ~50 MB fail with HTTP 413; "
+                     "put big matches in replays/ instead." if os.environ.get("CODESPACES") else None,
+            )
+        state = {UPLOAD: self.uploaded, FOLDER: self.from_folder}.get(kind, self.from_replays_dir)()
+        return LoadedSource.of(state)
+
+    def uploaded(self) -> dict | None:
         uploaded = st.file_uploader(
             "Drop the match's .zip (or every .rec file from the match folder)",
             type=["zip", "rec"], accept_multiple_files=True,
         )
-        if not local_files:
+        if not self.local_files:
             st.caption("Your replays are in the game's `MatchReplay` folder, one folder per match. "
                        "Right-click a match folder, choose **Send to > Compressed (zipped) folder**, "
                        "and upload that zip. Prefer not to upload? Get the Windows app, which "
                        "reads the folder directly.")
-        if uploaded:
-            sig = ("upload",) + tuple((u.name, u.size, u.file_id) for u in uploaded)
-            state = load_source(sig, lambda td, sc, u=uploaded: save_uploads(u, td, sc))
-    elif source == FOLDER:
+        if not uploaded:
+            return None
+        sig = ("upload",) + tuple((u.name, u.size, u.file_id) for u in uploaded)
+        return load_source(sig, lambda td, sc, u=uploaded: save_uploads(u, td, sc))
+
+    def from_folder(self) -> dict | None:
         found = find_replay_folders()
         auto = str(found[0]) if found else ""
-        if "replay_folder" not in st.session_state:  # first time on this page: the folder kept on this PC
+        if not self.session.has("replay_folder"):  # first time on this page: the folder kept on this PC
             saved = saved_replay_folder()
-            st.session_state["replay_folder"] = str(saved) if saved else auto
-        current = st.session_state["replay_folder"].strip().strip('"')
+            self.session.set("replay_folder", str(saved) if saved else auto)
+        current = self.session.get("replay_folder").strip().strip('"')
         # a folder that's set: the box stays out of the way; otherwise it's the first thing to fill in
         box = st.expander("Replay folder", expanded=not current) if current else st.container()
         with box:
@@ -402,13 +443,15 @@ else:
                 if auto:
                     st.button("Use the folder Siege saves to", on_click=_use_game_folder, args=(auto,),
                               type="tertiary")
-        if typed:
-            p = Path(typed).expanduser()
-            if not p.exists():
-                st.error(f"Not found: {p}")
-            else:
-                state = folder_source(p)
-    else:
+        if not typed:
+            return None
+        path = Path(typed).expanduser()
+        if not path.exists():
+            st.error(f"Not found: {path}")
+            return None
+        return folder_source(path)
+
+    def from_replays_dir(self) -> dict | None:
         REPLAYS_DIR.mkdir(exist_ok=True)
         choices = sorted(
             [p for p in REPLAYS_DIR.iterdir()
@@ -418,152 +461,139 @@ else:
         st.caption(f"Copy a match folder or its `.zip` into `{REPLAYS_DIR}`, then pick it here.")
         if not choices:
             st.info(f"No matches in `{REPLAYS_DIR}` yet.")
-        else:
-            chosen = st.selectbox("Match", choices, format_func=lambda p: p.name + ("/" if p.is_dir() else ""))
-            state = folder_source(chosen)
+            return None
+        chosen = st.selectbox("Match", choices, format_func=lambda p: p.name + ("/" if p.is_dir() else ""))
+        return folder_source(chosen)
 
-    if state is not None:
-        if state["skipped"]:
-            st.warning(state["skipped"], icon="🛡️")
-        if "error" in state:
-            st.error(state["error"])
-            st.stop()
-        names = sorted(state["groups"], key=lambda n: match_time(n) or n, reverse=True)  # newest first
-        with open_stats_db() as db:
+    def pick_match(self, source: ReplaySource) -> str:
+        """Which of the source's matches to show: newest first, or the one another tab asked for."""
+        names = source.matches()
+        with self.stats() as db:
             known = {r["source"]: r for r in db.match_list(db.me())}
-        opening = st.session_state.pop("open_match", None)  # "Open" on Match History
-        if len(names) > 1:
-            name = st.selectbox(f"{len(names)} matches", names,
-                                format_func=lambda n: match_label(n, known.get(n)) + (" · ✓ added" if n in known else ""),
-                                index=names.index(opening) if opening in names else 0)
+        opening = self.session.match_to_open()  # "Open on Dashboard" on Match History
+        if len(names) == 1:
+            return names[0]
+        return st.selectbox(source.picker_label(len(names)), names,
+                            index=names.index(opening) if opening in names else 0,
+                            format_func=lambda n: source.describe(n, known.get(n)))
+
+    # ----------------------------------------------------------- match ----
+    def show_match(self, match: dict, name: str | None, files: int, source: ReplaySource | None,
+                   my_name: str = "", my_players: dict | None = None, sides: dict | None = None) -> None:
+        sides = sides or {"mine": None, "logos": {}, "found": {}}
+        stats = compute_match_metrics(match)
+        rows = pro_league_rows(stats)
+        team_names = match["team_names"]
+        score = match["final_score"]
+        self.session.last_match = match
+        if not stats:
+            st.warning("This replay has no player data (it may be a practice session or a match "
+                       "that ended before it started).", icon="⚠️")
+            return
+        if not any(s.kills for s in stats.values()):
+            st.warning("Parsed, but no kills were found. Expand **Parser debug info** in the sidebar "
+                       "to see what r6-dissect returned.", icon="⚠️")
+        top_player = max(stats.values(), key=lambda player: (player.eps, player.kills))
+        snapshot_columns = st.columns(4)
+        snapshot_columns[0].metric("Rounds", len(match["rounds"]))
+        snapshot_columns[1].metric("Match score", f"{score[0]} : {score[1]}")
+        snapshot_columns[2].metric("Top EPS", top_player.eps)
+        snapshot_columns[3].metric("Top performer", top_player.name)
+        st.markdown(scorecard_html(match, sides, my_name), unsafe_allow_html=True)
+        for team_idx, team_name in enumerate(team_names[:2]):
+            team_rows = [r for r in rows if r["Team"] == team_idx]
+            if team_rows:
+                won = score[team_idx] > score[1 - team_idx]
+                st.markdown(scoreboard_html(team_name, won, team_rows), unsafe_allow_html=True)
+        if source is not None and source.adds_to_stats:
+            confirm_match(name, match, files, my_name, my_players, sides["mine"])
+        elif source is not None:
+            st.caption("This match is part of the demo season, which already has it in its stats.")
         else:
-            name = names[0]
-        if name not in state["parsed"]:
-            with st.spinner("Reading the match... long matches can take a few seconds."):
-                parse(state, name)
-        result = state["parsed"][name]
-        if isinstance(result, ReplayParseError):
-            st.error(f"{name}: {result}")
-            st.stop()
-        match, raw, parse_warnings = result
-        files = len(state["groups"][name])
-        my_name, my_players, my_necc = my_team()
-        match, sides = name_sides(match, my_name, my_players, my_necc)
-        for w in parse_warnings:
-            st.warning(w, icon="⚠️")
-        with st.sidebar:
-            with st.expander("🔍 Parser debug info"):
-                st.json(raw_shape_preview(raw))
+            st.caption("The demo match is only for trying the app, so it can't be added to your stats.")
+        self.exports(match, stats, rows)
+        self.breakdown(match, stats, rows)
 
-if match is None:
-    st.info("Load a replay above, or turn on the demo match in the sidebar.")
-    st.stop()
+    def exports(self, match: dict, stats: dict, rows: list[dict]) -> None:
+        team_names, score = match["team_names"], match["final_score"]
+        rounds = round_rows(match, stats)
+        c1, c2, c3, c4, _ = st.columns([1, 1, 1, 1.4, 2])
+        c1.download_button("⬇ CSV", rows_csv([{"Player": r["Player"], "Team Name": team_names[r["Team"]], **r}
+                                               for r in leaderboard_rows(stats)]).encode("utf-8"),
+                           file_name=f"{match['match_id']}_stats.csv", mime="text/csv")
+        c2.download_button("⬇ JSON", json.dumps({
+            "map": match["map"], "match_id": match["match_id"], "teams": team_names,
+            "score": score, "players": rows, "rounds": rounds},
+            indent=2, ensure_ascii=False).encode("utf-8"),
+            file_name=f"{match['match_id']}_stats.json", mime="application/json")
+        c3.download_button("⬇ TXT", (scoreboard_text(match, rows) + "\n\n" + rounds_text(match) + "\n").encode("utf-8"),
+                           file_name=f"{match['match_id']}_stats.txt", mime="text/plain")
+        c4.download_button("⬇ Rounds CSV", rows_csv(round_player_rows(rounds)).encode("utf-8"),
+                           file_name=f"{match['match_id']}_rounds.csv", mime="text/csv",
+                           help="One row per player per round: side, operator, result, K-D-A and highlights.")
 
-# ------------------------------------------------------------ compute ------
-stats = compute_match_metrics(match)
-rows = pro_league_rows(stats)
-team_names = match["team_names"]
-score = match["final_score"]
-st.session_state["r6_last_match"] = match
-
-if not stats:
-    st.warning("This replay has no player data (it may be a practice session or a match "
-               "that ended before it started).", icon="⚠️")
-    st.stop()
-if not any(s.kills for s in stats.values()):
-    st.warning("Parsed, but no kills were found. Expand **Parser debug info** in the sidebar "
-               "to see what r6-dissect returned.", icon="⚠️")
-
-top_player = max(stats.values(), key=lambda player: (player.eps, player.kills))
-snapshot_columns = st.columns(4)
-snapshot_columns[0].metric("Rounds", len(match["rounds"]))
-snapshot_columns[1].metric("Match score", f"{score[0]} : {score[1]}")
-snapshot_columns[2].metric("Top EPS", top_player.eps)
-snapshot_columns[3].metric("Top performer", top_player.name)
-
-# ------------------------------------------------------------ scorecard ---
-def _side_html(side: int, align: str) -> str:
-    logo = sides["logos"].get(side)
-    img = f'<img class="sc-logo" src="{html.escape(logo, quote=True)}" alt="">' if logo else ""
-    you = '<span class="sc-you">YOUR TEAM</span>' if sides["mine"] == side and my_name else ""
-    inner = f'{img}<div><div class="team-name">{html.escape(team_names[side])}</div>{you}</div>'
-    mirrored = "flex-direction:row-reverse;text-align:right;" if align == "flex-end" else ""
-    return f'<div class="sc-side" style="{mirrored}">{inner}</div>'
+    def breakdown(self, match: dict, stats: dict, rows: list[dict]) -> None:
+        team_names = match["team_names"]
+        st.subheader("Round-by-round")
+        st.markdown(rounds_html(match), unsafe_allow_html=True)
+        player = st.selectbox("Player", [r["Player"] for r in rows], key="r6_round_player",
+                              format_func=lambda name: f"{name} · {team_names[stats[name].team]}")
+        s = stats[player]
+        for col, (label, value) in zip(st.columns(3) + st.columns(3), (
+            ("EPS", s.eps),
+            ("K-D-A", f"{s.kills}-{s.deaths}-{s.assists}"),
+            ("Entry K-D", f"{s.entry_kills}-{s.entry_deaths}"),
+            ("KOST", f"{s.kost_pct:.0f}%"),
+            ("Plants-Defuses", f"{s.plants}-{s.defuses}"),
+            ("Traded-Trade kills", f"{s.trades}-{s.trade_kills}"),
+        )):
+            col.metric(label, value)
+        st.markdown(side_split_html(s.round_breakdown)
+                    + player_rounds_html(player, team_names[s.team], match, s.round_breakdown), unsafe_allow_html=True)
+        with st.expander("Stat definitions"):
+            st.markdown(STAT_DEFINITIONS)
 
 
-st.markdown(
-    f'<div class="scorecard">'
-    f'{_side_html(0, "flex-start")}'
-    f'<div style="text-align:center"><span class="score-big">{score[0]}</span>'
-    f'<span style="color:#8b949e;font-size:1.6rem"> : </span><span class="score-big">{score[1]}</span><br>'
-    f'<span class="map-pill">{html.escape(match["map"])} · {len(match["rounds"])} round{"s" if len(match["rounds"]) != 1 else ""}'
-    f'{" · " + html.escape(match["match_type"]) if match.get("match_type") else ""}</span></div>'
-    f'{_side_html(1, "flex-end")}'
-    f'</div>', unsafe_allow_html=True)
+def scorecard_html(match: dict, sides: dict, my_name: str) -> str:
+    """The match's score between its two sides, with each side's logo and which one is yours."""
+    team_names, score = match["team_names"], match["final_score"]
 
-# ------------------------------------------------------------ scoreboards -
-for team_idx, team_name in enumerate(team_names[:2]):
-    team_rows = [r for r in rows if r["Team"] == team_idx]
-    if team_rows:
-        won = score[team_idx] > score[1 - team_idx]
-        st.markdown(scoreboard_html(team_name, won, team_rows), unsafe_allow_html=True)
+    def side_html(side: int, align: str) -> str:
+        logo = sides["logos"].get(side)
+        img = f'<img class="sc-logo" src="{html.escape(logo, quote=True)}" alt="">' if logo else ""
+        you = '<span class="sc-you">YOUR TEAM</span>' if sides["mine"] == side and my_name else ""
+        inner = f'{img}<div><div class="team-name">{html.escape(team_names[side])}</div>{you}</div>'
+        mirrored = "flex-direction:row-reverse;text-align:right;" if align == "flex-end" else ""
+        return f'<div class="sc-side" style="{mirrored}">{inner}</div>'
 
-if name is not None:
-    confirm_match(name, match, files, my_name, my_players, sides["mine"])
-elif demo_mode and demo_active():
-    st.caption("This match is part of the demo season, which already has it in its stats.")
-else:
-    st.caption("The demo match is only for trying the app, so it can't be added to your stats.")
+    rounds = len(match["rounds"])
+    return (f'<div class="scorecard">'
+            f'{side_html(0, "flex-start")}'
+            f'<div style="text-align:center"><span class="score-big">{score[0]}</span>'
+            f'<span style="color:#8b949e;font-size:1.6rem"> : </span><span class="score-big">{score[1]}</span><br>'
+            f'<span class="map-pill">{html.escape(match["map"])} · {rounds} round{"s" if rounds != 1 else ""}'
+            f'{" · " + html.escape(match["match_type"]) if match.get("match_type") else ""}</span></div>'
+            f'{side_html(1, "flex-end")}'
+            f'</div>')
 
-rounds = round_rows(match, stats)
-c1, c2, c3, c4, _ = st.columns([1, 1, 1, 1.4, 2])
-c1.download_button("⬇ CSV", rows_csv([{"Player": r["Player"], "Team Name": team_names[r["Team"]], **r}
-                                       for r in leaderboard_rows(stats)]).encode("utf-8"),
-                   file_name=f"{match['match_id']}_stats.csv", mime="text/csv")
-c2.download_button("⬇ JSON", json.dumps({
-    "map": match["map"], "match_id": match["match_id"], "teams": team_names,
-    "score": score, "players": rows, "rounds": rounds},
-    indent=2, ensure_ascii=False).encode("utf-8"),
-    file_name=f"{match['match_id']}_stats.json", mime="application/json")
-c3.download_button("⬇ TXT", (scoreboard_text(match, rows) + "\n\n" + rounds_text(match) + "\n").encode("utf-8"),
-                   file_name=f"{match['match_id']}_stats.txt", mime="text/plain")
-c4.download_button("⬇ Rounds CSV", rows_csv(round_player_rows(rounds)).encode("utf-8"),
-                   file_name=f"{match['match_id']}_rounds.csv", mime="text/csv",
-                   help="One row per player per round: side, operator, result, K-D-A and highlights.")
 
-# ------------------------------------------------------------ breakdown ---
-st.subheader("Round-by-round")
-st.markdown(rounds_html(match), unsafe_allow_html=True)
-player = st.selectbox("Player", [r["Player"] for r in rows], key="r6_round_player",
-                      format_func=lambda name: f"{name} · {team_names[stats[name].team]}")
-s = stats[player]
-for col, (label, value) in zip(st.columns(3) + st.columns(3), (
-    ("EPS", s.eps),
-    ("K-D-A", f"{s.kills}-{s.deaths}-{s.assists}"),
-    ("Entry K-D", f"{s.entry_kills}-{s.entry_deaths}"),
-    ("KOST", f"{s.kost_pct:.0f}%"),
-    ("Plants-Defuses", f"{s.plants}-{s.defuses}"),
-    ("Traded-Trade kills", f"{s.trades}-{s.trade_kills}"),
-)):
-    col.metric(label, value)
-st.markdown(side_split_html(s.round_breakdown)
-            + player_rounds_html(player, team_names[s.team], match, s.round_breakdown), unsafe_allow_html=True)
+STAT_DEFINITIONS = (
+    "- **⚔︎ Attack / ♜ Defense**: the side the player's team played that round. "
+    "**Operator**: who they picked that round. **Score**: the score after that round.\n"
+    "- **Highlights**: a multikill (2K to ACE), the round's entry kill or death, trade kills, a death "
+    "that was traded, the defuser planted or disabled, and clutches won (or lost) as the last one alive.\n"
+    "- **EPS**: performance score centered on 100 (match average). Ubisoft hasn't published "
+    "its EPS formula; this one combines KPR, deaths, KOST, entry differential, multikills, "
+    "clutches, objectives and trade kills, weighted against everyone in this match.\n"
+    "- **KD (+/-)**: kills-deaths (difference). **Entry**: opening kills-opening deaths.\n"
+    "- **KOST**: % of rounds with a Kill, Objective, Survival or Traded death. "
+    "**KPR**: kills per round. **HS**: headshot kills %. **SRV**: % of rounds survived.\n"
+    "- **Clutches**: rounds won as the team's last player alive vs 1+ enemies. "
+    "**Multikills**: rounds with 2+ kills.\n"
+    "- **Objectives**: defuser plants + disables.\n"
+    "- **Dead for trade kill**: deaths a teammate avenged within 10 s. "
+    "**Trade kills**: kills that avenged a teammate within 10 s."
+)
 
-with st.expander("Stat definitions"):
-    st.markdown(
-        "- **⚔︎ Attack / ♜ Defense**: the side the player's team played that round. "
-        "**Operator**: who they picked that round. **Score**: the score after that round.\n"
-        "- **Highlights**: a multikill (2K to ACE), the round's entry kill or death, trade kills, a death "
-        "that was traded, the defuser planted or disabled, and clutches won (or lost) as the last one alive.\n"
-        "- **EPS**: performance score centered on 100 (match average). Ubisoft hasn't published "
-        "its EPS formula; this one combines KPR, deaths, KOST, entry differential, multikills, "
-        "clutches, objectives and trade kills, weighted against everyone in this match.\n"
-        "- **KD (+/-)**: kills-deaths (difference). **Entry**: opening kills-opening deaths.\n"
-        "- **KOST**: % of rounds with a Kill, Objective, Survival or Traded death. "
-        "**KPR**: kills per round. **HS**: headshot kills %. **SRV**: % of rounds survived.\n"
-        "- **Clutches**: rounds won as the team's last player alive vs 1+ enemies. "
-        "**Multikills**: rounds with 2+ kills.\n"
-        "- **Objectives**: defuser plants + disables.\n"
-        "- **Dead for trade kill**: deaths a teammate avenged within 10 s. "
-        "**Trade kills**: kills that avenged a teammate within 10 s."
-    )
+
+DashboardTab().run()

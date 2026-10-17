@@ -431,6 +431,24 @@ navigation. `sources.py` is where every page gets its replays: the source
 picked on the Dashboard (or, on your PC, the game's `MatchReplay` folder), each
 match parsed at most once per session. `stats_db.py` is the database, which
 only takes a match when it's confirmed on the Dashboard.
+
+The tabs are one program on one shared session:
+
+- **`session.Session`** owns what they share: the season, your league and
+  team, the demo season, the stats database, the match another tab asked the
+  Dashboard to open, and the notes a button leaves for its tab's next run. It
+  keeps them in `st.session_state` under the same keys, and only it spells
+  them out.
+- **`sources.ReplaySource`** is where matches come from: `FolderSource`,
+  `UploadSource` and `DemoSource` answer the same questions (`matches()`,
+  `open()`, `has()`, how the Dashboard names them, whether they can be added
+  to your stats). The Dashboard, Match History, Operator Analytics, Team
+  Analytics and League & Team use any of them the same way.
+- **`tab.Tab`** is each tab's base class. A tab overrides `render()` (and
+  `heading()` if it needs to) and gets the session, the stats database, the
+  "no matches yet" state, the season tracker's on/off note, notes across a
+  rerun, and links to the other tabs. Each page file ends with
+  `SomeTab().run()`, so `st.navigation` runs the files as before.
 `ask_engine.py` reads a question into a query (whose stats, which ones, which
 filters, what kind of answer), runs it with every value passed as a query
 parameter, and writes the answer; it also works out Build a team and the
