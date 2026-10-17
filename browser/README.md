@@ -45,3 +45,7 @@ NECC's divisions, since the page carries a copy of both.
 - Confirmed matches and selected players are saved in IndexedDB on this device. Export/import a workspace JSON backup to move them between browsers. Demo matches never enter your saved workspace.
 - Native window docking and automatic replay-folder discovery remain desktop integrations; browser uploads provide the same analysis.
 - Seasons can include the same confirmed match independently without double counting.
+
+## Match-day planning
+
+The full-width layout includes a responsive companion rail and a **Match day** page. Fixtures and their time-zone labels, availability and prep notes are entered manually; the demo season displays labeled examples. Turn off the companion panels for a statistics-only view. Planning data is saved on this device in the same IndexedDB workspace, included in workspace backups, and can also be exported/restored as match-day JSON compatible with the desktop app.

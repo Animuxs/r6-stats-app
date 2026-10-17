@@ -179,6 +179,19 @@ td.eps { color:var(--accent); font-weight:700; }
 .saved-match>div {flex:1;min-width:200px;}.saved-match small {display:block;color:var(--dim);}
 button:disabled {cursor:not-allowed;}
 
+.wrap {max-width:none;width:100%;}
+.workspace-layout {display:grid;grid-template-columns:minmax(0,1fr) minmax(240px,22%);gap:24px;align-items:start;margin-top:16px;}
+.workspace-layout main {min-width:0;}
+#matchday-panel {min-width:0;}
+.matchday-panel h3 {margin-bottom:10px;}
+.md-form {display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0;}
+.md-form label {display:grid;gap:5px;}
+.md-form textarea {min-height:110px;}
+.md-form .md-span {grid-column:1/-1;}
+body.matchday-off .workspace-layout {grid-template-columns:minmax(0,1fr);}
+body.matchday-off #matchday-panel {display:none;}
+@media(max-width:1100px){.workspace-layout{grid-template-columns:minmax(0,1fr);}#matchday-panel .matchday-panel{display:grid;grid-template-columns:1fr 1fr;gap:16px;}}
+@media(max-width:600px){#matchday-panel .matchday-panel,.md-form{grid-template-columns:1fr;}.md-form .md-span{grid-column:auto;}}
 </style>
 
 <div class="wrap">
@@ -196,6 +209,7 @@ button:disabled {cursor:not-allowed;}
     <button class="tab" role="tab" id="tab-teams" aria-selected="false" aria-controls="teams">Team Analytics</button>
     <button class="tab" role="tab" id="tab-operators" aria-selected="false" aria-controls="operators">Operator Analytics</button>
     <button class="tab" role="tab" id="tab-season" aria-selected="false" aria-controls="season">Season Tracker</button>
+    <button class="tab" role="tab" id="tab-matchday" aria-selected="false" aria-controls="matchday">Match day</button>
     <button class="tab" role="tab" id="tab-theme" aria-selected="false" aria-controls="theme">Team Theme</button>
     <button class="tab" role="tab" id="tab-league" aria-selected="false" aria-controls="league">League &amp; Team</button>
     <button class="tab" role="tab" id="tab-about" aria-selected="false" aria-controls="about">About</button>
@@ -207,7 +221,7 @@ button:disabled {cursor:not-allowed;}
   <button class="btn small" id="workspace-import">Import workspace</button>
   <input type="file" id="workspace-file" accept=".json,application/json" hidden></div>
   <div id="workspace-message" role="status" hidden></div>
-  <main>
+  <div class="workspace-layout"><main>
     <section class="panel" id="report" role="tabpanel" aria-labelledby="tab-report">
       <div class="intake">
         <div class="drop" id="drop">
@@ -294,7 +308,8 @@ button:disabled {cursor:not-allowed;}
         <p class="dim">R6 Match Stats is an unofficial fan project, free to use. It isn't made, endorsed or supported by Ubisoft. Rainbow Six and Ubisoft are trademarks of Ubisoft Entertainment. It only reads replay files the game has already saved.</p>
       </div>
     </section>
-  </main>
+    <section class="panel" id="matchday" role="tabpanel" aria-labelledby="tab-matchday" hidden><h2>Match-day workspace</h2><div id="matchday-content"></div></section>
+  </main><aside id="matchday-panel" aria-label="Match-day companion"></aside></div>
   <footer class="foot">
     <span id="foot-version"></span>
     <span>Event data from <a href="https://liquipedia.net/rainbowsix" target="_blank" rel="noopener">Liquipedia</a> (CC-BY-SA 3.0). NECC divisions from NECC's public season pages. League and team names belong to their owners.</span>
@@ -319,7 +334,7 @@ button:disabled {cursor:not-allowed;}
   if (R6.releasesUrl) $("releases-link").href = R6.releasesUrl;
 
   // ------------------------------------------------------------ tabs ----
-  const tabs = ["report", "ask", "history", "teams", "operators", "season", "league", "theme", "about"];
+  const tabs = ["report", "ask", "history", "teams", "operators", "season", "matchday", "league", "theme", "about"];
   function showTab(name) {
     for (const t of tabs) {
       $(`tab-${t}`).setAttribute("aria-selected", String(t === name));

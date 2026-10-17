@@ -119,6 +119,49 @@ class Session:
         return self._state.pop(f"{tab}_note", None)
 
     # ------------------------------------------------------- plain values ---
+    @property
+    def matchday(self):
+        from matchday_data import MatchdayWorkspace, demo_workspace
+        from app_info import desktop_data_dir, is_windows_app
+        import json
+        key = "matchday_demo" if self.demo else "matchday_real"
+        if key not in self._state:
+            value = demo_workspace().to_dict() if self.demo else {}
+            if not self.demo and is_windows_app():
+                try:
+                    value = json.loads((desktop_data_dir() / "matchday.json").read_text(encoding="utf-8"))
+                except FileNotFoundError:
+                    pass
+                except (OSError, ValueError):
+                    self.leave_note("matchday", "warning", "Could not read saved planning data. Export a backup before replacing it.")
+            try:
+                self._state[key] = MatchdayWorkspace.from_dict(value).to_dict()
+            except ValueError:
+                self._state[key] = MatchdayWorkspace().to_dict()
+                self.leave_note("matchday", "warning", "Saved planning data is invalid; the original file has been kept.")
+        return MatchdayWorkspace.from_dict(self._state[key])
+
+    def save_matchday(self, workspace) -> None:
+        from matchday_data import MatchdayWorkspace
+        from app_info import desktop_data_dir, is_windows_app
+        import json
+        import os
+        import tempfile
+        value = MatchdayWorkspace.from_dict(workspace.to_dict()).to_dict()
+        if not self.demo and is_windows_app():
+            folder = desktop_data_dir()
+            folder.mkdir(parents=True, exist_ok=True)
+            temporary = None
+            try:
+                with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=folder, delete=False) as file:
+                    temporary = file.name
+                    json.dump(value, file, ensure_ascii=False)
+                os.replace(temporary, folder / "matchday.json")
+            finally:
+                if temporary and os.path.exists(temporary):
+                    os.unlink(temporary)
+        self._state["matchday_demo" if self.demo else "matchday_real"] = value
+
     def get(self, key: str, default: Any = None) -> Any:
         """A tab's own value (a widget's key, say), for what's only that tab's business."""
         return self._state.get(key, default)

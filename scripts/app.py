@@ -63,6 +63,7 @@ page = st.navigation([
     st.Page("history.py", title="Match History", icon=":material/history:"),
     st.Page("teams.py", title="Team Analytics", icon=":material/groups:"),
     st.Page("operators.py", title="Operator Analytics", icon=":material/target:"),
+    st.Page("matchday.py", title="Match day", icon=":material/event:"),
     st.Page("league.py", title="League & Team", icon=":material/emoji_events:"),
     st.Page("appearance.py", title="Team Theme", icon=":material/palette:"),
     st.Page("download.py", title="Get the Windows app", icon=":material/download:"),
@@ -95,10 +96,20 @@ with st.sidebar:
         if st.button("Try the demo season", width="stretch", key="demo_start"):
             start_demo()
             st.rerun()
-Session().season  # the first time: the season named after your league on League & Team, if it has one
+_initial_season = Session().season  # the first time: the season named after your league on League & Team, if it has one
 render_identity()
 if demo_active():
     st.info("**Demo season**: twelve made-up league matches of Lakeside Varsity, so you can try Ask, Match History, "
             "Team Analytics and the rest without replays. Your own stats aren't touched. Leave it from the sidebar.",
             icon=":material/science:")
-page.run()
+session = Session()
+if session.get("show_matchday", True):
+    content, companion = st.columns([4, 1.15], gap="large")
+    # Draw the companion first: a page can legitimately stop (e.g. demo season tracker).
+    with companion:
+        from matchday_hub import render_panel
+        render_panel(session)
+    with content:
+        page.run()
+else:
+    page.run()

@@ -72,6 +72,9 @@ def workspace(payload: str, action: str = "overview", argument: str = "{}") -> s
     from team_tables import player_table, season_player_table
 
     state, args = json.loads(payload), json.loads(argument)
+    if state.get("matchday") is not None:
+        from matchday_data import MatchdayWorkspace
+        MatchdayWorkspace.from_dict(state["matchday"])
     entries = state.get("matches", [])
     teams = state.get("teams", {})
     with TemporaryDirectory(prefix="r6-browser-") as folder:

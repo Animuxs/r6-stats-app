@@ -17,7 +17,7 @@ APP_FILES = ["app.py", "report.py", "dock.py", "ask.py", "history.py", "operator
              "events.py", "liquipedia_events.json", "necc_divisions.json", "rosters.py", "necc_rosters.json", "team_ui.py",
              "download.py", "app_info.py", "ui.py", "presentation.py", "operator_stats.py", "team_tables.py", "branding.py", "appearance.py", "necc_data.py",
              "necc_season.json", "season_stats.py", "sources.py", "stats_db.py", "ask_engine.py",
-             "parser.py", "file_guard.py", "metrics_engine.py", "sample_data.py", "demo_season.py", "session.py", "tab.py",
+             "parser.py", "file_guard.py", "metrics_engine.py", "sample_data.py", "demo_season.py", "session.py", "tab.py", "matchday.py", "matchday_data.py", "matchday_hub.py",
              "icon.png"]
 datas = [(str(ROOT / "scripts" / name), "scripts") for name in APP_FILES]
 for stamp in ("repo.txt", "version.txt"):
@@ -38,7 +38,7 @@ hiddenimports = (
     + ["abc", "base64", "calendar", "collections", "collections.abc", "concurrent.futures", "contextlib", "csv", "dataclasses", "datetime",
        "difflib", "gzip", "html", "http.client", "io", "ipaddress", "itertools", "json", "logging", "os", "pathlib",
        "random", "re", "shutil", "sqlite3", "subprocess", "sys", "tempfile", "threading", "time", "typing", "unicodedata",
-       "urllib.parse", "urllib.request", "zipfile"]
+       "urllib.parse", "urllib.request", "uuid", "zipfile"]
 )
 
 # the Details tab of the exe's Properties, and the name Task Manager shows (Windows only)

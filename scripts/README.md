@@ -500,3 +500,10 @@ go test ./...                            # the Go replay parser
   ended during prep have no kill feed.
 - **A map shows as `Map(123...)`**: the map is newer than this r6-dissect
   build; add its ID to `dissect/header.go` and re-run `stringer -type=Map`.
+
+
+### Full-width match-day workspace (1.6.3)
+
+The app uses the available window width. Its companion rail shows manually entered upcoming fixtures, recent confirmed results, roster availability and preparation notes. Open **Match day** to manage fixtures and time-zone labels, record availability, edit notes, export or restore planning JSON, or turn the rail off for a full-width statistics-only view. Smaller windows stack the panels below the main content.
+
+No match schedule or availability is inferred from replay files. The demo season has clearly labeled example fixtures and availability, isolated from real planning data. The Windows app saves planning data in `%LOCALAPPDATA%/R6MatchStats/matchday.json`; the hosted app keeps it in the current private session, so export before leaving. Existing tabs, detailed team tables, selected-player imports, seasons, independent team deletion, replay sources and docking retain the shared Session/Tab structure.
