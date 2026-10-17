@@ -1,0 +1,39 @@
+{
+  "name": "r6-team-workspace",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-10-16",
+  "workers_dev": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "r6-team-workspace",
+      "database_id": "6d411864-62a3-4613-97c8-7fadfed902cb",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "assets": {
+    "directory": "../browser/dist/cloudflare",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/health",
+      "/create",
+      "/login",
+      "/recover",
+      "/logout",
+      "/workspace"
+    ]
+  },
+  "account_id": "8fce7ec514658905f6314e539d29a583",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 0.1,
+    "traces": {
+      "enabled": true,
+      "head_sampling_rate": 0.1
+    }
+  },
+  "preview_urls": false
+}

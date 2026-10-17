@@ -1,0 +1,35 @@
+"""Small machine-local preferences shared by the launcher and Settings UI."""
+import json
+import os
+import tempfile
+from pathlib import Path
+
+
+def launch_chime_enabled(folder):
+    try:
+        value = json.loads((Path(folder) / "desktop-settings.json").read_text(encoding="utf-8"))
+        return value.get("launch_chime", True) is not False if isinstance(value, dict) else True
+    except (OSError, ValueError):
+        return True
+
+
+def save_launch_chime(folder, enabled):
+    folder = Path(folder)
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / "desktop-settings.json"
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        value = {}
+    if not isinstance(value, dict):
+        value = {}
+    value["launch_chime"] = bool(enabled)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=folder, delete=False) as file:
+            temporary = file.name
+            json.dump(value, file)
+        os.replace(temporary, path)
+    finally:
+        if temporary and os.path.exists(temporary):
+            os.unlink(temporary)

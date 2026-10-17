@@ -55,3 +55,8 @@ __pycache__/
 # coverage data (scripts/run_tests.py --coverage writes it to build/)
 .coverage
 .coverage.*
+
+# Local Cloudflare development state contains team credentials and data
+/team-server/.wrangler/
+/team-server/node_modules/
+/team-server/.dev.vars

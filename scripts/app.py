@@ -49,6 +49,15 @@ from presentation import render_styles
 
 render_styles()
 
+from team_runtime import current_team, switch_account
+from team_accounts import AccountError
+try:
+    _signed_team = current_team()
+except AccountError:
+    switch_account()
+    _signed_team = None
+    st.warning('Your team session ended. Sign in again from Team hub.')
+
 if st.query_params.get("view") == "dock":
     # the Windows app docked to the edge of the screen (desktop/launcher.py): just the compact page
     page = st.navigation([st.Page("dock.py", title="Docked", icon=":material/dock_to_right:", default=True)],
@@ -64,6 +73,7 @@ page = st.navigation([
     st.Page("teams.py", title="Team Analytics", icon=":material/groups:"),
     st.Page("operators.py", title="Operator Analytics", icon=":material/target:"),
     st.Page("matchday.py", title="Match day", icon=":material/event:"),
+    st.Page("team_hub.py", title="Team hub", icon=":material/badge:"),
     st.Page("league.py", title="League & Team", icon=":material/emoji_events:"),
     st.Page("appearance.py", title="Team Theme", icon=":material/palette:"),
     st.Page("download.py", title="Get the Windows app", icon=":material/download:"),
@@ -85,6 +95,7 @@ if "demo" in st.query_params and not Session().get("demo_from_link"):
     if not demo_active():
         start_demo()
 with st.sidebar:
+    st.page_link('team_hub.py', label='Team hub · ' + (_signed_team['name'] if _signed_team else 'sign in'), icon=':material/badge:')
     if demo_active():
         st.caption("You're looking at the **demo season**: made-up matches, not your own.")
         if st.button("Leave the demo season", width="stretch", key="demo_leave"):
@@ -98,12 +109,17 @@ with st.sidebar:
             st.rerun()
 _initial_season = Session().season  # the first time: the season named after your league on League & Team, if it has one
 render_identity()
+if _signed_team and not demo_active():
+    from ui import md
+    _person = next((p for p in _signed_team['directory'] if p['id'] == Session().team_person), None)
+    _view = _person['name'] if _person else 'team overview'
+    st.caption(md(f"Team workspace: {_signed_team['name']} · Viewing as {_view} · Shared account access"))
 if demo_active():
     st.info("**Demo season**: twelve made-up league matches of Lakeside Varsity, so you can try Ask, Match History, "
             "Team Analytics and the rest without replays. Your own stats aren't touched. Leave it from the sidebar.",
             icon=":material/science:")
 session = Session()
-if session.get("show_matchday", True):
+if session.get("show_matchday", True) and page.title != 'Team hub':
     content, companion = st.columns([4, 1.15], gap="large")
     # Draw the companion first: a page can legitimately stop (e.g. demo season tracker).
     with companion:

@@ -1,0 +1,13 @@
+{
+  "name": "r6-team-workspace",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node test_worker.mjs",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "4.151.1"
+  }
+}

@@ -1,6 +1,8 @@
 """Team identity controls: colors, names and logo, starting from your team (any NECC team: its own
 colors and logo) or a NECC school if you like."""
 import streamlit as st
+from app_info import desktop_data_dir, is_windows_app
+from desktop_settings import launch_chime_enabled, save_launch_chime
 import rosters
 from branding import DEFAULT_THEME, apply_theme, current_competition, current_theme, local_preferences, uploaded_logo
 from necc_data import bundled_school_catalog
@@ -19,6 +21,17 @@ class ThemeTab(Tab):
 
     def render(self) -> None:
         st.write('Make every match report and analytics page feel like home.')
+        if is_windows_app():
+            with st.expander('Desktop options'):
+                folder = desktop_data_dir()
+                enabled = launch_chime_enabled(folder)
+                chosen = st.toggle('Play a launch chime', value=enabled, key='desktop_launch_chime',
+                                   help='Uses your Windows sound scheme once when startup succeeds.')
+                if chosen != enabled:
+                    try:
+                        save_launch_chime(folder, chosen)
+                    except OSError:
+                        st.error('Could not save the chime setting. Check access to the app data folder.')
         theme = current_theme()
         schools = self.session.get('necc_schools') or bundled_school_catalog()
         team_css()

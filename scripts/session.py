@@ -28,6 +28,8 @@ _SEASON = "r6_season"
 _LAST_MATCH = "r6_last_match"
 _OPEN_MATCH = "open_match"
 _TEAM_CHOICE = "team_choice"
+_TEAM_TOKEN = "team_token"
+_TEAM_PERSON = "team_person"
 
 
 class Session:
@@ -53,6 +55,9 @@ class Session:
 
     def tracker(self, season: str | None = None) -> StatsManager:
         """The season tracker, for `season` or the session's."""
+        from team_runtime import current_team
+        if current_team() or self.demo:
+            return StatsManager(db_path=sources.stats_db_path(), season=season or self.season)
         return StatsManager(season=season or self.season)
 
     @property
@@ -109,6 +114,29 @@ class Session:
     def team_choice(self, team: str) -> None:
         self._state[_TEAM_CHOICE] = team
 
+    # ------------------------------------------------------- team login ---
+    @property
+    def team_token(self) -> str | None:
+        """The signed-in team account's session token (None when nobody is signed in)."""
+        return self._state.get(_TEAM_TOKEN)
+
+    @team_token.setter
+    def team_token(self, token: str) -> None:
+        self._state[_TEAM_TOKEN] = token
+
+    @property
+    def team_person(self) -> str | None:
+        """Who in the team directory this browser is viewing as."""
+        return self._state.get(_TEAM_PERSON)
+
+    @team_person.setter
+    def team_person(self, person: str) -> None:
+        self._state[_TEAM_PERSON] = person
+
+    def clear(self) -> None:
+        """Forget everything, so nothing crosses from one team account to another."""
+        self._state.clear()
+
     # -------------------------------------------------------------- notes ---
     def leave_note(self, tab: str, kind: str, text: str) -> None:
         """A message for `tab` to show at the top of its next run ("success", "error", ...): what a
@@ -124,6 +152,11 @@ class Session:
         from matchday_data import MatchdayWorkspace, demo_workspace
         from app_info import desktop_data_dir, is_windows_app
         import json
+        from team_runtime import current_team, store
+        if not self.demo and current_team():
+            value, revision = store().document(self.team_token, 'planning')
+            self.setdefault('team_planning_revision', revision)
+            return MatchdayWorkspace.from_dict(value)
         key = "matchday_demo" if self.demo else "matchday_real"
         if key not in self._state:
             value = demo_workspace().to_dict() if self.demo else {}
@@ -148,6 +181,12 @@ class Session:
         import os
         import tempfile
         value = MatchdayWorkspace.from_dict(workspace.to_dict()).to_dict()
+        from team_runtime import current_team, store
+        if not self.demo and current_team():
+            store().save_document(self.team_token, 'planning', value,
+                                  self.get('team_planning_revision', 0))
+            self.set('team_planning_revision', self.get('team_planning_revision', 0) + 1)
+            return
         if not self.demo and is_windows_app():
             folder = desktop_data_dir()
             folder.mkdir(parents=True, exist_ok=True)

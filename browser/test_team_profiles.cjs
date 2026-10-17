@@ -1,0 +1,13 @@
+const assert = require('node:assert/strict');
+const {directory,serverUrl}=require('./team_profiles');
+const member={id:'a'.repeat(32),name:'Captain',player:'Kanto',roles:['Player','Captain'],custom_role:''};
+assert.deepEqual(directory([member])[0],member);
+assert.throws(()=>directory([member,{...member,id:'b'.repeat(32),player:'kanto'}]));
+assert.throws(()=>directory([{...member,roles:['Admin']}]));
+assert.throws(()=>directory([{...member,roles:['Other']}]));
+assert.throws(()=>directory([{...member,id:'../account'}]));
+assert.deepEqual(directory(),[]);
+assert.equal(serverUrl('https://team.example/team_hub'),'https://team.example/team_hub');
+assert.equal(serverUrl('http://localhost:8501/team_hub'),'http://localhost:8501/team_hub');
+for(const value of ['http://team.example','javascript:alert(1)','https://user:pass@team.example','https://team.example/?token=secret','file:///C:/app'])assert.throws(()=>serverUrl(value));
+console.log('Portable directory and server URL checks passed.');
