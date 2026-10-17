@@ -204,10 +204,10 @@ practicing casual casuals tag tagged
 
 _WORDS = {  # each idea's wordings, matched as whole words in the cleaned question
     "me": r"\b(i|me|my|mine|myself|im|ive|id)\b",
-    "we": r"\b(we|us|our|ours|ourselves|my team|our team|my squad)\b",
+    "we": r"\b(we|us|our|ours|ourselves|my team|our team|my squad|the team|the teams|the squad)\b",
     "teammates": r"\b(teammates?|team mates?|who i play with|played with|play with)\b",
     "opponents": r"\b(opponents?|enem(y|ies)|against me|against us|the other team)\b",
-    "everyone": r"\b(everyone|everybody|all players|anyone|any player|the lobby|in the lobby)\b",
+    "everyone": r"\b(everyone|everyones|everybody|everybodys|all players|anyone|any player|the lobby|in the lobby)\b",
     "trend": r"\b(over time|trend|trends|trending|progress|progression|improv(e|ed|es|ing|ement)|getting (better|worse)"
              r"|declin(e|ed|ing)|change[ds]?|changing|timeline|graph|chart|plot|per match|each match|every match|"
              r"match by match|per game|each game|by match|by game|over my|over our|over the)\b(?! types?\b)",
@@ -271,8 +271,11 @@ def loose(text: str) -> str:
     return re.sub(r"[^0-9a-z]", "", fold(text))
 
 
+MAX_NUMBER = 10_000  # "last 999999999999 matches" is every match, not a number too big for SQLite or a date
+
+
 def _number(word: str) -> int:
-    return int(word) if word.isdigit() else _NUMBER_WORDS[word]
+    return min(int(word), MAX_NUMBER) if word.isdigit() else _NUMBER_WORDS[word]
 
 
 def _has(pattern: str, text: str) -> bool:
@@ -715,6 +718,8 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
     found = _find_metrics(text)
     counting = _has(_WORDS["count"], text)
     q.metrics = [m for m in found if m not in SAMPLE_METRICS or counting or q.most_played]
+    if counting and any(m not in SAMPLE_METRICS for m in q.metrics):
+        q.metrics = [m for m in q.metrics if m not in SAMPLE_METRICS]  # "how many matches have we won": wins
     if not q.metrics and counting:
         q.metrics = [m for m in found if m in SAMPLE_METRICS][:1]
     if _has(_WORDS["record"], text):
@@ -1189,7 +1194,7 @@ def _answer_value(db: StatsDB, q: Query, vocab: Vocab) -> Answer:
     first = q.metrics[0]
     value = fmt(_value(row.get(first), METRICS[first].kind), METRICS[first].kind)
     if q.metrics[:3] == RECORD:
-        verb = "are" if who == "you" or q.who in ("teammates", "opponents", "my_team") else "is"
+        verb = "are" if who == "you" or q.who in ("teammates", "opponents") else "is"
         headline = f"{_cap(who)} {verb} {row['wins']}–{row['losses']} " \
                    f"({fmt(row['win_rate'], 'pct')} wins) {sample}{_filters_text(q)}."
     elif METRICS[first].kind == "count":
@@ -1311,6 +1316,11 @@ def _answer_rank(db: StatsDB, q: Query, vocab: Vocab) -> Answer:
         return Answer(False, understood, f"No {dim.label.lower()}s found{among}{_filters_text(q)}.", notes=notes)
     top = shown[0]
     kind = METRICS[first].kind
+    if kind == "count" and METRICS[first].higher_is_better and not q.most_played and q.order != "low"             and not any(r.get(first) for r in shown):  # "most clutches": nobody has any
+        nobody = "nobody" if q.group in ("player", "player_match") else f"no {dim.label.lower()}"
+        return Answer(True, understood, f"{_cap(nobody)} has any {_phrase(first, level)} yet{among}{_filters_text(q)}.",
+                      *_table(shown, q.group, q.metrics, level, ())[:2], None, notes,
+                      _table(shown, q.group, q.metrics, level, ())[2])
     value = fmt(_value(top.get(first), kind), kind)
     sample = _plural(top["matches"], "match") if level == "match" else _plural(top["rounds"], "round")
     if q.group in ("match", "player_match"):  # "Your most kills in a match: 11 (Sep 23, 9:30 PM · Villa)."
@@ -1339,8 +1349,10 @@ def _answer_rank(db: StatsDB, q: Query, vocab: Vocab) -> Answer:
         if q.most_played:
             headline = f"{_cap(whose)} most played {what} is {top['name']}: {value} {_phrase(first, level)}."
         else:
-            headline = f"{_cap(whose)} {word} {what} by {_phrase(first, level)} is {top['name']}: " \
-                       f"{value} ({sample})."
+            # "Your best map by K/D is Bank", "Your map with the most kills is Border"
+            by = f"{word} {what} by {_phrase(first, level)}" if word not in ("most", "fewest", "least") else \
+                f"{what} with the {word} {_phrase(first, level)}"
+            headline = f"{_cap(whose)} {by} is {top['name']}: {value} ({sample})."
     if q.group in ("match", "player_match"):
         extra: tuple[str, ...] = ()  # each row is one match
     else:

@@ -22,6 +22,7 @@ import desktop_settings
 import parser as replay_parser
 import question_reports as qr
 import season_stats
+from ask_engine import Vocab
 from assistant import Conversation, answer_anything, starters
 from stats_db import StatsDB
 from tab import PAGES
@@ -130,6 +131,82 @@ class TestAnswers(unittest.TestCase):
         self.assertEqual(reply.links, [("history", "Open Match History")])
         for page in PAGES:
             self.assertTrue(starters(page))
+
+
+class TestMoreAnswers(unittest.TestCase):
+    """Questions the Ask engine alone got wrong or couldn't answer."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.db = StatsDB(":memory:")
+        demo_season.load(cls.db)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.db.close()
+
+    def text(self, question: str) -> str:
+        return answer_anything(question, self.db, now=NOW).text
+
+    def test_a_stat_with_a_filter_is_a_question_not_a_definition(self):
+        self.assertTrue(self.text("what is our trade kills when we won").startswith("Your team has"))
+        self.assertTrue(self.text("what is the team's rating when we won").startswith("Your team"))
+
+    def test_whose(self):
+        self.assertTrue(self.text("everyone's headshot percentage on Bank").startswith("Everyone's"))
+        self.assertTrue(self.text("the team's aces").startswith("Your team"))
+        self.assertEqual(self.text("how many matches have we won"), "Your team has 6 wins over 12 matches.")
+        self.assertTrue(self.text("what's our record").startswith("Your team is 6–6"))
+
+    def test_ban_or_pick_a_map(self):
+        self.assertTrue(self.text("which map should we ban").startswith("Ban **Kafe Dostoyevsky**"))
+        self.assertTrue(self.text("which map should we pick").startswith("Pick **Bank**"))
+
+    def test_when_i_play_best(self):
+        self.assertIn("Evening", self.text("do I play better in the evening"))
+        day = answer_anything("which day do I play best", self.db, now=NOW)
+        self.assertIn("Thursdays", day.text)
+        self.assertEqual(day.columns[0], "When")
+
+    def test_consistency_and_improvement(self):
+        self.assertIn("consistent", self.text("how consistent am I"))
+        self.assertIn("has improved the most", self.text("who's improving the most"))
+
+    def test_averages_per_match(self):
+        self.assertEqual(self.text("my average kills per game"), "You average **8.2 kills** per match (98 over 12 matches).")
+        self.assertTrue(self.text("Sacri's average deaths per match").startswith("Sacri averages"))
+
+    def test_a_ranking_where_nobody_has_any(self):
+        self.assertEqual(self.text("who has the most aces"), "Nobody has any aces yet.")
+
+
+class TestNeverCrashes(unittest.TestCase):
+    """Random and hostile input never raises, always gets words back, and charts always draw."""
+
+    def test_random_questions(self):
+        import random
+
+        from chart_engine import build, parse
+        from chart_view import altair_chart
+        rng = random.Random(11)
+        words = ("my our Sacri Sens BC Lakeside Varsity K/D kills EPS KOST aces clutches win rate best worst top 5 "
+                 "most over time per week by map by operator on attack defense Bank Thorn ranked scrims last 3 "
+                 "matches since Sep 20 vs compare analyze chart pie heatmap scatter histogram box how what who "
+                 "which why ? % 0 -1 999999999999999999999 ; DROP TABLE matches -- <b> 🙂 Jäger").split()
+        hostile = ["", "?", "a" * 3000, "\x00", "' OR 1=1 --", "my kills in my last 10000000000000000000000 matches",
+                   "last 99999999 weeks", "9" * 400 + "+1", "2**99999", "10/0", "compare me and me", "and?", "why?"]
+        with StatsDB(":memory:") as db, StatsDB(":memory:") as empty:
+            demo_season.load(db)
+            vocab = Vocab.from_db(db)
+            chat = Conversation()
+            for q in hostile + [" ".join(rng.choice(words) for _ in range(rng.randint(1, 10))) for _ in range(300)]:
+                with self.subTest(q=q[:60]):
+                    self.assertTrue(answer_anything(q, db, now=NOW).text.strip())
+                    self.assertTrue(answer_anything(q, empty, now=NOW).text.strip())
+                    self.assertTrue(chat.reply(q, db, now=NOW).text.strip())
+                    chart = build(parse(q, vocab, NOW), db, vocab)
+                    if chart.ok:
+                        altair_chart(chart).to_dict()
 
 
 class TestConversation(unittest.TestCase):
