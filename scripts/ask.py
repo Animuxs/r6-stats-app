@@ -113,9 +113,9 @@ class AskTab(Tab):
         else:
             st.divider()
             show_message(as_message(reply))
-        if reply.suggestions:
-            columns = st.columns(min(3, len(reply.suggestions)))
-            for i, follow in enumerate(reply.suggestions[:3]):
+        if follow_ups := reply.next_questions():
+            columns = st.columns(min(3, len(follow_ups)))
+            for i, follow in enumerate(follow_ups[:3]):
                 columns[i].button(follow, key=f"ask_next_{i}", on_click=_set_question, args=(follow,),
                                   icon=":material/subdirectory_arrow_right:", width="stretch")
         understood = reply.answer.understood if reply.answer else ""

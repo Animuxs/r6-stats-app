@@ -74,8 +74,11 @@ def altair_chart(chart: Chart, height: int = 320) -> alt.Chart:
             y=alt.Y("x2:N", title=chart.series_label, sort=None),
             color=alt.Color("y:Q", title=chart.y_label, scale=alt.Scale(scheme="blues")),
             tooltip=[alt.Tooltip("x:N", title=chart.x_label), alt.Tooltip("x2:N", title=chart.series_label), tip_y])
-        text = base.mark_text(fontSize=11, color="#080e19").encode(
-            x=alt.X("x:N", sort=None), y=alt.Y("x2:N", sort=None), text=alt.Text("y:Q", format=fmt or ".0f"))
+        values = [r["y"] for r in chart.rows]
+        middle = (min(values) + max(values)) / 2  # dark text on light cells, light on dark
+        text = base.mark_text(fontSize=11).encode(
+            x=alt.X("x:N", sort=None), y=alt.Y("x2:N", sort=None), text=alt.Text("y:Q", format=fmt or ".0f"),
+            color=alt.condition(alt.datum.y > middle, alt.value("#f2f6fb"), alt.value("#080e19")))
         drawn = rect + text
     elif spec.kind == "histogram":
         drawn = base.mark_bar(opacity=0.85).encode(

@@ -159,7 +159,7 @@ def as_message(reply: Reply) -> dict[str, Any]:
     answer = reply.answer
     return {"role": "assistant", "text": reply.text, "kind": reply.kind, "answered": reply.answered,
             "columns": columns, "rows": rows[:12], "more_rows": max(0, len(rows) - 12), "formats": formats,
-            "links": reply.links, "suggestions": reply.suggestions, "question": reply.question,
+            "links": reply.links, "suggestions": reply.next_questions(), "question": reply.question,
             "resolved": reply.resolved, "understood": answer.understood if answer else "",
             "notes": list(answer.notes) if answer else [], "plain": reply.kind == "stats",
             "chart": asdict(reply.chart) if reply.chart else None}

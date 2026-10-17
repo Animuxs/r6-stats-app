@@ -64,6 +64,11 @@ class Reply:
             return self.answer.columns, self.answer.rows, self.answer.formats
         return self.columns, self.rows, {}
 
+    def next_questions(self) -> list[str]:
+        """Its suggestions, without the question just asked."""
+        asked = {fold(self.question).strip(" ?!."), fold(self.resolved).strip(" ?!.")}
+        return [s for s in self.suggestions if fold(s).strip(" ?!.") not in asked]
+
     def summary(self) -> str:
         """The reply in one line, for a report."""
         return re.sub(r"\s+", " ", re.sub(r"[*_`#>]", "", self.text)).strip()[:300]
