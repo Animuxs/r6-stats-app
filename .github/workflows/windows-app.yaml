@@ -207,6 +207,13 @@ jobs:
           $files = "dist/R6MatchStats-Setup.exe", "dist/R6MatchStats-Windows.zip", "dist/R6MatchStats-Browser.html", "dist/SHA256SUMS.txt"
           if (Test-Path dist/SIGNATURE.txt) { $files += "dist/SIGNATURE.txt" }  # who signed it, when it's signed
           gh release upload "${{ github.event.release.tag_name }}" @files --clobber
+          # a Downloads section at the top of the notes, since GitHub lists the r6-dissect-* files first
+          $tag = "${{ github.event.release.tag_name }}"
+          [Console]::OutputEncoding = [Text.UTF8Encoding]::new()  # gh's output is UTF-8 (→, …, emoji)
+          gh release view $tag --json body -q .body | Out-File -Encoding utf8 notes.md
+          python desktop/release_notes.py "${{ github.repository }}" $tag notes.md @files
+          if ($LASTEXITCODE) { throw "couldn't write the Downloads section" }
+          gh release edit $tag --notes-file notes.md
 
       - name: Remove the signing certificate
         if: always()
