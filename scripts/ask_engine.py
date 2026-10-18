@@ -1420,6 +1420,10 @@ def _answer_rank(db: StatsDB, q: Query, vocab: Vocab) -> Answer:
             by = f"{word} {what} by {_phrase(first, level)}" if word not in ("most", "fewest", "least") else \
                 f"{what} with the {word} {_phrase(first, level)}"
             headline = f"{_cap(whose)} {by} is {top['name']}: {value} ({sample})."
+            if len(rows) == 1:  # nothing to rank it against: no "hardest" opponent at a 100% win rate
+                plain = dim.label.lower() + (f" on {q.side}" if q.side else "")
+                headline = (f"Only one {plain} so far: {top['name']}, {_phrase(first, level)} {value} ({sample}). "
+                            f"Play more to compare.")
     if q.group in ("match", "player_match"):
         extra: tuple[str, ...] = ()  # each row is one match
     else:
