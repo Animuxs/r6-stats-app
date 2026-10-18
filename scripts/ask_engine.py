@@ -1535,6 +1535,7 @@ def _answer_matches(db: StatsDB, q: Query, vocab: Vocab) -> Answer:
     cols = {k: _metric_sql(k, "match") for k in ("kills", "deaths", "kd", "eps")}
     text = ("SELECT t.match_id, MAX(m.played_at) AS played_at, MAX(m.map) AS map, MAX(m.match_type) AS match_type,"
             " MAX(m.score0) AS score0, MAX(m.score1) AS score1, MAX(t.team) AS team, MAX(t.won) AS won, "
+            f" MAX({DIMS['opponent'].sql}) AS opponent, "
             + ", ".join(f"{s} AS {k}" for k, s in cols.items())
             + f" FROM {sql.from_}{sql.where_sql()} GROUP BY t.match_id"
             f" ORDER BY MAX(m.played_at) {'ASC' if q.first_matches else 'DESC'} LIMIT ?")
@@ -1548,9 +1549,11 @@ def _answer_matches(db: StatsDB, q: Query, vocab: Vocab) -> Answer:
     if not rows:
         return _no_matches(q, vocab, understood)
     table = []
+    named = any(named_team(r["opponent"]) for r in rows)  # Ranked's ENEMY TEAM every time: no column
     for r in rows:
         own, other = (r["score0"], r["score1"]) if r["team"] == 0 else (r["score1"], r["score0"])
         table.append({"When": nice_time(r["played_at"]), "Map": r["map"], "Type": r["match_type"],
+                      **({"Opponent": r["opponent"] if named_team(r["opponent"]) else ""} if named else {}),
                       "Result": {1: "Win", 0: "Loss"}.get(r["won"], "Draw"), "Score": f"{own}–{other}",
                       "Kills": r["kills"], "Deaths": r["deaths"], "K/D": _value(r["kd"], "ratio"),
                       "EPS": _value(r["eps"], "eps")})
@@ -1559,7 +1562,8 @@ def _answer_matches(db: StatsDB, q: Query, vocab: Vocab) -> Answer:
     if edge and len(table) == 1:
         only = table[0]
         result = {"Win": "a win", "Loss": "a loss"}.get(only["Result"], "a draw")
-        headline = f"{_cap(whose)} {edge} match{filters}: {result} on {only['Map']}, {only['Score']}."
+        against = f" against {only['Opponent']}" if only.get("Opponent") else ""
+        headline = f"{_cap(whose)} {edge} match{filters}: {result} on {only['Map']}{against}, {only['Score']}."
     elif edge:
         headline = f"{_cap(whose)} {edge} {len(table)} matches{filters}: {wins} won, {losses} lost."
     else:
