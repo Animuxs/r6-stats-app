@@ -1440,6 +1440,14 @@ class Conversation:
         if opener is None and kb.guide(rest):
             return message  # "is it safe?": a question about the app, not about the last answer
         entities, _ = vocab.find(rest)
+        if _ANALYZE.search(_norm(last)) and not _ANALYZE.search(_norm(rest)) and alone.kind not in ("unknown", "summary"):
+            # "analyze Kanto" then "and his worst map?": a question of its own about the same player, not the analysis again
+            rest = rest.rstrip("?!. ")
+            subject = next((last[e.start:e.end] for e in vocab.find(last)[0] if e.kind in ("player", "team")), None)
+            if subject and not any(e.kind in ("player", "team") for e in entities) \
+                    and not re.search(r"\b(my|me|i|our|we|us|mine)\b", rest, re.I):
+                return f"{subject} {re.sub(r'^(their|his|her)\s+', '', rest, flags=re.I)}"
+            return rest
         base = last
         if any(e.kind in ("player", "team") for e in entities):  # a new subject replaces "my"
             base = re.sub(r"\b(my|me|i|our|we|us|mine|i'm|im)\b", " ", base, flags=re.I)

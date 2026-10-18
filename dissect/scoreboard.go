@@ -179,8 +179,10 @@ func readScoreboardAssists(r *Reader) error {
 	username := "N/A"
 	if idx != -1 {
 		username = r.Header.Players[idx].Username
-		r.Scoreboard.Players[idx].Assists = assists
-		r.Scoreboard.Players[idx].AssistsFromRound++
+		if idx < len(r.Scoreboard.Players) {
+			r.Scoreboard.Players[idx].Assists = assists
+			r.Scoreboard.Players[idx].AssistsFromRound++
+		}
 	}
 	log.Debug().
 		Uint32("assists", assists).
@@ -219,7 +221,9 @@ func readScoreboardScore(r *Reader) error {
 	username := "N/A"
 	if idx != -1 {
 		username = r.Header.Players[idx].Username
-		r.Scoreboard.Players[idx].Score = score
+		if idx < len(r.Scoreboard.Players) {
+			r.Scoreboard.Players[idx].Score = score
+		}
 	}
 	log.Debug().
 		Uint32("score", score).

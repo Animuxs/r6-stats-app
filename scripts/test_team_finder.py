@@ -145,3 +145,32 @@ class TestAdd(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def _pick_page():
+    """The pick pop-up on its own, with three matches found."""
+    import team_finder as tf
+    import teams
+    found = [tf.Found(f"Match-{i}", f"2026-09-2{i}T20:00:00", "Bank", (7, 4), "Ridgeview", ["a", "b", "c"], True)
+             for i in range(3)]
+    teams._pick_matches("Varsity", found)
+
+
+class TestPickPopUp(unittest.TestCase):
+    """"Tick all" ticks or unticks every match, and stays ticked only while every match is."""
+
+    def test_tick_all_follows_the_matches(self):
+        from streamlit.testing.v1 import AppTest
+        at = AppTest.from_function(_pick_page).run()
+        boxes = lambda: [c.value for c in at.checkbox]
+        self.assertEqual(boxes(), [True] * 4)
+        self.assertEqual(at.button(key="team_pick_add").label, "Add 3 matches")
+        at.checkbox(key="team_pick_1").uncheck().run()
+        self.assertEqual(boxes(), [False, True, False, True])  # "Tick all" is off once one match isn't ticked
+        self.assertEqual(at.button(key="team_pick_add").label, "Add 2 matches")
+        at.checkbox(key="team_pick_all").check().run()
+        self.assertEqual(boxes(), [True] * 4)
+        at.checkbox(key="team_pick_all").uncheck().run()
+        self.assertEqual(boxes(), [False] * 4)
+        self.assertTrue(at.button(key="team_pick_add").disabled)
+        self.assertEqual(len(at.exception), 0)
