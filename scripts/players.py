@@ -94,7 +94,9 @@ class PlayersTab(Tab):
         rows = comparison(a, b)
         st.markdown(md(verdict(a, b, rows)))
         mark = lambda r, i: "✅ " if r["leader"] == i else ""  # noqa: E731
-        st.dataframe([{"Stat": r["label"], a.name: mark(r, 0) + r["a"], b.name: mark(r, 1) + r["b"]} for r in rows],
+        # the columns are named after the players, so one named "Stat" still gets a column of their own
+        first, second = (a.name, b.name) if "Stat" not in (a.name, b.name) else (f"{a.name} (1)", f"{b.name} (2)")
+        st.dataframe([{"Stat": r["label"], first: mark(r, 0) + r["a"], second: mark(r, 1) + r["b"]} for r in rows],
                      hide_index=True)
         st.caption("✅ marks who's ahead on each stat. Fewer deaths per round is better.")
         st.subheader("Together and against")
