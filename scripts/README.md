@@ -120,6 +120,8 @@ Dashboard:
   their record as teammates and against each other. **Goals** on a profile: pick
   a stat and a target ("K/D 1.20") and see how the last 10 matches measure up;
   ask the assistant "my goals" too.
+  **Player card** downloads a profile as a PNG in your Team Theme's color, to
+  post in a team chat.
 - **The assistant**: the **Assistant** button in the bottom-right corner of every
   page opens a chat (see below). Turn it off with the **Assistant** switch in the
   sidebar.

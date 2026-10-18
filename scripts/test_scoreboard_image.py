@@ -13,7 +13,7 @@ from PIL import Image
 import scoreboard_image
 from metrics_engine import compute_match_metrics, pro_league_rows
 from sample_data import SAMPLE_MATCH
-from scoreboard_image import scoreboard_png
+from scoreboard_image import CARD_WIDTH, player_card_png, scoreboard_png
 
 
 def _rows(match: dict) -> list[dict]:
@@ -72,6 +72,26 @@ class TestScoreboardImage(unittest.TestCase):
         with mock.patch("PIL.ImageFont.truetype", side_effect=OSError("bad font")):
             self.assertTrue(scoreboard_image.font(17))
             self.assertTrue(_open(scoreboard_png(SAMPLE_MATCH, _rows(SAMPLE_MATCH))))  # in the bitmap font
+
+
+class TestPlayerCard(unittest.TestCase):
+    """A player's profile as a picture (Players' Player card)."""
+
+    STATS = [("EPS", "105"), ("K/D", "1.13"), ("Kills per round", "0.71"), ("Headshot %", "41%"),
+             ("KOST %", "68%"), ("Survival %", "37%"), ("Entry +/-", "+18"), ("Win %", "50%")]
+
+    def test_a_profile(self):
+        picture = Image.open(io.BytesIO(player_card_png("Fabian", "12 matches · 139 rounds", self.STATS,
+                                                        [("Most kills", "12 kills")] * 5, "#ff0000")))
+        self.assertEqual(picture.format, "PNG")
+        self.assertEqual(picture.width, CARD_WIDTH)
+        self.assertEqual(picture.getpixel((2, 2))[:3], (255, 0, 0))  # the accent bar, in the theme's color
+
+    def test_odd_names_no_bests_and_a_bad_color(self):
+        for name in ("🔥Blaze", "x" * 300, "Robert'); DROP TABLE players;--", ""):
+            with self.subTest(name=name):
+                png = player_card_png(name, "", self.STATS[:3], [], "not a color")
+                self.assertEqual(Image.open(io.BytesIO(png)).width, CARD_WIDTH)
 
 
 if __name__ == "__main__":

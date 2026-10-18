@@ -7,7 +7,9 @@ from __future__ import annotations
 import streamlit as st
 
 from ask_engine import METRICS, fmt
+from branding import current_theme
 from player_profile import GOAL_MATCHES, GOAL_STATS, HEADLINE, comparison, form_trend, goal_progress, profile, shared, verdict
+from scoreboard_image import player_card_png
 from session import Session
 from tab import Tab
 from ui import md
@@ -79,6 +81,12 @@ class PlayersTab(Tab):
         for row in (HEADLINE[:4], HEADLINE[4:]):
             for col, key in zip(st.columns(len(row)), row):
                 col.metric(METRICS[key].label, p.show(key))
+        card = player_card_png(p.name, f"{p.matches} match{'es' if p.matches != 1 else ''} · "
+                                       f"{p.stats.get('rounds') or 0} rounds",
+                               [(METRICS[k].label, p.show(k)) for k in HEADLINE],
+                               [(b["label"], b["value"]) for b in p.bests], current_theme()["primary"])
+        st.download_button("⬇ Player card", card, file_name=f"{p.key}_player_card.png", mime="image/png",
+                           help="This profile as a picture, in your Team Theme's color, to post in a team chat.")
         self.bests(p)
         self.goals(p)
         st.subheader("Recent form")
