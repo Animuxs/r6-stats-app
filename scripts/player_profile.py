@@ -37,6 +37,8 @@ class Profile:
     maps: list[dict[str, Any]] = field(default_factory=list)       # best first
     operators: list[dict[str, Any]] = field(default_factory=list)  # most played first
     sides: dict[str, dict[str, Any]] = field(default_factory=dict)  # "attack"/"defense" -> numbers
+    bests: list[dict[str, Any]] = field(default_factory=list)      # personal bests, see bests()
+    streak: Streaks | None = None
 
     @property
     def matches(self) -> int:
@@ -130,11 +132,86 @@ def sides(db: StatsDB, key: str) -> dict[str, dict[str, Any]]:
             for r in rows}
 
 
+@dataclass
+class Streaks:
+    """Win and loss streaks over a run of results, newest first (1 won, 0 lost, None a draw)."""
+
+    current: int        # the newest result's run: matches in a row with the same result
+    current_won: int | None  # what that run is: 1 wins, 0 losses, None a draw
+    best_win: int
+    best_loss: int
+    matches: int
+
+
+def streaks(results: list[int | None]) -> Streaks:
+    """The streaks in `results`, newest first. A draw ends any streak."""
+    current = 0
+    for r in results:
+        if r != results[0] or r is None:
+            break
+        current += 1
+    best_w = best_l = run = 0
+    last = None
+    for r in reversed(results):
+        run = run + 1 if r == last and r is not None else (1 if r is not None else 0)
+        last = r
+        if r == 1:
+            best_w = max(best_w, run)
+        elif r == 0:
+            best_l = max(best_l, run)
+    return Streaks(current, results[0] if results else None, best_w, best_l, len(results))
+
+
+# each personal best: its label, the SQL that ranks matches (best first), and how it's shown
+_BESTS = [
+    ("Most kills", "t.kills", lambda r: _count(r["kills"], "kill")),
+    ("Best EPS", "t.rating", lambda r: f"{round(100 * r['rating'])} EPS"),
+    ("Best K/D", "CASE WHEN t.deaths = 0 THEN t.kills ELSE t.kills * 1.0 / t.deaths END",
+     lambda r: f"{r['kills']}-{r['deaths']} K-D"),
+    ("Most entry kills", "t.entry_kills", lambda r: _count(r["entry_kills"], "entry kill")),
+    ("Most multikill rounds", "t.multikills", lambda r: _count(r["multikills"], "multikill round")),
+]
+MIN_BEST_ROUNDS = 5  # a match counts for a best with at least this many rounds played (not one quit early)
+
+
+def _count(n: int, word: str) -> str:
+    return f"{n} {word}{'' if n == 1 else 's'}"
+
+
+def bests(db: StatsDB, key: str) -> list[dict[str, Any]]:
+    """The player's best single matches (most kills, best EPS, ...), and their career totals of
+    the rare things (aces, clutches): [{"label", "value", "match_id", "when", "map"}]. A best of
+    nothing (no entry kills in any match) isn't one, so it's left out."""
+    out = []
+    for label, order, shown in _BESTS:
+        rows = db.query(
+            f"""SELECT t.match_id, t.kills, t.deaths, t.entry_kills, t.multikills, t.rating, m.played_at, m.map,
+                       {order} AS best
+                FROM match_players t JOIN matches m ON m.match_id = t.match_id
+                WHERE t.player_key = ? AND t.rounds >= ? ORDER BY best DESC, m.played_at DESC LIMIT 1""",
+            (key, MIN_BEST_ROUNDS))
+        if rows and rows[0]["best"]:
+            r = rows[0]
+            out.append({"label": label, "value": shown(r), "match_id": r["match_id"], "when": nice_day(r["played_at"]),
+                        "map": r["map"] or ""})
+    totals = db.query("SELECT SUM(kills >= 5) AS aces, SUM(clutch IS NOT NULL) AS clutches, MAX(clutch) AS biggest "
+                      "FROM round_players WHERE player_key = ?", (key,))[0]
+    if totals["aces"]:
+        out.append({"label": "Aces", "value": _count(totals["aces"], "ace"),
+                    "match_id": None, "when": "", "map": ""})
+    if totals["clutches"]:
+        out.append({"label": "Clutches won", "value": f"{totals['clutches']} (biggest 1v{totals['biggest']})",
+                    "match_id": None, "when": "", "map": ""})
+    return out
+
+
 def profile(db: StatsDB, key: str) -> Profile:
     """Everything the Players tab shows about one player."""
     key = key.casefold()
     name = db.players().get(key, key)
-    return Profile(key, name, stats_for(db, key), form(db, key), maps(db, key), operators(db, key), sides(db, key))
+    results = [m["won"] for m in db.match_list(key) if m.get("player")]
+    return Profile(key, name, stats_for(db, key), form(db, key), maps(db, key), operators(db, key), sides(db, key),
+                   bests(db, key), streaks(results) if results else None)
 
 
 def _round(value: float | None, digits: int) -> float | int | None:

@@ -54,6 +54,7 @@ class PlayersTab(Tab):
         for row in (HEADLINE[:4], HEADLINE[4:]):
             for col, key in zip(st.columns(len(row)), row):
                 col.metric(METRICS[key].label, p.show(key))
+        self.bests(p)
         st.subheader("Recent form")
         if trend := form_trend(p.form):
             st.caption(TREND[trend])
@@ -88,6 +89,24 @@ class PlayersTab(Tab):
                     st.caption(f"{numbers['rounds']} rounds · round win {fmt(numbers['win_rate'], 'pct')} · "
                                f"K/D {fmt(numbers['kd'], 'ratio')} · KOST {fmt(numbers['kost'], 'pct')}")
         st.page_link("charts.py", label="Chart any of these over time on Charts", icon=":material/insights:")
+
+    @staticmethod
+    def bests(p) -> None:
+        """Personal bests: their best single matches, aces and clutches, and their streaks."""
+        st.subheader("Personal bests")
+        if run := p.streak:
+            now = {1: f"on a **{run.current}-match win streak**", 0: f"on a **{run.current}-match losing streak**"}.get(
+                run.current_won, "coming off a draw")
+            st.caption(f"{md(p.name)} is {now}. Longest win streak: {run.best_win} · longest losing streak: "
+                       f"{run.best_loss}.")
+        if not p.bests:
+            st.caption("No full-length matches yet (5 rounds or more).")
+            return
+        for start in range(0, len(p.bests), 4):
+            row = p.bests[start:start + 4]
+            for col, best in zip(st.columns(4), row):
+                where = " · ".join(x for x in (best["when"], best["map"]) if x)
+                col.metric(best["label"], best["value"], help=where or None)
 
     # ------------------------------------------------------------ two players --
     def compare(self, a, b, both) -> None:

@@ -111,5 +111,49 @@ class TestAgainst(unittest.TestCase):
         db.close()
 
 
+class TestStreaks(unittest.TestCase):
+    def test_streaks(self):
+        run = pp.streaks([1, 1, 0, 0, 0, 1])  # newest first
+        self.assertEqual((run.current, run.current_won, run.best_win, run.best_loss, run.matches), (2, 1, 2, 3, 6))
+        run = pp.streaks([None, 1, 1, 1])  # a draw ends any streak
+        self.assertEqual((run.current, run.current_won, run.best_win), (0, None, 3))
+        self.assertEqual(pp.streaks([0]).best_loss, 1)
+
+
+class TestBests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.db = StatsDB(":memory:")
+        demo_season.load(cls.db)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.db.close()
+
+    def test_most_kills_is_the_most(self):
+        me = self.db.me().casefold()
+        best = {b["label"]: b for b in pp.bests(self.db, me)}
+        top = self.db.query("SELECT MAX(kills) AS k FROM match_players WHERE player_key = ? AND rounds >= 5", (me,))[0]
+        self.assertEqual(best["Most kills"]["value"], f"{top['k']} kills")
+        self.assertTrue(best["Most kills"]["when"] and best["Most kills"]["map"])
+        self.assertIn("Best EPS", best)
+
+    def test_nothing_isnt_a_best(self):
+        db = StatsDB(":memory:")
+        db.import_match("sample", SAMPLE_MATCH)
+        for key in db.players():
+            for best in pp.bests(db, key):
+                self.assertFalse(best["value"].startswith("0 "), best)
+                self.assertNotIn(" 1 kills", " " + best["value"])
+        self.assertEqual(pp.bests(db, "nobody"), [])
+        db.close()
+
+    def test_profile_has_them(self):
+        p = pp.profile(self.db, self.db.me())
+        self.assertTrue(p.bests)
+        self.assertEqual(p.streak.matches, 12)
+        self.assertIsNone(pp.profile(self.db, "nobody").streak)
+
+
 if __name__ == "__main__":
     unittest.main()
