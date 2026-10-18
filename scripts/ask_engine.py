@@ -668,7 +668,9 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
     q.operators = list(dict.fromkeys(e.value for e in entities if e.kind == "operator"))
     q.opponents = list(dict.fromkeys(e.value for e in entities if e.kind == "opponent"))
     wants_we = _has(_WORDS["we"], text)
-    wants_me = _has(_WORDS["me"], re.sub(_WORDS["we"], " ", text))
+    # "tell me about Sacri", "show me the top players": that "me" is who's asking, not whose stats
+    asking = re.sub(r"\b(tell|show|give|get|let|help|remind|find|send) me\b", " ", text)
+    wants_me = _has(_WORDS["me"], re.sub(_WORDS["we"], " ", asking))
     if wants_me and vocab.me and vocab.me not in players:
         players.insert(0, vocab.me)
 
