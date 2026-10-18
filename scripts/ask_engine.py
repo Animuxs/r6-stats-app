@@ -273,9 +273,10 @@ _GROUP_WORDS = {  # the first that matches decides the grouping
     "operator": r"\b(operators|ops|by operator|per operator|each operator|which operators?|what operators?|"
                 r"which ops?|best operators?|worst operators?|operator|op)\b",
     "rank": r"\b(rank|ranking|rankings|leaderboard|standings?|what place|which place)\b",
-    "map": r"\b(maps|by map|per map|each map|which map|what map|best map|worst map|on what map|"
+    "map": r"\b(maps|by map|per map|each map|which map|what map|best map|worst map|on what map|maps? with|"
            r"(best|worst|strongest|weakest) (attack|attacking|defen[cs]e|defending) maps?|"
-           r"where (do|did) (i|we) (do|play|perform|win)|where (am|are) (i|we) (best|worst|strongest|weakest))\b",
+           r"where (do|did) (i|we) (do|play|perform|win)|where (am|are) (i|we) (best|worst|strongest|weakest)|"
+           r"where (do|did|have) (i|we) (\w+ ){1,3}(the )?(most|least|fewest|best|worst))\b",  # "where do I die the most"
     "player": r"\b(who|whos|whom|which players?|what players?|players|by player|per player|each player|"
               r"teammates?|best player|worst player|top players?|mvp|fraggers?)\b",
 }
@@ -1405,6 +1406,9 @@ def _answer_rank(db: StatsDB, q: Query, vocab: Vocab) -> Answer:
     word = {"best": "best", "worst": "worst", "high": "most", "low": "least"}.get(q.order or "", "best")
     if METRICS[first].kind == "count" and word in ("best", "worst"):  # "the most kills", "the fewest deaths"
         word = "most" if (word == "best") == METRICS[first].higher_is_better else "fewest"
+    elif METRICS[first].kind != "count" and word in ("most", "least") and q.group not in ("player", "player_match"):
+        # "where do we win the most?": your best map by win rate (a map isn't "highest")
+        word = "best" if (word == "most") == METRICS[first].higher_is_better else "worst"
     elif METRICS[first].kind != "count" and word in ("most", "least"):
         word = "highest" if word == "most" else "lowest"
     ranked_by = "most played" if q.most_played else f"{word} {_phrase(first, level)}"

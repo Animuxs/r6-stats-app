@@ -88,6 +88,27 @@ class TestEverydayQuestions(unittest.TestCase):
         self.assertNotEqual(best.split("**")[1], worst.split("**")[1])
         db.close()
 
+    def test_where_do_i_is_a_map(self):  # was: a total over every map
+        for question in ("where do I die the most?", "where do we lose the most rounds?", "where do I get the most kills?"):
+            self.assertEqual(ask(question, self.db, vocab=self.vocab).query.group, "map", question)
+        self.assertIn("best map by win rate", ask("where do we win the most?", self.db, vocab=self.vocab).headline)
+
+    def test_most_kills_in_a_round(self):  # was: every kill, added up
+        mine = self.db.query("SELECT MAX(kills) AS n FROM round_players WHERE player_key = ?", [self.vocab.me])[0]["n"]
+        self.assertTrue(self.answer("my most kills in a round").startswith(f"Your most kills in a round: **{mine}**"))
+        anyone = self.db.query("SELECT MAX(kills) AS n FROM round_players")[0]["n"]
+        self.assertIn(f"**{anyone}**", self.answer("who had the most kills in a round?"))
+        self.assertNotIn("in a round:", self.answer("which map has my best round win rate?"))
+
+    def test_best_round_on_a_map_as_an_operator_in_a_month(self):
+        best = self.db.query("SELECT r.kills, r.operator, m.map, m.played_at FROM round_players r "
+                             "JOIN matches m ON m.match_id = r.match_id WHERE r.player_key = ? AND r.operator != '' "
+                             "ORDER BY r.kills DESC LIMIT 1", [self.vocab.me])[0]
+        month = datetime.strptime(best["played_at"][:10], "%Y-%m-%d").strftime("%B %Y")
+        reply = self.answer(f"my best round on {best['map']} as {best['operator']} in {month}")
+        self.assertTrue(reply.startswith(f"Your most kills in a round: **{best['kills']}**"), reply)
+        self.assertIn(f"on {best['map']} as {best['operator']}", reply)
+
 
 if __name__ == "__main__":
     unittest.main()

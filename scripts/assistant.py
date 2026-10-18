@@ -141,11 +141,14 @@ _SITUATION = re.compile(r"\b(post ?plants?|after (we|i) plant(ed)?|when (we|i) p
                         r"player disadvantage|outnumbered|stop(ped)? the plant|deny the plant|situations?)\b")
 _HOW_TO = re.compile(r"^(how (do|can|to)|where|what is|what's|what does|is there)\b")  # about the app, not the stats
 # a sitting's recap: "how did I do last night?", "recap tonight", "my last session" (not "who do we play tonight?",
-# nor "how many kills did I get last night?": that's a stat, from yesterday)
+# nor "how many kills did I get last night?": that's a stat, from that evening)
 _RECAP = re.compile(r"\b(session recap|recap|last session|this session|latest session|"
                     r"how (did|was|were|is|went|has|have|d)\b.{0,30}\b(last night|tonight)|"
                     r"(last night|tonight)\W*s? (scrims?|matches|games|session)|(last|today\W*s) (scrims|session))\b")
-_TONIGHT = re.compile(r"\b(last night|tonight)\b")
+# "my most kills in a round", "who had the best round?": one round, not a match's or a season's total
+_ROUND_BEST = re.compile(r"\b(most|best) (\w+ ){0,2}in (a|one|1|a single|any) round\b|"
+                         r"\b(best|biggest) (single )?round\b|\bmost kills (in )?(a|one) round\b")
+_ROUND_RESULT = re.compile(r"\brounds? (win|wins|won|loss|losses|lost|rate|percent|played)\b")  # a rate, not one round
 _GOALS = re.compile(r"\bgoals?\b|\btargets?\b")
 _OPEN_PAGE = re.compile(r"^(open|go to|goto|take me to|navigate to|bring up|show)\b.*\b(page|tab)\b|"
                         r"^(open|go to|goto|take me to|navigate to)\b")
@@ -639,6 +642,48 @@ def _goals(question: str, db: StatsDB, vocab: Vocab) -> Reply:
                  + "\n".join(lines), "stats", links=link)
 
 
+def _round_best(question: str, db: StatsDB, vocab: Vocab, q: Query | None) -> Reply:
+    """The most kills anyone (or a player) had in one round, and where: "Your most kills in a round: 4, round 7
+    on Bank (Sep 30)." Kept to the question's map, operator and dates."""
+    kind, key = _who(question, vocab)
+    everyone = bool(re.search(r"\b(who|anyone|anybody|everyone|the most kills in a round)\b", _norm(question))) \
+        and kind != "player"
+    where, params = [], []
+    if not everyone:
+        if not (key := key if kind == "player" else vocab.me):
+            return Reply("I need to know which player is you first: add a match you recorded.", "stats",
+                         answered=False)
+        where.append("r.player_key = ?")
+        params.append(key)
+    if q and q.maps:
+        where.append(f"m.map IN ({', '.join('?' * len(q.maps))})")
+        params += q.maps
+    if q and q.operators:
+        where.append(f"r.operator IN ({', '.join('?' * len(q.operators))})")
+        params += q.operators
+    if q and q.since:
+        where.append("m.played_at >= ?")
+        params.append(q.since)
+    if q and q.until:
+        where.append("m.played_at < ?")
+        params.append(q.until)
+    rows = db.query("SELECT r.player_key, r.player, r.round, r.kills, r.operator, m.map, m.played_at "
+                    "FROM round_players r JOIN matches m ON m.match_id = r.match_id"
+                    + (" WHERE " + " AND ".join(where) if where else "")
+                    + " ORDER BY r.kills DESC, m.played_at DESC LIMIT 1", params)
+    if not rows or not rows[0]["kills"]:
+        return Reply("No kills in a round for that yet.", "stats")
+    top = rows[0]
+    whose = "Your" if top["player_key"] == vocab.me and not everyone else \
+        "The" if everyone else f"{_name(vocab, top['player_key'])}'s"
+    by = f" ({'you' if top['player_key'] == vocab.me else top['player']})" if everyone else ""
+    as_op = f" as {top['operator']}" if top["operator"] else ""
+    ace = " An ace!" if top["kills"] >= 5 else ""
+    return Reply(f"{whose} most kills in a round: **{top['kills']}**{by}, round {top['round']} on "
+                 f"{top['map'] or 'an unknown map'}{as_op} ({nice_time(top['played_at'])}).{ace}", "stats",
+                 suggestions=["How many aces do I have?", "My most kills in a match"])
+
+
 def _bench(db: StatsDB, vocab: Vocab) -> Reply:
     """"Who should I bench?": your side's players by EPS, lowest first, with the numbers behind it."""
     if not vocab.me:
@@ -1049,6 +1094,8 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
         return _with_question(_situations(text, db, vocab, q), question)
     if _BENCH.search(text):
         return _with_question(_bench(db, vocab), question)
+    if _ROUND_BEST.search(text) and not _ROUND_RESULT.search(text) and not _HOW_TO.search(text):
+        return _with_question(_round_best(question, db, vocab, q), question)
     one_last = _LAST_RESULT.search(text) and not re.search(r"\blast (\d+|two|three|four|five|six|seven|eight|nine|ten)\b",
                                                              text) and not (q and q.operators)
     if one_last or _LAST_PLAYED.search(text):

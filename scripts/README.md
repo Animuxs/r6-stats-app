@@ -209,8 +209,9 @@ It understands:
 - **answers**: a single number, rankings ("top 5 players by EPS", "best map",
   "where do I rank", "which opponent is the hardest"), trends ("over time", "per week"), comparisons ("me vs
   Talus", "attack vs defense", "ranked vs custom", "this week vs last week"),
-  your best single matches ("most kills in a match"), summaries ("how am I
-  doing") and match lists ("my last 5 matches").
+  your best single matches and rounds ("most kills in a match", "my best
+  round"), an evening's numbers ("how did Typhoon do last night"), summaries
+  ("how am I doing") and match lists ("my last 5 matches", "show my losses").
 
 It always says how it read the question, and when it guesses (a misspelled
 name, or a name that's both a player and an operator) it says so. It works with
