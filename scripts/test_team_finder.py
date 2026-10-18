@@ -9,7 +9,6 @@ import unittest
 import team_finder
 from sample_data import SAMPLE_MATCH, TEAM0, TEAM1
 from stats_db import StatsDB
-from sources import ReplaySource
 
 
 def match(match_id, team_names=("YOUR TEAM", "ENEMY TEAM"), swap=False):
@@ -23,7 +22,10 @@ def match(match_id, team_names=("YOUR TEAM", "ENEMY TEAM"), swap=False):
     return m
 
 
-class FakeSource(ReplaySource):
+class FakeSource:
+    """What team_finder uses of a ReplaySource. Not a subclass: test_structure counts every ReplaySource
+    subclass as a kind of source the app makes."""
+
     def __init__(self, matches):
         self._matches = matches
         self.opened = []
@@ -35,6 +37,12 @@ class FakeSource(ReplaySource):
         self.opened.append(name)
         found = self._matches[name]
         return found if isinstance(found, Exception) else (found, {}, [])
+
+    def has(self, name):
+        return name in self._matches
+
+    def round_files(self, name):
+        return 0
 
 
 class TestFind(unittest.TestCase):
