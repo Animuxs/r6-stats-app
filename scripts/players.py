@@ -43,8 +43,15 @@ class PlayersTab(Tab):
                 self.has_matches(db)
                 return
             me = db.me()
-            keys = sorted(names, key=lambda k: (k != (me or "").casefold(), names[k].casefold()))
-            label = lambda k: names[k] + (" (you)" if names[k] == me else "")  # noqa: E731
+            # you, then the teammates you've played with most, then everyone else (the teams you've played)
+            mates = {name.casefold(): i for i, (name, _) in enumerate(db.teammates(me, limit=len(names)))} \
+                if me else {}
+            keys = sorted(names, key=lambda k: (k != (me or "").casefold(), k not in mates, mates.get(k, 0),
+                                                names[k].casefold()))
+            opponent = set(names) - set(mates) - {(me or "").casefold()} if me else set()
+
+            def label(k: str) -> str:
+                return names[k] + (" (you)" if names[k] == me else " (opponent)" if k in opponent else "")
             # opened from an answer ("compare me and Sacri"): those two, picked
             if (asked := st.query_params.get("player")) and asked.casefold() in keys:
                 self.session.set("players_first", asked.casefold())

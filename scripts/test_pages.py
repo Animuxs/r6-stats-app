@@ -310,6 +310,20 @@ class TestPlayersTab(unittest.TestCase):
         self.assertTrue(table.iloc[:, 1:].apply(lambda col: col.str.startswith("✅")).any().any())
         self.assertTrue(any(m.label == "Matches as teammates" for m in at.metric))
 
+    def test_you_then_your_teammates_then_opponents(self):
+        """The picker lists you, the teammates you play with most, then the other teams' players, marked."""
+        from sample_data import TEAM0, TEAM1
+
+        at = SITUATIONS[3].start(self)
+        at.switch_page("players.py").run()
+        options = at.selectbox(key="players_first").options
+        self.assertTrue(options[0].endswith(" (you)"))
+        marked = [o.endswith(" (opponent)") for o in options[1:]]
+        self.assertEqual(marked, sorted(marked))  # every teammate before any opponent
+        self.assertEqual({o.removesuffix(" (opponent)") for o in options if o.endswith(" (opponent)")} & set(TEAM0),
+                         set())
+        self.assertTrue(set(TEAM1) <= {o.removesuffix(" (opponent)") for o in options})
+
     def test_opened_with_two_players(self):
         """?player=...&vs=... (an answer's link) opens those two side by side, then leaves the address."""
         from sample_data import SAMPLE_MATCH
