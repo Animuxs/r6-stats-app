@@ -208,8 +208,10 @@ class TeamsTab(Tab):
                 mine = self.session.competition["team"].casefold()
                 self.session.team_choice = next((t for t in teams if t.casefold() == mine), NEW)
             choice = st.selectbox("Team", [NEW, *teams], key="team_choice") if teams else NEW
-            # a new team starts as you and the players you've played with most
-            name, players = ("", [me, *mates] if me else []) if choice == NEW else (choice, teams[choice])
+            # a new team starts as you and the players you've played with most; your first one is named after
+            # your team on League & Team, so "Show team stats" works in one click
+            first_name = "" if teams else (self.session.competition.get("team") or "").strip()
+            name, players = (first_name, [me, *mates] if me else []) if choice == NEW else (choice, teams[choice])
             # the whole roster, subs and all, and a spare box for one more
             size = min(MAX_ROSTER, max(ROSTER_SIZE, len(players) + (choice != NEW)))
             self.session.set(f"roster_size_{choice}", size)

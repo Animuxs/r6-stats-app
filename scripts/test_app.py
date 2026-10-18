@@ -450,6 +450,19 @@ class TestAnalyticsPages(unittest.TestCase):
         self.assertEqual(players[0], "Fabian")
         self.assertEqual(sorted(players), sorted(TEAM0))  # Fabian's four teammates fill the rest
 
+    def test_your_first_team_is_named_after_your_team_so_one_click_shows_it(self):
+        import branding
+
+        at = with_matches(run_app())
+        at.session_state["competition"] = dict(branding.DEFAULT_COMPETITION, source="custom", name="Scrim League",
+                                               team="Carthage Firebirds")  # as League & Team saves it
+        at.switch_page("teams.py").run()
+        self.assertEqual(at.text_input(key="team_name_New team").value, "Carthage Firebirds")
+        at = next(b for b in at.button if b.label == "Show team stats").click().run()
+        self.assertFalse(at.exception)
+        self.assertEqual(at.selectbox(key="team_choice").value, "Carthage Firebirds")
+        self.assertIn("Maps", {m.label for m in at.metric})
+
     def test_picking_a_saved_team_shows_its_own_stats(self):
         """Another saved team picked in Team shows that team's stats at once, never the last one built."""
         at = with_matches(run_app())
