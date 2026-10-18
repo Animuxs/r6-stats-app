@@ -56,19 +56,32 @@ def _players(db: StatsDB, ids: list[str], me: str, same_side: bool) -> list[dict
              "KOST %": round(r["kost"]) if r["kost"] is not None else None, "Entry +/-": r["entry"]} for r in rows]
 
 
-def scout(db: StatsDB, opponent: str) -> Scout:
-    """The scouting report on `opponent` (any spelling), from the matches you played against them."""
-    report = Scout(opponent.strip())
+def same_team(a: str | None, b: str | None) -> bool:
+    """Whether two team names are the same team: any case (accents too: SQLite's LOWER only knows ASCII), any spacing."""
+    return bool(a and b) and " ".join(a.casefold().split()) == " ".join(b.casefold().split())
+
+
+def meetings(db: StatsDB, opponent: str, before: str | None = None, leave_out: str | None = None) -> list[dict]:
+    """Your matches against `opponent`, newest first: only those before `before` (a played_at), and never the match
+    `leave_out` (the one on screen). Every view of a head-to-head (Match day, the rail, the Dashboard, the dock)
+    reads them from here, so they always agree."""
     me = db.me()
-    name = " ".join(opponent.casefold().split())
-    if not me or not name:
-        return report
-    me = me.casefold()
-    games = db.query(
+    if not me or not opponent.strip():
+        return []
+    rows = db.query(
         f"""SELECT m.match_id, m.played_at, m.map, m.score0, m.score1, t.team, t.won, {OPPONENT_SQL} AS name
             FROM match_players t JOIN matches m ON m.match_id = t.match_id
-            WHERE t.player_key = ? AND LOWER({OPPONENT_SQL}) = ?
-            ORDER BY m.played_at DESC, m.match_id DESC""", [me, name])
+            WHERE t.player_key = ? AND {OPPONENT_SQL} IS NOT NULL AND m.match_id IS NOT ?
+              AND (? IS NULL OR m.played_at < ?)
+            ORDER BY m.played_at DESC, m.match_id DESC""", [me.casefold(), leave_out, before, before])
+    return [r for r in rows if same_team(r["name"], opponent)]
+
+
+def scout(db: StatsDB, opponent: str, before: str | None = None, leave_out: str | None = None) -> Scout:
+    """The scouting report on `opponent` (any spelling), from the matches you played against them (see meetings)."""
+    report = Scout(opponent.strip())
+    games = meetings(db, opponent, before, leave_out)
+    me = (db.me() or "").casefold()
     if games:
         report.opponent = games[0]["name"]  # as the replays spell it
     for g in games:

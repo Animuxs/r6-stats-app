@@ -12,12 +12,13 @@ players to track in them, on the Dashboard.
 from __future__ import annotations
 
 import html
+import time
 from datetime import datetime
 
 import streamlit as st
 
 from app_info import can_dock, send_window_command
-from matchday_data import head_to_head
+from matchday_data import MatchdayWorkspace, fixture_when, head_to_head
 from metrics_engine import SIDE_ICONS, SIDE_NAMES, eps_from_rating
 from session import Session
 from sources import current_source, match_time, open_stats_db
@@ -25,6 +26,7 @@ from stats_db import nice_time
 from tab import Tab
 
 REFRESH_SECONDS = 15
+SCHEDULE_SECONDS = 60  # how often the panel reads Match day's schedule again
 FORM_MATCHES = 5
 
 STYLE = """<style>
@@ -140,13 +142,28 @@ def form_html(rows: list[dict]) -> str:
             f'<div class="dk-line">Record <b>{wins}–{losses}</b> · K/D <b>{kills / deaths if deaths else kills:.2f}</b></div>')
 
 
+def schedule():
+    """Match day's schedule, read at most once a minute (a team's is fetched over the network, and the panel
+    refreshes every few seconds); an empty one if it can't be read, so the panel still shows your matches."""
+    session = Session()
+    cached = session.get("dock_schedule")
+    if cached and time.monotonic() - cached[0] < SCHEDULE_SECONDS:
+        return MatchdayWorkspace.from_dict(cached[1])
+    try:
+        workspace = session.matchday
+    except Exception:  # unreadable planning data, a team server that's down: never the whole panel
+        workspace = MatchdayWorkspace()
+    session.set("dock_schedule", (time.monotonic(), workspace.to_dict()))
+    return workspace
+
+
 def next_match_html(db, workspace) -> str:
     """The next match on the Match day schedule, and your record against that opponent."""
     upcoming = workspace.upcoming()[:1]
     if not upcoming:
         return ""
     fixture = upcoming[0]
-    when = datetime.fromisoformat(fixture["when"]).strftime("%a %b %d · %H:%M")
+    when = fixture_when(fixture)
     record = head_to_head(db, fixture["opponent"])
     return (f'<div class="dk-kicker">Next match</div>'
             f'<div class="dk-line"><b>vs {html.escape(fixture["opponent"])}</b> · {html.escape(when)}'
@@ -180,7 +197,7 @@ def panel() -> None:
                                        "the Dashboard.")
             return
         st.markdown((waiting or "") + latest_match_html(db, me, rows[0]) + form_html(rows)
-                    + next_match_html(db, Session().matchday), unsafe_allow_html=True)
+                    + next_match_html(db, schedule()), unsafe_allow_html=True)
     who = f"As {html.escape(me)} · " if me else ""
     st.markdown(f'<div class="dk-foot">{who}updated {datetime.now():%H:%M:%S}, every {REFRESH_SECONDS} s</div>',
                 unsafe_allow_html=True)

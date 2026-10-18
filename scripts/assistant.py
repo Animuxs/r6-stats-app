@@ -107,8 +107,10 @@ _MORE = re.compile(r"^(more|show more|tell me more|details|more details|go on|el
 _CHART = re.compile(r"\b(chart|charts|graph|graphs|plot|plots|visuali[sz]e|visuali[sz]ation|pie|donut|heat ?map|"
                     r"scatter|histogram|box ?plot|bar chart|line chart|diagram)\b")
 _BAN = re.compile(r"\b(ban|bans|banning|veto|vetoes|vetoing|avoid|dodge|pick|picks|first pick)\b.*\bmaps?\b|"
-                  r"\bmaps?\b.*\b(ban|veto|avoid|dodge|pick)\b|\b(ban|veto|pick) (suggestions?|advice|ideas?)\b|"
-                  r"\bwhat (should|do) (we|i) (ban|pick|veto)\b|\bmap pool\b")
+                  r"\bmaps?\b.*\b(ban|veto|avoid|dodge|pick)\b|\bmap pool\b")
+# "ban suggestion", "what should we pick?": the map veto too, unless it's about a side, a map or operators
+_BAN_LOOSE = re.compile(r"\b(ban|veto|pick) (suggestions?|advice|ideas?)\b|\bwhat (should|do) (we|i) (ban|pick|veto)\b")
+_NOT_MAPS = re.compile(r"\b(on (attack|defen[cs]e)|attack|defen[cs]e|operators?|ops?|as)\b")
 _TIME_OF_DAY = re.compile(r"\b(morning|afternoon|evening|night|late|what time|time of day|which day|what day|"
                           r"weekdays?|weekends?|mondays?|tuesdays?|wednesdays?|thursdays?|fridays?|saturdays?|"
                           r"sundays?|day of the week)\b")
@@ -993,7 +995,9 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
     # a chart: "chart my K/D over time", "pie of the operators I play"
     if _CHART.search(text) and not kb.guide(question):  # "how do charts work?" is the guide
         return _with_question(chart_reply(question, db, vocab, now), question)
-    if _SCOUT.search(text) and q and len(q.opponents) == 1:  # "scout Metro Tech"
+    asking = re.sub(r"\b(tell|show|give|get) me\b", " ", text)  # the "me" asking isn't whose stats
+    if _SCOUT.search(text) and q and len(q.opponents) == 1 and not clean_metrics and not _ME.search(asking) \
+            and not re.search(r"\bstats\b", text):  # "scout Metro Tech", not "tell me about my stats against them"
         report = scouting.scout(db, q.opponents[0])
         return Reply(report.headline, "stats", rows=report.ours, columns=list(report.ours[0]) if report.ours else [],
                      links=[("matchday", "Their full scouting report on Match day")], question=question,
@@ -1017,7 +1021,12 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
         return _with_question(_last_played(question, db, vocab, first=True), question)
     if _DUO.search(text):
         return _with_question(_duos(question, db, vocab), question)
-    if _BAN.search(text):
+    if _BAN_LOOSE.search(text) and (_NOT_MAPS.search(text) or (q and q.maps)) and matches:
+        picks = re.sub(r"\bwhat (should|do) (we|i) pick\b|\bpick (suggestions?|advice|ideas?)\b", "my best operators",
+                       question, flags=re.I)
+        if picks != question:
+            return _with_question(answer_anything(picks, db, vocab=vocab, now=now, page=page), question)
+    if _BAN.search(text) or (_BAN_LOOSE.search(text) and not _NOT_MAPS.search(text) and not (q and q.maps)):
         return _with_question(_ban(question, db, vocab), question)
     if _IMPROVING.search(text):
         return _with_question(_improving(db, vocab, decline=bool(_DECLINE.search(text))), question)
