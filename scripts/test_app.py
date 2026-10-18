@@ -1086,6 +1086,26 @@ class TestDockedView(unittest.TestCase):
         self.assertNotIn("Not in your stats yet", page)
         self.assertEqual([b.label for b in at.button], ["⇱ Full window"])  # docking itself needs the Windows app
 
+    def test_the_next_match_and_the_record_against_that_opponent(self):
+        """The next fixture on Match day, and how you've done against that team (the sample matches' other side)."""
+        from datetime import date, timedelta
+
+        at = with_matches(run_app())
+        at.session_state["matchday_real"] = {"fixtures": [{
+            "id": "next", "opponent": "spacestation gaming", "team": "Liquid", "kind": "League · BO3",
+            "when": f"{date.today() + timedelta(days=2)}T19:00:00", "timezone": "Central Time"}],
+            "availability": {}, "notes": ""}
+        at = self.docked(at)
+        self.assertFalse(at.exception)
+        page = "".join(m.value for m in at.markdown)
+        self.assertIn('<div class="dk-kicker">Next match</div>', page)
+        self.assertIn("<b>vs spacestation gaming</b>", page)
+        self.assertIn("Your record: 2–0 · last met ", page)  # Fabian's Team Liquid won both
+
+    def test_no_schedule_no_next_match(self):
+        page = "".join(m.value for m in self.docked(with_matches(run_app())).markdown)
+        self.assertNotIn("Next match", page)
+
     def test_a_match_the_game_saved_waits_to_be_added(self):
         at = self.docked(with_matches(run_app(), added=False))
         self.assertFalse(at.exception)

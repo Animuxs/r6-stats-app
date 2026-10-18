@@ -17,7 +17,9 @@ from datetime import datetime
 import streamlit as st
 
 from app_info import can_dock, send_window_command
+from matchday_data import head_to_head
 from metrics_engine import SIDE_ICONS, SIDE_NAMES, eps_from_rating
+from session import Session
 from sources import current_source, match_time, open_stats_db
 from stats_db import nice_time
 from tab import Tab
@@ -138,6 +140,20 @@ def form_html(rows: list[dict]) -> str:
             f'<div class="dk-line">Record <b>{wins}–{losses}</b> · K/D <b>{kills / deaths if deaths else kills:.2f}</b></div>')
 
 
+def next_match_html(db, workspace) -> str:
+    """The next match on the Match day schedule, and your record against that opponent."""
+    upcoming = workspace.upcoming()[:1]
+    if not upcoming:
+        return ""
+    fixture = upcoming[0]
+    when = datetime.fromisoformat(fixture["when"]).strftime("%a %b %d · %H:%M")
+    record = head_to_head(db, fixture["opponent"])
+    return (f'<div class="dk-kicker">Next match</div>'
+            f'<div class="dk-line"><b>vs {html.escape(fixture["opponent"])}</b> · {html.escape(when)}'
+            + (f' · {html.escape(fixture["kind"])}' if fixture.get("kind") else "") + "</div>"
+            + (f'<div class="dk-line">{html.escape(record)}</div>' if record else ""))
+
+
 def new_match_html(name: str) -> str:
     """The newest replay in the folder, when it isn't in your stats: where to add it."""
     when = match_time(name)
@@ -163,7 +179,8 @@ def panel() -> None:
                         if source else "The game's replay folder wasn't found. Open the full window and pick it on "
                                        "the Dashboard.")
             return
-        st.markdown((waiting or "") + latest_match_html(db, me, rows[0]) + form_html(rows), unsafe_allow_html=True)
+        st.markdown((waiting or "") + latest_match_html(db, me, rows[0]) + form_html(rows)
+                    + next_match_html(db, Session().matchday), unsafe_allow_html=True)
     who = f"As {html.escape(me)} · " if me else ""
     st.markdown(f'<div class="dk-foot">{who}updated {datetime.now():%H:%M:%S}, every {REFRESH_SECONDS} s</div>',
                 unsafe_allow_html=True)
