@@ -133,7 +133,6 @@ def _pick_matches(team: str, found: list[team_finder.Found]) -> None:
     """Every match found, with when, where, the score and who it was against: tick the ones to add."""
     st.caption(f"{len(found)} of {md(team)}'s matches in your replays aren't in your stats yet. Tick the ones to add; "
                "only the team's players in each are kept, like picking them on the Dashboard.")
-    session = Session()
     every = st.checkbox("Tick all", value=True, key="team_pick_all")
     box = st.container(height=min(440, 44 * len(found) + 10))
     ticked = [f for i, f in enumerate(found)
