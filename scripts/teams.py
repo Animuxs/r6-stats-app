@@ -9,6 +9,7 @@ import re
 
 import streamlit as st
 
+import team_finder
 from ask_engine import rate, team_report, team_summary
 from map_pool import MIN_SITE_ROUNDS, MIN_VETO_MAPS, map_pool, site_table, veto_hint
 from metrics_engine import rows_csv
@@ -91,6 +92,74 @@ def _save_team(choice: str) -> None:
         db.save_roster(team, names)
     session.set("team_shown", (team, session.get(f"roster_min_{choice}", 3)))
     session.team_choice = team  # the saved team is what's shown and selected now
+
+
+def _found(team: str, players: list[str], need: int) -> list[team_finder.Found]:
+    """The team's matches in the replays that your stats don't have yet, looked for once per roster
+    and replay folder (reading every replay is slow the first time) and kept in the session."""
+    session = Session()
+    source = session.replays
+    if source is None or not source.adds_to_stats:
+        return []
+    names = source.matches()
+    key = (team, tuple(sorted(p.casefold() for p in players)), need, len(names), names[0] if names else "")
+    cached = session.get("team_found")
+    if cached and cached[0] == key:
+        return cached[1]
+    bar = st.progress(0.0, text=f"Looking for {md(team)}'s matches in your replays…")
+    with session.stats() as db:
+        found = team_finder.find(source, db, players, need,
+                                 progress=lambda done, total: bar.progress(done / max(total, 1)))
+    bar.empty()
+    session.set("team_found", (key, found))
+    return found
+
+
+def _add_found(found: list[team_finder.Found]) -> None:
+    """Add these found matches to your stats and say how it went on the next run."""
+    session = Session()
+    with session.stats() as db:
+        added, failed = team_finder.add(session.replays, db, found)
+    session.pop("team_found")  # look again: what's left to add has changed
+    session.drop("team_pick_")
+    text = f"Added {len(added)} match{'es' if len(added) != 1 else ''} to your stats." if added else "Nothing was added."
+    if failed:
+        text += " Not added: " + "; ".join(f"{f.summary()} ({why})" for f, why in failed[:5])
+    session.leave_note("teams", "warning" if failed else "success", text)
+
+
+@st.dialog("Pick matches to add", width="large")
+def _pick_matches(team: str, found: list[team_finder.Found]) -> None:
+    """Every match found, with when, where, the score and who it was against: tick the ones to add."""
+    st.caption(f"{len(found)} of {md(team)}'s matches in your replays aren't in your stats yet. Tick the ones to add; "
+               "only the team's players in each are kept, like picking them on the Dashboard.")
+    session = Session()
+    every = st.checkbox("Tick all", value=True, key="team_pick_all")
+    box = st.container(height=min(440, 44 * len(found) + 10))
+    ticked = [f for i, f in enumerate(found)
+              if box.checkbox(md(f.summary()), value=every, key=f"team_pick_{i}_{every}")]
+    if st.button(f"Add {len(ticked)} match{'es' if len(ticked) != 1 else ''}", type="primary",
+                 disabled=not ticked, key="team_pick_add"):
+        _add_found(ticked)
+        st.rerun()
+
+
+def _find_matches(team: str, players: list[str], need: int) -> None:
+    """Under a team's stats: how many of its matches your stats are missing, with one button to add
+    them all and one to look through them and add one or some."""
+    if note := Session().take_note("teams"):
+        getattr(st, note[0])(md(note[1]))
+    found = _found(team, players, need)
+    if not found:
+        return
+    with st.container(border=True):
+        st.markdown(f"**{len(found)} more of {md(team)}'s match{'es' if len(found) != 1 else ''}** in your replays "
+                    f"(with {need}+ of the team on one side) aren't in your stats yet.")
+        quick, pick, _ = st.columns([1, 1, 2])
+        quick.button(f"Quick add all {len(found)}", type="primary", key="team_add_all",
+                     on_click=_add_found, args=(found,))
+        if pick.button("Review and pick…", key="team_review"):
+            _pick_matches(team, found)
 
 
 def _delete_team(team: str) -> None:
@@ -242,6 +311,7 @@ class TeamsTab(Tab):
                 with self.stats() as db:
                     report = team_report(db, *shown)
                 team, need = shown
+                _find_matches(team, teams[team], need)
                 if not report["matches"]:
                     st.warning(f"No match had {need}+ of {md(team)}'s players on the same side. Check the spelling of "
                                f"the names, or lower the number in **Edit {md(team)}**.")
