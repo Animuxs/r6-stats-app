@@ -96,6 +96,31 @@ class TestBuild(unittest.TestCase):
     def chart(self, text: str):
         return build(parse(text, self.vocab), self.db, self.vocab)
 
+    def test_requests_that_read_wrong_on_real_replays(self):
+        """Each was charted wrong on a team's real replays."""
+        for request, kind, metric, x, who in (
+                ("team kd over time", "line", "kd", "match", "my_team"),         # was: just you
+                ("kost vs kd scatter for my team", "scatter", "kost", "player", "my_team"),  # was: everyone
+                ("my kd each night", "line", "kd", "day", "me"),                 # was: match by match
+                ("operators I play on attack", "bar", "rounds", "operator", "me"),  # was: win rate
+                ("maps we play", "bar", "matches", "map", "my_team")):
+            spec = parse(request, self.vocab)
+            self.assertEqual((spec.kind, spec.metric, spec.x, spec.who), (kind, metric, x, who), request)
+        scatter = self.chart("kost vs kd scatter for my team")
+        self.assertIn(self.vocab.players[self.vocab.me], {r["series"] for r in scatter.rows})  # you're on your team
+
+    def test_a_rate_chart_keeps_the_most_played(self):
+        """Fifteen bars of a rate are the fifteen most played, best first: not operators played once at 100%."""
+        spec = parse("win rate by operator for everyone", self.vocab)
+        chart = build(spec, self.db, self.vocab)
+        counts = self.db.query("SELECT operator, COUNT(*) AS n FROM round_players WHERE operator IS NOT NULL "
+                               "GROUP BY operator ORDER BY n DESC")
+        self.assertGreater(len(counts), len(chart.rows))  # more operators than bars, or this proves nothing
+        most = counts[0]["operator"]
+        self.assertIn(most, [r["x"] for r in chart.rows])
+        values = [r["y"] for r in chart.rows]
+        self.assertEqual(values, sorted(values, reverse=True))
+
     def test_a_line_per_player_agrees_with_ask(self):
         chart = self.chart("my K/D over time vs Sacri")
         series = defaultdict(list)

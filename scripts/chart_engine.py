@@ -22,8 +22,8 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime
 from typing import Any
 
-from ask_engine import (METRICS, ROUND_DIMS, Query, Vocab, _aggregate, _match_ids, _name_rows, _value,
-                        fold, interpret)
+from ask_engine import (METRICS, ROUND_DIMS, Query, Vocab, _aggregate, _find_metrics, _match_ids, _name_rows,
+                        _value, fold, interpret)
 from stats_db import StatsDB, nice_day
 
 # what can be drawn, with a name for the menus
@@ -69,7 +69,7 @@ _AXIS_WORDS = {
     "opponent": r"\b(by opponent|per opponent|each opponent|every opponent|which opponents?|opponent teams?|"
                 r"against each (team|opponent))\b",
     "player": r"\b(players?|teammates?|everyone|each player|who)\b",
-    "month": r"\b(months?|monthly)\b", "week": r"\b(weeks?|weekly)\b", "day": r"\b(days?|daily)\b",
+    "month": r"\b(months?|monthly)\b", "week": r"\b(weeks?|weekly)\b", "day": r"\b(days?|daily|nights?|nightly|sessions?|evenings?)\b",
 }
 _ROLLING = r"\b(rolling|moving|running) (average|avg|mean)(?: (?:of|over) (\d+))?|\b(?:last|over) (\d+) (?:matches|games) average\b"
 
@@ -191,8 +191,10 @@ def parse(request: str, vocab: Vocab, now: datetime | None = None) -> ChartSpec:
         spec.who, spec.players = "players", names
     elif q.who in ("everyone", "teammates", "opponents", "my_team"):
         spec.who = q.who
-    if "player" in axes and spec.who in ("me", "my_team"):
-        spec.who = "everyone" if spec.who == "me" else "teammates"
+    elif spec.who == "me" and re.search(r"\bteam\b", text) and not q.teams:
+        spec.who = "my_team"
+    if "player" in axes and spec.who == "me":
+        spec.who = "everyone"  # your side's players, you among them, when it says "my team"
 
     if kind == "scatter":
         spec.kind = "scatter"
@@ -200,7 +202,7 @@ def parse(request: str, vocab: Vocab, now: datetime | None = None) -> ChartSpec:
         if spec.metric2 == spec.metric:
             spec.metric2 = "kost" if spec.metric != "kost" else "kd"
         spec.x = next((a for a in axes if a in ("player", "operator", "map")), "player")
-        if spec.x == "player" and spec.who in ("me", "my_team"):
+        if spec.x == "player" and spec.who == "me":
             spec.who = "everyone"
         return spec
     spec.metric = metrics[0] if metrics else ("rounds" if kind == "pie" else "kd")
@@ -218,6 +220,9 @@ def parse(request: str, vocab: Vocab, now: datetime | None = None) -> ChartSpec:
     if q.group in AXES and q.group not in ("match",) and not group_axis and not time_axis:
         group_axis = q.group if q.group not in TIME_AXES else None
         time_axis = q.group if q.group in TIME_AXES else None
+    if not _find_metrics(text) and group_axis in ("operator", "map", "site") and \
+            re.search(r"\b(i|we|they|he|she|you) (play|use|pick|main|run)\b|\b(played|picked|used)\b", text):
+        spec.metric = "rounds" if group_axis != "map" else "matches"
     if kind in ("histogram", "box"):
         spec.kind, spec.x = kind, "match"
         if kind == "box" and group_axis:
@@ -304,7 +309,12 @@ def _rows(db: StatsDB, vocab: Vocab, q: Query, metrics: list[str], group: str, l
         rows = _aggregate(db, replace(q, order="high" if order_desc else "low"), vocab, metrics, group, ids=ids,
                           level=level, minimums=False)
     _name_rows(rows, group, vocab)
-    if limit and group not in TIME_AXES:
+    if limit and group not in TIME_AXES and len(rows) > limit:
+        if METRICS[metrics[0]].kind != "count":
+            # a rate's top 15 would be operators played once at 100%: keep the most played, still best first
+            sample = "rounds" if level == "round" else "matches"
+            kept = {id(r) for r in sorted(rows, key=lambda r: -(r.get(sample) or 0))[:limit]}
+            rows = [r for r in rows if id(r) in kept]
         rows = rows[:limit]
     return rows
 
