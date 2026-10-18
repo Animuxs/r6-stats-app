@@ -269,6 +269,25 @@ class TestTheStructureHolds(unittest.TestCase):
                 for number, line in enumerate((SCRIPTS / name).read_text(encoding="utf-8").splitlines(), 1):
                     self.assertIsNone(pattern.search(line), f"{name}:{number}: {line.strip()}")
 
+    def test_the_browser_edition_bundles_everything_its_python_imports(self):
+        """browser/build.py lists the app modules the browser edition runs; each one's own imports of app
+        modules (at any depth in the file) must be in that list too, or the page fails as it loads."""
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("browser_build", SCRIPTS.parent / "browser" / "build.py")
+        build = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(build)
+        bundled = {path.stem for path in build.PYTHON.values()}
+        ours = {p.stem for p in SCRIPTS.glob("*.py")}
+        for name, path in build.PYTHON.items():
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+            for node in ast.walk(tree):
+                modules = [a.name.split(".")[0] for a in node.names] if isinstance(node, ast.Import) else                     [node.module.split(".")[0]] if isinstance(node, ast.ImportFrom) and node.module else []
+                for module in modules:
+                    if module in ours:
+                        with self.subTest(file=name, imports=module):
+                            self.assertIn(module, bundled, f"add {module}.py to PYTHON in browser/build.py")
+
     def test_links_between_tabs_go_through_the_tab_base(self):
         """st.switch_page is called in one place, Tab.go_to, with the page from tab.PAGES."""
         for name in _app_modules():
