@@ -254,6 +254,23 @@ class TestEverydayQuestions(unittest.TestCase):
         self.assertTrue(self.answer("show me my K/D").text.startswith("Your K/D is "))
         self.assertIn("vs", self.answer("show me Sacri vs me").text)
 
+    def test_second_sweep(self):
+        """More everyday questions, each sent where it belongs."""
+        from ask_engine import team_summary
+
+        self.assertIn("played the most matches", self.answer("who plays the most matches").text)
+        self.assertIn("most played operator", self.answer("what's Fabian's main").text)
+        for question in ("ban suggestion", "what should we pick", "our map pool"):
+            with self.subTest(question):
+                self.assertRegex(self.answer(question).text, r"^(Ban|Pick) \*\*")
+        self.assertTrue(self.answer("best attack map").text.startswith("Your best map on attack by "))
+        self.assertEqual(self.answer("open players page").text.splitlines()[0], "**Players**")
+        self.assertEqual(self.answer("go to charts").links, [("charts", "Open Charts")])
+        # rounds are counted as rounds, matches as matches
+        s = team_summary(self.db, [self.db.me()], 1)
+        self.assertIn(f"{s['rounds_won']} rounds won over {s['rounds']} rounds", self.answer("how many rounds have we won").text)
+        self.assertIn("6 wins over 12 matches", self.answer("how many matches did we win").text)
+
     def test_the_last_match_score_is_from_your_side(self):
         from assistant import _last_played
 

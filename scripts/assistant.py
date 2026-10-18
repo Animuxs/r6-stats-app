@@ -107,7 +107,8 @@ _MORE = re.compile(r"^(more|show more|tell me more|details|more details|go on|el
 _CHART = re.compile(r"\b(chart|charts|graph|graphs|plot|plots|visuali[sz]e|visuali[sz]ation|pie|donut|heat ?map|"
                     r"scatter|histogram|box ?plot|bar chart|line chart|diagram)\b")
 _BAN = re.compile(r"\b(ban|bans|banning|veto|vetoes|vetoing|avoid|dodge|pick|picks|first pick)\b.*\bmaps?\b|"
-                  r"\bmaps?\b.*\b(ban|veto|avoid|dodge|pick)\b")
+                  r"\bmaps?\b.*\b(ban|veto|avoid|dodge|pick)\b|\b(ban|veto|pick) (suggestions?|advice|ideas?)\b|"
+                  r"\bwhat (should|do) (we|i) (ban|pick|veto)\b|\bmap pool\b")
 _TIME_OF_DAY = re.compile(r"\b(morning|afternoon|evening|night|late|what time|time of day|which day|what day|"
                           r"weekdays?|weekends?|mondays?|tuesdays?|wednesdays?|thursdays?|fridays?|saturdays?|"
                           r"sundays?|day of the week)\b")
@@ -142,6 +143,8 @@ _RECAP = re.compile(r"\b(session recap|recap|last session|this session|latest se
                     r"how (did|was|were|is|went|has|have|d)\b.{0,30}\b(last night|tonight)|"
                     r"(last night|tonight)\W*s? (scrims?|matches|games|session)|(last|today\W*s) (scrims|session))\b")
 _TONIGHT = re.compile(r"\b(last night|tonight)\b")
+_OPEN_PAGE = re.compile(r"^(open|go to|goto|take me to|navigate to|bring up|show)\b.*\b(page|tab)\b|"
+                        r"^(open|go to|goto|take me to|navigate to)\b")
 _SCOUT = re.compile(r"\b(scout|scouting|scouting report|intel on|tell me about|what do we know about)\b")
 # the schedule, not the stats: "who are we playing tonight?", "when's our next match?"
 _SCHEDULE = re.compile(r"\b(who (are|do|will) (we|i) (play|playing|face|facing)\b(?! (best|better|worse|worst|well|"
@@ -951,6 +954,8 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
         question = f"how did I do {'in ' if re.fullmatch(_MONTH, period) else ''}{period}"
         text = _norm(question)
 
+    if _OPEN_PAGE.search(text) and (topic := kb.guide(question, any_wording=True)) and topic.page:
+        return _topic_reply(topic, question)  # "open the players page": what's there, and a link
     if _SCHEDULE.search(text):  # Match day has the schedule; the stats don't
         return _topic_reply(kb.topic("matchday"), question)
     if _TONIGHT.search(text) and _find_metrics(text) and not _RECAP.search(text):  # "my kills last night"
