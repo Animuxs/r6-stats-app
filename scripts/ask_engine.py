@@ -242,7 +242,8 @@ _WORDS = {  # each idea's wordings, matched as whole words in the cleaned questi
                r"|stats|statistics|summary|overview|profile|report card|tell me about|numbers|how good)\b",
     "list": r"\b(show|list|which matches|what matches|my matches|our matches|match history|games where|matches where|"
             r"recent matches|recent games|every match|all matches|all games|see matches|matches did|games did)\b",
-    "most_played": r"\b(most played|played most|play most|play the most|played the most|most often|favou?rite|main|"
+    "most_played": r"\b(most played|played most|play most|plays most|play the most|plays the most|played the most|"
+                   r"most often|favou?rite|main|"
                    r"mains|pick most|picked most|use most|used most|most used|most picked|play with most|"
                    r"played with most|play with the most|played with the most)\b",
 }
@@ -259,6 +260,7 @@ _GROUP_WORDS = {  # the first that matches decides the grouping
                 r"which ops?|best operators?|worst operators?|operator|op)\b",
     "rank": r"\b(rank|ranking|rankings|leaderboard|standings?|what place|which place)\b",
     "map": r"\b(maps|by map|per map|each map|which map|what map|best map|worst map|on what map|"
+           r"(best|worst|strongest|weakest) (attack|attacking|defen[cs]e|defending) maps?|"
            r"where (do|did) (i|we) (do|play|perform|win)|where (am|are) (i|we) (best|worst|strongest|weakest))\b",
     "player": r"\b(who|whos|whom|which players?|what players?|players|by player|per player|each player|"
               r"teammates?|best player|worst player|top players?|mvp|fraggers?)\b",
@@ -537,6 +539,7 @@ class Query:
     conditions: list[tuple[str, str, float]] = field(default_factory=list)  # (metric, op, value)
     min_matches: int | None = None
     min_rounds: int | None = None
+    by_rounds: bool = False      # wins and losses counted in rounds ("how many rounds did we win?"), not matches
     highlight_me: bool = False
     most_played: bool = False
     notes: list[str] = field(default_factory=list)
@@ -544,7 +547,7 @@ class Query:
     @property
     def level(self) -> str:
         """Which table answers it: per round for operators/sides/sites and aces, else per match."""
-        if self.group in ROUND_DIMS or self.operators or self.side or \
+        if self.group in ROUND_DIMS or self.operators or self.side or self.by_rounds or \
                 any(METRICS[m].match_sql is None for m in self.metrics):
             return "round"
         if self.metrics == ["rounds"] and self.who not in ("me", "players"):
@@ -708,7 +711,7 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
     if group == "rank":  # "where do I rank", "leaderboard": players, unless it says what else to rank
         group = next((g for g in ("map", "operator", "side", "site") if _has(_GROUP_WORDS[g], text)), "player")
     if q.most_played and group is None:
-        group = "operator" if q.operators or _has(r"\bcharacters?\b", text) else "map"
+        group = "operator" if q.operators or _has(r"\b(characters?|mains?)\b", text) else "map"
     if attack and defense:
         group = "side"
     elif attack or defense:
@@ -764,6 +767,11 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
         q.metrics = [m for m in q.metrics if m not in SAMPLE_METRICS]  # "how many matches have we won": wins
     if not q.metrics and counting:
         q.metrics = [m for m in found if m in SAMPLE_METRICS][:1]
+    if counting and "win_rate" in q.metrics:  # "how many matches did we win?": a count, not a rate
+        q.metrics = list(dict.fromkeys("wins" if m == "win_rate" else m for m in q.metrics))
+    if set(q.metrics) & RESULT_METRICS and _has(r"\brounds?\b", text):  # "how many rounds did we win on Border?"
+        q.by_rounds = True
+        q.metrics = [m for m in q.metrics if m != "rounds"] or q.metrics
     if _has(_WORDS["record"], text):
         q.metrics = RECORD + [m for m in q.metrics if m not in RESULT_METRICS]
 
@@ -1404,6 +1412,7 @@ def _answer_rank(db: StatsDB, q: Query, vocab: Vocab) -> Answer:
             # "Your best map by K/D is Bank", "Your map with the most kills is Border"
             if q.group == "opponent":  # the opponent you win least against is the hardest, not the "worst"
                 word = {"best": "easiest", "worst": "hardest"}.get(word, word)
+            what += f" on {q.side}" if q.side else ""  # "your best map on attack"
             by = f"{word} {what} by {_phrase(first, level)}" if word not in ("most", "fewest", "least") else \
                 f"{what} with the {word} {_phrase(first, level)}"
             headline = f"{_cap(whose)} {by} is {top['name']}: {value} ({sample})."
