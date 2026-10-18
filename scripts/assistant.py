@@ -100,6 +100,9 @@ _MATCH_WORDS = re.compile(r"\b(last|latest|recent|this|that|previous|my last|our
 _TEAM_WORDS = re.compile(r"\b(my team|our team|the team|we|us|our|squad|roster)\b")
 _ME = re.compile(r"\b(i|me|my|mine|myself|im)\b")
 _PRONOUNS = re.compile(r"\b(he|she|they|him|her|them|his|hers|their|theirs)\b", re.I)
+# "on it", "as it", "that map": the map or operator just talked about (never a bare "it": "is it safe?")
+_IT = re.compile(r"\b(on|as|with|against|at|play|plays|playing|played|use|uses|using|pick|picks|picking) it\b|"
+                 r"\bthat (?:map|operator|op|team)\b", re.I)
 _FOLLOW_UP = re.compile(r"^(and|what about|how about|same for|same but|now|ok and|okay and|also|but|"
                         r"what if|then|for)\b[\s,]*", re.I)
 _WHY = re.compile(r"^(why|how come|how did you (get|work out|figure) (that|this)|explain( that| this)?|"
@@ -1220,6 +1223,13 @@ class Conversation:
                 # "who should I bench?" then "analyze him": the player the answer named, before the one asked about
                 if subject := reply.subject or top or (person.display if person else None):
                     self.state["last_player"] = subject
+                # "it", "that map": the map or operator the answer named ("your best map is Bank"), or the question did
+                columns = {"map": "Map", "operator": "Operator", "opponent": "Opponent"}
+                named = answer.rows[0].get(columns[answer.query.group]) if answer and answer.ok and answer.rows \
+                    and answer.query and answer.query.kind == "rank" and answer.query.group in columns else None
+                thing = next((e.display for e in found if e.kind in columns), None)
+                if named or thing:
+                    self.state["last_thing"] = named or thing
         return reply
 
     def resolve(self, message: str, vocab: Vocab) -> str:
@@ -1228,6 +1238,8 @@ class Conversation:
         if (name := self.state.get("last_player")) and _PRONOUNS.search(message):
             message = _PRONOUNS.sub(lambda m: f"{name}'s" if m.group(1).lower() in ("his", "her", "their", "hers",
                                                                                      "theirs") else name, message)
+        if (thing := self.state.get("last_thing")) and _IT.search(message):
+            message = _IT.sub(lambda m: f"{m.group(1)} {thing}" if m.group(1) else thing, message)
         if not last:
             return message
         opener = _FOLLOW_UP.match(message) or re.search(r"\binstead\b", message, re.I)
@@ -1239,6 +1251,8 @@ class Conversation:
             return message
         if opener is None and alone.kind == "summary" and (alone.players or alone.team):
             return message  # "Paltry" on its own: how they're doing
+        if opener is None and kb.guide(rest):
+            return message  # "is it safe?": a question about the app, not about the last answer
         entities, _ = vocab.find(rest)
         base = last
         if any(e.kind in ("player", "team") for e in entities):  # a new subject replaces "my"
@@ -1253,6 +1267,10 @@ class Conversation:
                         base = re.sub(r"(\b(vs|versus|against|on|as)\s+)?" + re.escape(last[e.start:e.end]), " ", base,
                                       flags=re.I)
         superlative = r"\b(best|worst|hardest|easiest|toughest|strongest|weakest|highest|lowest|most|least|top|bottom)\b"
+        only = re.fullmatch(r"(?:(?:my|our|the|your|his|her|their)\s+)?" + superlative + r"(?:\s+one)?",
+                            rest.rstrip("?!. ").strip(), re.I)
+        if only and re.search(superlative, last, re.I):  # "and my worst?" after "my best map": "my worst map"
+            return re.sub(superlative, only.group(1).lower(), last, count=1, flags=re.I)
         if re.search(superlative, rest, re.I):  # "and the easiest?" after "the hardest"
             base = re.sub(superlative, " ", base, flags=re.I)
         if _find_metrics(_clean(rest, entities)):  # a new stat replaces the old one

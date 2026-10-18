@@ -733,7 +733,7 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
     q.most_played = _has(_WORDS["most_played"], text) or \
         _has(r"\b(what|which) (operators?|ops|characters?|maps?) (do|does|did) .{0,20}\b(play|use|pick|run)\b", text)
     # "who plays Twitch?": the players who've played that operator, most rounds first
-    who_plays = bool(q.operators) and _has(r"\bwho (plays|played|mains|picks|picked|uses|used|runs|ran)\b", text)
+    who_plays = bool(q.operators) and _has(r"\bwho (else )?(plays|played|mains|picks|picked|uses|used|runs|ran)\b", text)
     q.most_played = q.most_played or who_plays
 
     group = next((g for g, pattern in _GROUP_WORDS.items() if _has(pattern, text)), None)
