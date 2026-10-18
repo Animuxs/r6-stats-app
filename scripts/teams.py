@@ -133,10 +133,20 @@ def _pick_matches(team: str, found: list[team_finder.Found]) -> None:
     """Every match found, with when, where, the score and who it was against: tick the ones to add."""
     st.caption(f"{len(found)} of {md(team)}'s matches in your replays aren't in your stats yet. Tick the ones to add; "
                "only the team's players in each are kept, like picking them on the Dashboard.")
-    every = st.checkbox("Tick all", value=True, key="team_pick_all")
+    session, keys = Session(), [f"team_pick_{i}" for i in range(len(found))]
+
+    def tick_all() -> None:  # "Tick all" ticks or unticks every match
+        for k in keys:
+            session.set(k, session.get("team_pick_all"))
+
+    def tick_one() -> None:  # and stays ticked only while every match is
+        session.set("team_pick_all", all(session.get(k, True) for k in keys))
+
+    for k in ["team_pick_all", *keys]:  # all ticked when it opens
+        session.setdefault(k, True)
+    st.checkbox("Tick all", key="team_pick_all", on_change=tick_all)
     box = st.container(height=min(440, 44 * len(found) + 10))
-    ticked = [f for i, f in enumerate(found)
-              if box.checkbox(md(f.summary()), value=every, key=f"team_pick_{i}_{every}")]
+    ticked = [f for f, k in zip(found, keys) if box.checkbox(md(f.summary()), key=k, on_change=tick_one)]
     if st.button(f"Add {len(ticked)} match{'es' if len(ticked) != 1 else ''}", type="primary",
                  disabled=not ticked, key="team_pick_add"):
         _add_found(ticked)
@@ -158,6 +168,7 @@ def _find_matches(team: str, players: list[str], need: int) -> None:
         quick.button(f"Quick add all {len(found)}", type="primary", key="team_add_all",
                      on_click=_add_found, args=(found,))
         if pick.button("Review and pick…", key="team_review"):
+            Session().drop("team_pick_")  # forget the ticks from the last time it was open
             _pick_matches(team, found)
 
 

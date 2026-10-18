@@ -87,7 +87,10 @@ func (r *Reader) PlayerStats() []PlayerRoundStats {
 		winningTeamIndex = 1
 	}
 	for i, p := range r.Header.Players {
-		scorePlayer := r.Scoreboard.Players[i]
+		var scorePlayer ScoreboardPlayer // none when the scoreboard never listed them
+		if i < len(r.Scoreboard.Players) {
+			scorePlayer = r.Scoreboard.Players[i]
+		}
 		stats = append(stats, PlayerRoundStats{
 			Username:  p.Username,
 			TeamIndex: p.TeamIndex,

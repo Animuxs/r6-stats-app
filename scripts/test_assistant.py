@@ -357,6 +357,25 @@ class TestConversation(unittest.TestCase):
         low = min(bench.rows, key=lambda r: r["EPS"])["Player"]
         self.assertEqual(chat.reply("analyze him", self.db, now=NOW).resolved, f"analyze {low}")
 
+    def test_a_question_after_an_analysis_isnt_the_analysis_again(self):
+        """"Analyze Kanto" then "and his worst map?" is Kanto's worst map, not his whole analysis a second time;
+        a team's the same, and "my" after someone else's analysis is still you."""
+        for first, then, resolved, starts in [
+                ("analyze Kanto", "and his worst map?", "Kanto's worst map", "Kanto's worst map"),
+                ("analyze Kanto", "what about his K/D?", "Kanto's K/D", "Kanto's K/D is"),
+                ("analyze Kanto", "and my worst map?", "my worst map", "Your worst map"),
+                ("analyze my stats", "and my worst map?", "my worst map", "Your worst map"),
+                ("analyze Lakeside Varsity", "and their best map?", "Lakeside Varsity best map",
+                 "Lakeside Varsity's best map")]:
+            chat = Conversation()
+            chat.reply(first, self.db, now=NOW)
+            reply = chat.reply(then, self.db, now=NOW)
+            self.assertEqual(reply.resolved, resolved)
+            self.assertTrue(reply.text.startswith(starts), (first, then, reply.text[:80]))
+        chat = Conversation()
+        chat.reply("analyze Kanto", self.db, now=NOW)
+        self.assertEqual(chat.reply("and Sacri?", self.db, now=NOW).resolved, "Sacri analyze")  # another analysis
+
     def test_a_tie_is_a_tie(self):
         answer = Conversation().reply("compare me and Sacri on Bank", self.db, now=NOW)
         self.assertEqual(answer.text, "You and Sacri are level on K/D: 1.20 each.")

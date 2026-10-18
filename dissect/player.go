@@ -195,6 +195,10 @@ func readPlayer(r *Reader) error {
 		}
 	}
 	if !found && len(username) > 0 {
+		// a player who joins after the scoreboard's list was made gets a row there too, so the two lists keep the same order
+		if len(r.Scoreboard.Players) == len(r.Header.Players) && len(r.Scoreboard.Players) > 0 {
+			r.Scoreboard.Players = append(r.Scoreboard.Players, ScoreboardPlayer{ID: p.DissectID})
+		}
 		r.Header.Players = append(r.Header.Players, p)
 	}
 	return err
