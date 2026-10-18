@@ -127,7 +127,10 @@ Dashboard:
   it: a **tag** (Official, Scrim, Practice or Casual), a note and a link to its
   video. Once a match is tagged, **Show** lists just one tag's matches, and Ask
   understands the tags ("my K/D in scrims"). Notes stay when a match is added
-  again and go when it's removed.
+  again and go when it's removed. Below the list, **Session recap** groups the
+  matches played in one sitting (less than 4 hours apart): your record that
+  session, each match, and every player's numbers over it, with the top EPS
+  named. Pick an earlier session from its list.
 - **Team Analytics > Build a team**: up to five players, filled in with you and
   the four teammates you play with most. Every match where enough of them (you
   choose how many) were tracked on the same side is found. Teams are saved: pick one
