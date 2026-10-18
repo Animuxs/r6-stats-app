@@ -79,6 +79,16 @@ class TestDemoSeason(unittest.TestCase):
         self.assertNotEqual(chart_engine.parse("top opponents by K/D", self.vocab).x, "opponent")  # their players
 
 
+class TestOnlyOne(unittest.TestCase):
+    def test_one_opponent_isnt_the_hardest(self):
+        db = StatsDB(":memory:")
+        db.import_match("one", {**SAMPLE_MATCH, "recording_player": "Fabian"})
+        headline = ask("which opponent is the hardest", db).headline
+        self.assertTrue(headline.startswith("Only one opponent so far: Spacestation Gaming, "), headline)
+        self.assertNotIn("hardest", headline)
+        db.close()
+
+
 class TestNamelessTeams(unittest.TestCase):
     def test_stand_in_names_arent_opponents(self):
         db = StatsDB(":memory:")
