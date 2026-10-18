@@ -481,6 +481,27 @@ class TestAnalyticsPages(unittest.TestCase):
         self.assertEqual(sorted(at.dataframe[1].value["Player"]), sorted(players))
         self.assertTrue(any(e.label.startswith("Edit Liquid") for e in at.expander))
 
+    def test_a_teams_matches_missing_from_your_stats_are_found_and_added_in_one_click(self):
+        from stats_db import StatsDB
+
+        at = with_matches(run_app(), 3, added=False)
+        parsed = at.session_state["source"]["parsed"]
+        newest = sorted(parsed)[-1]
+        with StatsDB() as db:  # one added on the Dashboard; the other two only in the replays
+            db.import_match(newest, parsed[newest][0], files=1)
+        at.switch_page("teams.py").run()
+        at.text_input(key="team_name_New team").set_value("Liquid")
+        at = next(b for b in at.button if b.label == "Show team stats").click().run()
+        self.assertFalse(at.exception)
+        self.assertEqual({m.label: m.value for m in at.metric}["Maps"], "1")
+        self.assertTrue(any("2 more of Liquid's matches" in m.value for m in at.markdown))
+        self.assertTrue(any(b.label == "Review and pick…" for b in at.button))
+        at = next(b for b in at.button if b.label == "Quick add all 2").click().run()
+        self.assertFalse(at.exception)
+        self.assertIn("Added 2 matches", at.success[0].value)
+        self.assertEqual({m.label: m.value for m in at.metric}["Maps"], "3")
+        self.assertFalse(any(b.label.startswith("Quick add all") for b in at.button))  # nothing left to add
+
     def test_build_a_team(self):
         from metrics_engine import compute_match_metrics
         from sample_data import SAMPLE_MATCH
