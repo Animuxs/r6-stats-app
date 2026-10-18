@@ -335,6 +335,7 @@ exactly as printed. Use any of them together, or none to just print.
 | EPS | Performance score, where 100 is the average player in this match. Ubisoft hasn't published its EPS formula, so this one is built from the same kind of inputs: kills and deaths per round, KOST, entry differential, multikills, clutches, objectives and trade kills, each compared against the other players in the match. |
 | KD (+/-) | kills-deaths (difference) |
 | Entry | opening kills-opening deaths. The opening duel is the round's first death. |
+| Opening duel % | (in Ask and Charts) opening kills / (opening kills + opening deaths): the share of opening duels won |
 | KOST | % of rounds with a **K**ill, **O**bjective, **S**urvival or **T**raded death |
 | KPR | kills per round |
 | HS | headshot kills / kills |
