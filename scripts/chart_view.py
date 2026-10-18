@@ -9,6 +9,9 @@ Shared by the Charts tab, the Ask page and the assistant's panel.
 
 from __future__ import annotations
 
+import json
+from datetime import datetime
+
 import altair as alt
 import streamlit as st
 
@@ -16,6 +19,26 @@ from branding import current_theme, readable_accent
 from chart_engine import Chart
 
 _SCHEME = "tableau10"
+
+
+def _day(stamp: str) -> str:
+    """ "2026-09-30 20:10:00" -> "Sep 30"; anything else as it is."""
+    try:
+        return datetime.strptime(str(stamp)[:10], "%Y-%m-%d").strftime("%b %d").replace(" 0", " ")
+    except ValueError:
+        return str(stamp)
+
+
+def _by_match(chart: Chart) -> tuple[alt.Chart, alt.X]:
+    """The chart's data with each match one step along, oldest first (every series on the same steps, so two
+    players' lines still line up), and an axis labelled with the matches' days."""
+    stamps = sorted({str(r["x"]) for r in chart.rows})
+    step = {stamp: i for i, stamp in enumerate(stamps)}
+    values = [dict(r, step=step[str(r["x"])]) for r in chart.rows]
+    days = json.dumps([_day(stamp) for stamp in stamps])
+    x = alt.X("step:Q", title="Match, oldest to newest", scale=alt.Scale(domain=[0, max(len(stamps) - 1, 1)]),
+              axis=alt.Axis(tickMinStep=1, labelAngle=-35, labelExpr=f"{days}[datum.value] || ''"))
+    return alt.Chart(alt.Data(values=values)), x
 
 
 def altair_chart(chart: Chart, height: int = 320) -> alt.Chart:
@@ -32,8 +55,10 @@ def altair_chart(chart: Chart, height: int = 320) -> alt.Chart:
 
     if spec.kind in ("line", "area"):
         temporal = spec.x == "match"
-        x = alt.X("x:T" if temporal else "x:N", title=chart.x_label, sort=None,
-                  axis=alt.Axis(labelAngle=-35, labelLimit=160, format="%b %d" if temporal else alt.Undefined))
+        if temporal:  # one step per match: a night of three matches is three points, not a spike
+            base, x = _by_match(chart)
+        else:
+            x = alt.X("x:N", title=chart.x_label, sort=None, axis=alt.Axis(labelAngle=-35, labelLimit=160))
         tips = [alt.Tooltip("label:N", title="Match" if temporal else chart.x_label), tip_y]
         if series:
             tips.insert(0, alt.Tooltip("series:N", title=chart.series_label))
