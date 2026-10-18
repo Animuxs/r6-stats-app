@@ -87,52 +87,57 @@ class PlayersTab(Tab):
                                [(b["label"], b["value"]) for b in p.bests], current_theme()["primary"])
         st.download_button("⬇ Player card", card, file_name=f"{p.key}_player_card.png", mime="image/png",
                            help="This profile as a picture, in your Team Theme's color, to post in a team chat.")
-        self.bests(p)
-        self.goals(p)
-        st.subheader("Recent form")
-        if trend := form_trend(p.form):
-            st.caption(TREND[trend])
-        st.dataframe([{k: v for k, v in r.items() if k != "match_id"} for r in p.form], hide_index=True,
-                     column_config={"K/D": st.column_config.NumberColumn(format="%.2f")})
-        maps, ops = st.columns(2)
-        with maps:
-            st.subheader("Best maps")
-            if p.maps:
-                st.dataframe(p.maps[:5], hide_index=True, column_config={
+        # the rest in tabs, so the page stays short: form first, the deep dives a click away
+        form, bests, play, rivals = st.tabs(["Form", "Bests & goals", "Maps & operators", "Opponents"])
+        with form:
+            if trend := form_trend(p.form):
+                st.caption(TREND[trend])
+            st.dataframe([{k: v for k, v in r.items() if k != "match_id"} for r in p.form], hide_index=True,
+                         column_config={"K/D": st.column_config.NumberColumn(format="%.2f")})
+            if p.sides:
+                for col, side, icon in zip(st.columns(2), ("attack", "defense"), ("⚔", "♜")):
+                    numbers = p.sides.get(side)
+                    with col:
+                        st.markdown(f"**{icon} {side.title()}**")
+                        if not numbers:
+                            st.caption("No rounds on this side yet.")
+                            continue
+                        st.caption(f"{numbers['rounds']} rounds · round win {fmt(numbers['win_rate'], 'pct')} · "
+                                   f"K/D {fmt(numbers['kd'], 'ratio')} · KOST {fmt(numbers['kost'], 'pct')}")
+        with bests:
+            self.bests(p)
+            self.goals(p)
+        with play:
+            maps, ops = st.columns(2)
+            with maps:
+                st.markdown("**Best maps**")
+                if p.maps:
+                    st.dataframe(p.maps[:5], hide_index=True, column_config={
+                        "Win %": st.column_config.NumberColumn(format="%d%%"),
+                        "K/D": st.column_config.NumberColumn(format="%.2f")})
+                else:
+                    st.caption("Play a map twice to see it here.")
+            with ops:
+                st.markdown("**Top operators**")
+                if p.operators:
+                    st.dataframe(p.operators, hide_index=True, column_config={
+                        "Round win %": st.column_config.NumberColumn(format="%d%%"),
+                        "K/D": st.column_config.NumberColumn(format="%.2f")})
+                else:
+                    st.caption("These replays don't include operator picks.")
+        with rivals:
+            if p.opponents:
+                st.dataframe(p.opponents, hide_index=True, column_config={
                     "Win %": st.column_config.NumberColumn(format="%d%%"),
                     "K/D": st.column_config.NumberColumn(format="%.2f")})
             else:
-                st.caption("Play a map twice to see it here.")
-        with ops:
-            st.subheader("Top operators")
-            if p.operators:
-                st.dataframe(p.operators, hide_index=True, column_config={
-                    "Round win %": st.column_config.NumberColumn(format="%d%%"),
-                    "K/D": st.column_config.NumberColumn(format="%.2f")})
-            else:
-                st.caption("These replays don't include operator picks.")
-        if p.sides:
-            st.subheader("Attack and defense")
-            for col, side, icon in zip(st.columns(2), ("attack", "defense"), ("⚔", "♜")):
-                numbers = p.sides.get(side)
-                with col:
-                    st.markdown(f"**{icon} {side.title()}**")
-                    if not numbers:
-                        st.caption("No rounds on this side yet.")
-                        continue
-                    st.caption(f"{numbers['rounds']} rounds · round win {fmt(numbers['win_rate'], 'pct')} · "
-                               f"K/D {fmt(numbers['kd'], 'ratio')} · KOST {fmt(numbers['kost'], 'pct')}")
-        if p.opponents:
-            st.subheader("Against opponents")
-            st.dataframe(p.opponents, hide_index=True, column_config={
-                "Win %": st.column_config.NumberColumn(format="%d%%"),
-                "K/D": st.column_config.NumberColumn(format="%.2f")})
+                st.caption("No teams with names of their own yet: custom and league matches name them.")
         st.page_link("charts.py", label="Chart any of these over time on Charts", icon=":material/insights:")
 
     @staticmethod
     def bests(p) -> None:
         """Personal bests: their best single matches, aces and clutches, and their streaks."""
-        st.subheader("Personal bests")
+        st.markdown("**Personal bests**")
         if run := p.streak:
             now = {1: f"on a **{run.current}-match win streak**", 0: f"on a **{run.current}-match losing streak**"}.get(
                 run.current_won, "coming off a draw")
@@ -149,7 +154,7 @@ class PlayersTab(Tab):
 
     def goals(self, p) -> None:
         """The player's goals, each measured over their newest matches, and a form to set or clear one."""
-        st.subheader("Goals")
+        st.markdown("**Goals**")
         with self.stats() as db:
             progress = goal_progress(db, p.key)
         if progress:
