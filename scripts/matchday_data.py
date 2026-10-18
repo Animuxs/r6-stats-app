@@ -67,9 +67,10 @@ def demo_workspace(today: date | None = None) -> MatchdayWorkspace:
        "Example preparation notes: review retakes and confirm the map veto before match time.")
 
 
-def head_to_head(db, opponent: str) -> str | None:
+def head_to_head(db, opponent: str, before: str | None = None) -> str | None:
     """Your record against a team, by the name the replays give it, and how the last meeting went:
-    "Your record: 1–1 · last met Oct 9, lost 5–7". None when you haven't played it (or don't know who you are)."""
+    "Your record: 1–1 · last met Oct 9, lost 5–7"; with `before` (a played_at), only the matches before
+    then. None when there's no name or it's not known who you are."""
     me = db.me()
     if not me or not opponent.strip():
         return None
@@ -77,7 +78,8 @@ def head_to_head(db, opponent: str) -> str | None:
         """SELECT m.played_at, m.score0, m.score1, mp.team, mp.won FROM match_players mp
            JOIN matches m ON m.match_id = mp.match_id
            WHERE mp.player_key = ? AND lower(trim(CASE mp.team WHEN 0 THEN m.team1 ELSE m.team0 END)) = ?
-           ORDER BY m.played_at DESC""", [me.casefold(), " ".join(opponent.casefold().split())])
+             AND (? IS NULL OR m.played_at < ?)
+           ORDER BY m.played_at DESC""", [me.casefold(), " ".join(opponent.casefold().split()), before, before])
     if not rows:
         return "First meeting in your stats"
     wins, losses = sum(r["won"] == 1 for r in rows), sum(r["won"] == 0 for r in rows)

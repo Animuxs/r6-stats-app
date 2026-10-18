@@ -76,10 +76,11 @@ class TestDemoSeason(unittest.TestCase):
 class TestNamelessTeams(unittest.TestCase):
     def test_stand_in_names_arent_opponents(self):
         db = StatsDB(":memory:")
-        for i, names in enumerate((["Team A", "Team B"], ["Blue", "Orange"], ["Liquid", "Spacestation"])):
+        for i, names in enumerate((["Team A", "Team B"], ["Blue", "Orange"], ["YOUR TEAM", "ENEMY TEAM"],
+                                   ["Liquid", "Spacestation"])):
             match = copy.deepcopy(SAMPLE_MATCH)
             match.update(match_id=f"n{i}", team_names=names, recording_player="Fabian",
-                         played_at=f"2026-10-0{i + 1} 20:00:00")
+                         played_at=f"2026-10-0{i + 1} 20:00:00")  # Ranked says YOUR/ENEMY TEAM
             db.import_match(f"Match-{i}", match)
         team = next(p["team"] for p in SAMPLE_MATCH["players"] if p["name"] == "Fabian")
         expected = ["Spacestation" if team == 0 else "Liquid"]

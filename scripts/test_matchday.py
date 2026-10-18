@@ -91,6 +91,10 @@ class TestHeadToHead(unittest.TestCase):
         self.assertTrue(line.endswith(f"{'won' if last['won'] else 'lost'} {last['score0']}–{last['score1']}"))
         self.assertEqual(head_to_head(self.db, "A team never played"), "First meeting in your stats")
         self.assertIsNone(head_to_head(self.db, " "))
+        # before a match: only the meetings before it
+        self.assertEqual(head_to_head(self.db, "Metro Tech", before=last["played_at"]).split(" · ")[0],
+                         f"Your record: {wins - (last['won'] == 1)}–{losses - (last['won'] == 0)}")
+        self.assertEqual(head_to_head(self.db, "Metro Tech", before="2000-01-01 00:00:00"), "First meeting in your stats")
 
     def test_every_demo_fixture_has_a_record(self):
         for fixture in demo_workspace(date(2026, 10, 16)).upcoming(date(2026, 10, 16)):

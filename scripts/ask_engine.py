@@ -40,6 +40,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from metrics_engine import round_eps
+from season_stats import GENERIC_TEAM_NAMES
 from stats_db import StatsDB, nice_day, nice_time
 
 # ------------------------------------------------------------------ metrics --
@@ -300,8 +301,10 @@ class Entity:
 
 
 # team names a replay gives when it has none of its own: not an opponent anyone means
-_NAMELESS_TEAMS = {"team a", "team b", "team 1", "team 2", "blue", "orange", "your team", "opponents", "opponent",
-                   "enemy", "enemies", "allies", "attackers", "defenders", "yellow", "alpha", "bravo"}
+# (Ranked replays say "YOUR TEAM" and "ENEMY TEAM": season_stats.GENERIC_TEAM_NAMES, which the season tracker uses)
+_NAMELESS_TEAMS = {n.casefold() for n in GENERIC_TEAM_NAMES} | {
+    "team 1", "team 2", "opponents", "opponent", "enemy", "enemies", "allies", "attackers", "defenders", "yellow",
+    "alpha", "bravo"}
 
 
 def named_team(name: str | None) -> bool:

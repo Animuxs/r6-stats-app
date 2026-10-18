@@ -20,11 +20,13 @@ import streamlit as st
 
 import rosters
 from app_info import APP_NAME, APP_VERSION, NOTICE, is_windows_app
+from matchday_data import head_to_head
 from metrics_engine import (
     PRO_LEAGUE_COLUMNS, SIDE_ICONS, SIDE_NAMES, compute_match_metrics, leaderboard_rows, pro_league_rows,
     round_player_rows, round_rows, rounds_text, rows_csv, running_scores, scoreboard_text, side_split, team_side,
     win_condition_label,
 )
+from ask_engine import named_team
 from branding import current_theme
 from parser import (
     ReplayParseError, find_replay_folders, load_demo_match, r6_dissect_available, raw_shape_preview, save_uploads,
@@ -523,6 +525,7 @@ class DashboardTab(Tab):
         snapshot_columns[2].metric("Top EPS", top_player.eps)
         snapshot_columns[3].metric("Top performer", top_player.name)
         st.markdown(scorecard_html(match, sides, my_name), unsafe_allow_html=True)
+        self.head_to_head(match, sides["mine"])
         for team_idx, team_name in enumerate(team_names[:2]):
             team_rows = [r for r in rows if r["Team"] == team_idx]
             if team_rows:
@@ -536,6 +539,19 @@ class DashboardTab(Tab):
             st.caption("The demo match is only for trying the app, so it can't be added to your stats.")
         self.exports(match, stats, rows)
         self.breakdown(match, stats, rows)
+
+    def head_to_head(self, match: dict, mine: int | None) -> None:
+        """Your record against the other team before this match, when it has a name of its own. Your side is
+        your team's (League & Team), or else the side your own player is on."""
+        with self.stats() as db:
+            if mine not in (0, 1):
+                me = (db.me() or "").casefold()
+                mine = next((p["team"] for p in match.get("players", []) if me and p["name"].casefold() == me), None)
+            if mine not in (0, 1) or not named_team(opponent := match["team_names"][1 - mine]):
+                return
+            record = head_to_head(db, opponent, before=match.get("played_at"))
+        if record:
+            st.caption(md(f"Against {opponent} before this match · {record.removeprefix('Your record: ')}"))
 
     def exports(self, match: dict, stats: dict, rows: list[dict]) -> None:
         team_names, score = match["team_names"], match["final_score"]
