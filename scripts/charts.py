@@ -67,6 +67,7 @@ def _from_prompt() -> None:
         spec = parse(text, Vocab.from_db(db))
     _put(session, spec)
     session.set("chart_asked", text)
+    session.set("chart_customizing", False)
 
 
 def _example(text: str) -> None:
@@ -96,6 +97,7 @@ def _edited() -> None:
     for name in ("since", "until", "tag", "notes"):
         session.set(_KEY + name, None if name != "notes" else [])
     session.set("chart_asked", None)
+    session.set("chart_customizing", True)  # keep the menus open while they're being used
 
 
 class ChartsTab(Tab):
@@ -146,7 +148,8 @@ class ChartsTab(Tab):
         kind = _value(s, "kind")
         if kind == "scatter" and _value(s, "x") not in DOTS:
             _show(s, "x", "player")  # a scatter's dots are players, operators or maps
-        with st.expander("Customize the chart", expanded=not s.get("chart_asked"), icon=":material/tune:"):
+        # closed until someone uses the menus, so the chart sits right under the request
+        with st.expander("Customize the chart", expanded=bool(s.get("chart_customizing")), icon=":material/tune:"):
             a, b, c, d = st.columns(4)
             a.selectbox("Chart", list(KINDS.values()), key=_KEY + "kind", on_change=_edited)
             kind = _value(s, "kind")
