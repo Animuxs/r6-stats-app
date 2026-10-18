@@ -47,11 +47,11 @@ def _put(session: Session, spec: ChartSpec) -> None:
     for name in ("kind", "metric", "x", "split", "who", "side"):
         _show(session, name, getattr(spec, name))
     _show(session, "metric2", spec.metric2 or "kost")
-    for name in ("players", "teams", "maps", "operators", "rolling", "cumulative"):
+    for name in ("players", "teams", "maps", "operators", "opponents", "rolling", "cumulative"):
         session.set(_KEY + name, getattr(spec, name))
     session.set(_KEY + "match_type", spec.match_type or EVERY_TYPE)
     session.set(_KEY + "last_n", spec.last_matches or 0)
-    for name in ("since", "until", "tag", "opponents"):
+    for name in ("since", "until", "tag"):
         session.set(_KEY + name, getattr(spec, name))
     session.set(_KEY + "notes", list(spec.notes))
 
@@ -92,10 +92,10 @@ def _forget(index: int) -> None:
 
 def _edited() -> None:
     """A menu was changed by hand: it's no longer just the request's chart, and the filters a request set
-    without a menu (dates, a tag, an opponent) go."""
+    without a menu (dates, a tag) go."""
     session = Session()
-    for name in ("since", "until", "tag", "opponents", "notes"):
-        session.set(_KEY + name, [] if name in ("notes", "opponents") else None)
+    for name in ("since", "until", "tag", "notes"):
+        session.set(_KEY + name, None if name != "notes" else [])
     session.set("chart_asked", None)
     session.set("chart_customizing", True)  # keep the menus open while they're being used
 
@@ -140,7 +140,8 @@ class ChartsTab(Tab):
         if not s.has(_KEY + "kind"):
             _put(s, ChartSpec())
         names = {key: vocab.players[key] for key in sorted(vocab.players, key=lambda k: vocab.players[k].casefold())}
-        known = {"players": names, "teams": vocab.rosters, "maps": vocab.maps, "operators": vocab.operators}
+        known = {"players": names, "teams": vocab.rosters, "maps": vocab.maps, "operators": vocab.operators,
+                 "opponents": vocab.opponents}
         for key, values in known.items():  # drop what this database doesn't have
             s.set(_KEY + key, [v for v in s.get(_KEY + key) or [] if v in values])
         if s.get(_KEY + "match_type") not in [EVERY_TYPE, *vocab.match_types]:
@@ -177,9 +178,15 @@ class ChartsTab(Tab):
                               placeholder="Build teams on Team Analytics", on_change=_edited)
             g.multiselect("Maps", vocab.maps, key=_KEY + "maps", placeholder="Every map", on_change=_edited)
             h.selectbox("Side", list(SIDES.values()), key=_KEY + "side", on_change=_edited)
-            i, j, k, m = st.columns(4)
+            if vocab.opponents:
+                i, o, j, k, m = st.columns(5)
+            else:
+                (i, j, k, m), o = st.columns(4), None
             i.multiselect("Operators", vocab.operators, key=_KEY + "operators", placeholder="Every operator",
                           on_change=_edited)
+            if o is not None:  # the teams you've played, by name ("vs Metro Tech")
+                o.multiselect("Opponents", vocab.opponents, key=_KEY + "opponents", placeholder="Every opponent",
+                              on_change=_edited)
             j.selectbox("Match type", [EVERY_TYPE, *vocab.match_types], key=_KEY + "match_type", on_change=_edited)
             k.number_input("Last N matches (0 = all)", min_value=0, max_value=500, step=1, key=_KEY + "last_n",
                            on_change=_edited)

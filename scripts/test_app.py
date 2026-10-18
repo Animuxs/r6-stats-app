@@ -299,6 +299,21 @@ class TestDemoSeason(unittest.TestCase):
         self.assertEqual(len(lines), 1, [c.value for c in at.caption])
         self.assertRegex(lines[0], r"^Against Metro Tech before this match · \d+–\d+ · last met ")
 
+    def test_a_chart_s_opponent_stays_when_another_menu_changes(self):
+        """"My K/D over time against Metro Tech" fills in the Opponents menu, and a bar chart instead keeps it."""
+        at = run_app()
+        at.query_params["demo"] = "1"
+        at.run()
+        at.switch_page("charts.py").run()
+        at.text_input(key="chart_prompt").set_value("my K/D over time against Metro Tech")
+        at = next(b for b in at.button if b.label == "Draw").click().run()
+        self.assertEqual(at.multiselect(key="chart_opponents").value, ["Metro Tech"])
+        at = at.selectbox(key="chart_kind").select_index(1).run()  # another kind of chart, by hand
+        self.assertFalse(at.exception)
+        self.assertEqual(at.multiselect(key="chart_opponents").value, ["Metro Tech"])
+        charts = [c.proto.spec for c in at.get("vega_lite_chart")]
+        self.assertTrue(any("(against Metro Tech)" in spec for spec in charts), "the chart is still against them")
+
     def test_a_link_opens_the_demo(self):
         with mock.patch.object(app_info, "is_loopback", return_value=True):
             at = AppTest.from_file(APP, default_timeout=60)
