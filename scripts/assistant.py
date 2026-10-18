@@ -39,6 +39,7 @@ from ask_engine import (METRIC_WORDS, METRICS, Answer, Query, Vocab, _aggregate,
                         _find_metrics, ask, fmt, fold, interpret, operator_table, rate, suggestions,
                         team_report, team_summary)
 from map_pool import map_pool, veto_hint
+from player_profile import streaks
 from stats_db import StatsDB, nice_time
 
 
@@ -458,20 +459,8 @@ def _streaks(question: str, db: StatsDB, vocab: Vocab) -> Reply:
         who = "You" if key == vocab.me else _name(vocab, key)
     if not results:
         return Reply(f"No matches for {who} yet.", "stats")
-    current = 0
-    for r in results:
-        if r != results[0] or r is None:
-            break
-        current += 1
-    best_w = best_l = run = 0
-    last = None
-    for r in reversed(results):
-        run = run + 1 if r == last and r is not None else (1 if r is not None else 0)
-        last = r
-        if r == 1:
-            best_w = max(best_w, run)
-        elif r == 0:
-            best_l = max(best_l, run)
+    run = streaks(results)
+    current, best_w, best_l = run.current, run.best_win, run.best_loss
     state = {1: f"on a **{current}-match win streak**", 0: f"on a **{current}-match losing streak**"}.get(
         results[0], "coming off a draw")
     verb = "are" if who == "You" else "is"
