@@ -52,9 +52,10 @@ On macOS/Linux, use `go build` (it produces `r6-dissect`), `source
 
 ## Using the dashboard
 
-The top navigation has **Dashboard**, **Ask**, **Match History**, **Team
-Analytics**, **Operator Analytics**, **League & Team**, **Team Theme** and **Get
-the Windows app**. Dashboard takes a **Replay source**:
+The top navigation has **Dashboard**, **Ask** and **Charts**, then three menus:
+**Stats** (Match History, Team Analytics, Operator Analytics), **Team** (Match day,
+Team hub, League & Team, Team Theme) and **App** (Get the Windows app). Dashboard
+takes a **Replay source**:
 
 - **Folder or zip on this computer**: a path to one match folder, a `.zip`, or
   your whole `MatchReplay` folder. It's filled in automatically when Siege is

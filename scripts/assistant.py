@@ -100,6 +100,18 @@ _WHY = re.compile(r"^(why|how come|how did you (get|work out|figure) (that|this)
 _MORE = re.compile(r"^(more|show more|tell me more|details|more details|go on|elaborate|expand)\W*$", re.I)
 _CHART = re.compile(r"\b(chart|charts|graph|graphs|plot|plots|visuali[sz]e|visuali[sz]ation|pie|donut|heat ?map|"
                     r"scatter|histogram|box ?plot|bar chart|line chart|diagram)\b")
+_BAN = re.compile(r"\b(ban|bans|banning|veto|vetoes|vetoing|avoid|dodge|pick|picks|first pick)\b.*\bmaps?\b|"
+                  r"\bmaps?\b.*\b(ban|veto|avoid|dodge|pick)\b")
+_TIME_OF_DAY = re.compile(r"\b(morning|afternoon|evening|night|late|what time|time of day|which day|what day|"
+                          r"weekdays?|weekends?|mondays?|tuesdays?|wednesdays?|thursdays?|fridays?|saturdays?|"
+                          r"sundays?|day of the week)\b")
+_CONSISTENT = re.compile(r"\b(consistent|consistency|inconsistent|steady|streaky|up and down|reliable|variance|"
+                         r"volatile|swingy)\b")
+_IMPROVING = re.compile(r"\b(improv\w* the most|most improved|who\W*s improving|who is improving|who improved|"
+                        r"who\W*s getting better|getting worse the most|who\W*s declining|biggest improvement)\b")
+_AVERAGE = re.compile(r"\b(average|avg|on average|typical|usually)\b.*\bper (game|match)\b|\bper (game|match) average\b|"
+                      r"\b(average|avg) (\w+ ){0,2}(a|each|every) (game|match)\b|\bon average\b")
+_STATS_CONTEXT = re.compile(r"\b(our|we|team|teams|when|in my|in our|since|last|this|on|as|vs|versus|by|per|over)\b")
 _STREAK = re.compile(r"\bstreaks?\b|\bin a row\b|\bstraight (wins|losses)\b")
 _LAST_PLAYED = re.compile(r"\b(when did (i|we) (last )?play|last time (i|we) played|when was my last (match|game)|"
                           r"how long since|last played)\b")
@@ -153,9 +165,10 @@ def _arithmetic(text: str) -> float | None:
         raise ValueError
 
     try:
-        return run(ast.parse(expr, mode="eval"))
-    except (SyntaxError, ValueError, ZeroDivisionError, OverflowError, TypeError):
+        value = float(run(ast.parse(expr, mode="eval")))
+    except (SyntaxError, ValueError, ZeroDivisionError, OverflowError, TypeError, MemoryError, RecursionError):
         return None
+    return value if value == value and abs(value) != float("inf") else None
 
 
 # ------------------------------------------------------------------ helpers --
@@ -521,6 +534,174 @@ def _game_guide(entity, db: StatsDB, vocab: Vocab) -> Reply:
                  suggestions=["Which operators do I play most?" if entity.kind == "operator" else "What's my best map?"])
 
 
+def _per_match(db: StatsDB, key: str) -> list[dict[str, Any]]:
+    """A player's matches, oldest first: EPS, kills, deaths, result and when."""
+    return db.query("SELECT m.played_at, m.map, t.kills, t.deaths, t.won, 100.0 * t.rating AS eps FROM match_players t "
+                    "JOIN matches m ON m.match_id = t.match_id WHERE t.player_key = ? ORDER BY m.played_at", [key])
+
+
+def _swing(values: list[float]) -> float:
+    """How far values usually are from their average (the standard deviation)."""
+    mean = sum(values) / len(values)
+    return (sum((v - mean) ** 2 for v in values) / len(values)) ** 0.5
+
+
+def _subject_key(question: str, vocab: Vocab) -> str | None:
+    kind, key = _who(question, vocab)
+    return key if kind == "player" else vocab.me
+
+
+def _ban(question: str, db: StatsDB, vocab: Vocab) -> Reply:
+    """Which map to ban (the weakest) or pick (the strongest), from the map pool."""
+    kind, key = _who(question, vocab)
+    team = key if kind == "team" else _my_team(vocab, db) if kind == "my_team" else None
+    player = key if kind == "player" else vocab.me
+    players = vocab.rosters[team] if team else [_name(vocab, player)] if player else []
+    pool = map_pool(db, players, min_players=min(3, len(players)) if team else 1)
+    hint = veto_hint(pool)
+    who = team or ("you" if player == vocab.me else _name(vocab, player))
+    if not hint:
+        return Reply(f"There aren't enough maps played twice or more to say which to pick or ban for {who} yet. The map "
+                     "pool on Team Analytics shows each map's record so far.", "stats",
+                     links=[("teams", "Map pool on Team Analytics")])
+    best, worst = hint
+    text = _norm(question)
+    picking = bool(re.search(r"\b(pick|picks|first pick)\b", text)) and not re.search(r"\bban\b", text)
+    chosen = best if picking else worst
+    rows = [{"Map": m["map"], "Maps": m["maps"], "Record": f"{m['maps_won']}–{m['maps_lost']}",
+             "Rounds won": fmt(m["round_win"], "pct"), "Attack": fmt(m["attack_win"], "pct"),
+             "Defense": fmt(m["defense_win"], "pct")} for m in pool]
+    return Reply(f"{'Pick' if picking else 'Ban'} **{chosen['map']}**: {fmt(chosen['round_win'], 'pct')} of rounds won "
+                 f"there. Strongest map for {who}: {best['map']} ({fmt(best['round_win'], 'pct')}); weakest: "
+                 f"{worst['map']} ({fmt(worst['round_win'], 'pct')}). Only maps played at least twice count.",
+                 "stats", rows=rows, columns=list(rows[0]) if rows else [],
+                 links=[("teams", "Map pool on Team Analytics")], suggestions=["Heatmap of win rate by map and side"])
+
+
+_PARTS_OF_DAY = [("Morning", 5, 12), ("Afternoon", 12, 17), ("Evening", 17, 22), ("Late night", 22, 29)]
+_WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+
+
+def _when_best(question: str, db: StatsDB, vocab: Vocab) -> Reply:
+    """How a player does by time of day, or by day of the week."""
+    key = _subject_key(question, vocab)
+    if not key:
+        return Reply("Name a player and I'll see when they play best.", "stats", answered=False)
+    text = _norm(question)
+    by_day = bool(re.search(r"\b(which day|what day|weekdays?|weekends?|\w+days|day of the week)\b", text)) and \
+        not re.search(r"\b(time of day|morning|afternoon|evening|night)\b", text)
+    groups: dict[str, list[dict[str, Any]]] = {}
+    for m in _per_match(db, key):
+        try:
+            when = datetime.strptime(m["played_at"][:19], "%Y-%m-%d %H:%M:%S")
+        except (TypeError, ValueError):
+            continue
+        if by_day:
+            label = _WEEKDAYS[(when.weekday() + 1) % 7]
+        else:
+            hour = when.hour if when.hour >= 5 else when.hour + 24
+            label = next(name for name, start, end in _PARTS_OF_DAY if start <= hour < end)
+        groups.setdefault(label, []).append(m)
+    rows, scores = [], {}
+    for label in (_WEEKDAYS if by_day else [p[0] for p in _PARTS_OF_DAY]):
+        ms = groups.get(label)
+        if not ms:
+            continue
+        wins, losses = sum(1 for m in ms if m["won"] == 1), sum(1 for m in ms if m["won"] == 0)
+        kd = sum(m["kills"] or 0 for m in ms) / max(1, sum(m["deaths"] or 0 for m in ms))
+        scores[label] = sum(m["eps"] or 0 for m in ms) / len(ms)
+        rows.append({"When": label, "Matches": len(ms), "Record": f"{wins}–{losses}",
+                     "Win %": fmt(rate(wins, wins + losses), "pct"), "K/D": fmt(kd, "ratio"),
+                     "EPS": fmt(scores[label], "eps")})
+    who = "You" if key == vocab.me else _name(vocab, key)
+    if not rows:
+        return Reply(f"No matches for {who} yet.", "stats")
+    fair = [r for r in rows if r["Matches"] >= 2] or rows
+    best = max(fair, key=lambda r: scores[r["When"]])
+    text = (f"{who} {'play' if who == 'You' else 'plays'} best {'on' if by_day else 'in the'} "
+            f"**{best['When'] + ('s' if by_day else '')}**: EPS {best['EPS']}, K/D {best['K/D']} over {best['Matches']} "
+            f"match{'es' if best['Matches'] != 1 else ''}.")
+    if len(fair) < 2:
+        text += " That's the only time with enough matches to compare: play at other times to see a difference."
+    return Reply(text, "stats", rows=rows, columns=list(rows[0]),
+                 suggestions=["What time of day do I play best?" if by_day else "Which day do I play best?"])
+
+
+def _consistency(question: str, db: StatsDB, vocab: Vocab) -> Reply:
+    """How much a player's EPS swings from match to match, against their usual teammates'."""
+    key = _subject_key(question, vocab)
+    if not key:
+        return Reply("Name a player and I'll see how consistent they are.", "stats", answered=False)
+    keys = [key] + [name.casefold() for name, _ in db.teammates(_name(vocab, key), 6)]
+    rows, owner = [], {}
+    for k in dict.fromkeys(keys):
+        values = [m["eps"] for m in _per_match(db, k) if m["eps"] is not None]
+        if len(values) >= 3:
+            rows.append({"Player": _name(vocab, k), "Matches": len(values),
+                         "Average EPS": round(sum(values) / len(values)), "Swing (±)": round(_swing(values)),
+                         "Worst": round(min(values)), "Best": round(max(values))})
+            owner[id(rows[-1])] = k
+    mine = next((r for r in rows if owner[id(r)] == key), None)
+    who = "You" if key == vocab.me else _name(vocab, key)
+    if not mine:
+        return Reply(f"I need at least 3 matches for {'you' if who == 'You' else who} to say how consistent "
+                     f"{'you are' if who == 'You' else 'they are'}.", "stats")
+    rows.sort(key=lambda r: r["Swing (±)"])
+    swing = mine["Swing (±)"]
+    verdict = "very consistent" if swing <= 6 else "fairly consistent" if swing <= 12 else "streaky"
+    text = (f"{who} {'are' if who == 'You' else 'is'} **{verdict}**: EPS {mine['Average EPS']} on average, usually "
+            f"within ±{swing} (from {mine['Worst']} to {mine['Best']}).")
+    if len(rows) > 1:
+        text += (f" That's #{rows.index(mine) + 1} of {len(rows)} for steadiness among "
+                 f"{'your' if who == 'You' else 'their'} usual teammates.")
+    return Reply(text, "stats", rows=rows, columns=list(rows[0]),
+                 suggestions=["Rolling average of my EPS", "Analyze my stats"])
+
+
+def _improving(db: StatsDB, vocab: Vocab) -> Reply:
+    """Each player's EPS in their earlier matches against their later ones, most improved first."""
+    rows = []
+    for key, name in vocab.players.items():
+        values = [m["eps"] for m in _per_match(db, key) if m["eps"] is not None]
+        if len(values) < 6:
+            continue
+        half = len(values) // 2
+        early, late = sum(values[:half]) / half, sum(values[-half:]) / half
+        rows.append({"Player": name, "Matches": len(values), "Earlier EPS": round(early), "Recent EPS": round(late),
+                     "Change": round(late - early)})
+    if not rows:
+        return Reply("Nobody has 6 matches yet, which is what I need to compare earlier and recent games.", "stats")
+    rows.sort(key=lambda r: -r["Change"])
+    top, bottom = rows[0], rows[-1]
+    text = (f"**{top['Player']}** has improved the most: EPS {top['Earlier EPS']} → {top['Recent EPS']} "
+            f"({top['Change']:+d}), comparing their earlier half of matches with their recent half.")
+    if bottom is not top and bottom["Change"] < 0:
+        text += f" {bottom['Player']} has dropped the most ({bottom['Earlier EPS']} → {bottom['Recent EPS']})."
+    return Reply(text, "stats", rows=rows, columns=list(rows[0]),
+                 suggestions=[f"Chart {top['Player']}'s EPS over time", f"Analyze {top['Player']}"])
+
+
+def _average(question: str, db: StatsDB, vocab: Vocab, now: datetime | None) -> Reply | None:
+    """"My average kills per game": a count divided by the matches it's over."""
+    q = interpret(re.sub(r"\b(per|a|each|every) (game|match)\b|\baverage\b|\bavg\b|\bon average\b", " ", question,
+                         flags=re.I), vocab, now)
+    metric = next((m for m in q.metrics if METRICS[m].kind == "count" and m not in ("matches", "rounds")), None)
+    if metric is None or q.group:
+        return None
+    rows = _aggregate(db, q, vocab, [metric, "matches"], None, level=q.level)
+    if not rows or not rows[0].get("matches"):
+        return None
+    r = rows[0]
+    per = (r[metric] or 0) / r["matches"]
+    mine = q.who == "me" or q.players == [vocab.me]
+    who = "You" if mine else {"my_team": "Your team", "everyone": "Everyone"}.get(q.who) or (
+        _name(vocab, q.players[0]) if q.players else "They")
+    verb = "average" if who in ("You", "Everyone", "They") else "averages"
+    whose = "my" if mine else "our" if q.who == "my_team" else f"{who}'s"
+    return Reply(f"{who} {verb} **{per:.1f} {METRICS[metric].phrase}** per match ({r[metric]} over {r['matches']} "
+                 f"matches).", "stats", suggestions=[f"Chart {whose} {METRICS[metric].phrase} over time"])
+
+
 # ---------------------------------------------------------------- fallback --
 
 def example_questions(vocab: Vocab, db: StatsDB) -> list[str]:
@@ -633,7 +814,9 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
     clean_metrics = _find_metrics(_clean(question, [])) if matches else []
 
     # a stat explained: "what is KOST?" (not "what is my KOST?")
-    if (topic := kb.define(question)) and not (_ME.search(text) or (q and (q.players or q.team))):
+    context = bool(q and (q.players or q.team or q.won is not None or q.since or q.maps or q.side or q.operators
+                          or q.match_type or q.tag or q.last_matches)) or bool(_STATS_CONTEXT.search(text))
+    if (topic := kb.define(question)) and not (_ME.search(text) or context):
         reply = _topic_reply(topic, question, "define")
         reply.suggestions = [f"My {topic.title} over time" if topic.key in METRIC_WORDS else "Analyze my stats"]
         return reply
@@ -662,6 +845,17 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
         return _with_question(_last_played(question, db, vocab, first=True), question)
     if _DUO.search(text):
         return _with_question(_duos(question, db, vocab), question)
+    if _BAN.search(text):
+        return _with_question(_ban(question, db, vocab), question)
+    if _IMPROVING.search(text):
+        return _with_question(_improving(db, vocab), question)
+    if _CONSISTENT.search(text):
+        return _with_question(_consistency(question, db, vocab), question)
+    if _TIME_OF_DAY.search(text) and not (q and q.since):
+        return _with_question(_when_best(question, db, vocab), question)
+    if _AVERAGE.search(text) and clean_metrics:
+        if (reply := _average(question, db, vocab, now)) is not None:
+            return _with_question(reply, question)
     if _GAME_GUIDE.search(text) and (ops := [e for e in vocab.find(question)[0] if e.kind in ("operator", "map")]):
         return _with_question(_game_guide(ops[0], db, vocab), question)
 

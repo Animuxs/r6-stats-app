@@ -67,19 +67,20 @@ if st.query_params.get("view") == "dock":
     page.run()
     st.stop()
 
-page = st.navigation([
-    st.Page("report.py", title="Dashboard", icon=":material/dashboard:", default=True),
-    st.Page("ask.py", title="Ask", icon=":material/chat:"),
-    st.Page("charts.py", title="Charts", icon=":material/insights:"),
-    st.Page("history.py", title="Match History", icon=":material/history:"),
-    st.Page("teams.py", title="Team Analytics", icon=":material/groups:"),
-    st.Page("operators.py", title="Operator Analytics", icon=":material/target:"),
-    st.Page("matchday.py", title="Match day", icon=":material/event:"),
-    st.Page("team_hub.py", title="Team hub", icon=":material/badge:"),
-    st.Page("league.py", title="League & Team", icon=":material/emoji_events:"),
-    st.Page("appearance.py", title="Team Theme", icon=":material/palette:"),
-    st.Page("download.py", title="Get the Windows app", icon=":material/download:"),
-], position="top")
+# the everyday pages first; the rest in a few menus, so the bar stays short
+page = st.navigation({
+    "": [st.Page("report.py", title="Dashboard", icon=":material/dashboard:", default=True),
+         st.Page("ask.py", title="Ask", icon=":material/chat:"),
+         st.Page("charts.py", title="Charts", icon=":material/insights:")],
+    "Stats": [st.Page("history.py", title="Match History", icon=":material/history:"),
+              st.Page("teams.py", title="Team Analytics", icon=":material/groups:"),
+              st.Page("operators.py", title="Operator Analytics", icon=":material/target:")],
+    "Team": [st.Page("matchday.py", title="Match day", icon=":material/event:"),
+             st.Page("team_hub.py", title="Team hub", icon=":material/badge:"),
+             st.Page("league.py", title="League & Team", icon=":material/emoji_events:"),
+             st.Page("appearance.py", title="Team Theme", icon=":material/palette:")],
+    "App": [st.Page("download.py", title="Get the Windows app", icon=":material/download:")],
+}, position="top")
 if can_dock():
     with st.sidebar:
         st.caption("Dock the app to the edge of your screen, next to the game or your other apps:")
