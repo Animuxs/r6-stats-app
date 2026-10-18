@@ -73,6 +73,14 @@ GUIDE: list[Topic] = [
           "stacked bars, pies, scatters, heatmaps, histograms and box plots, with the numbers as a CSV. You can also "
           "just ask me for a chart.",
           "charts", ("My K/D over time", "Pie of the operators I play")),
+    Topic("players", "Players",
+          ("players page", "players tab", "player profile", "profile", "head to head", "head-to-head",
+           "side by side", "compare two players", "recent form", "my form"),
+          "**Players** (in the **Stats** menu) shows one player's profile: their headline numbers, recent form "
+          "(and whether it's trending up or down), best maps, top operators and attack vs defense. Pick a second "
+          "player under **Compare with** to put them side by side: who's ahead on each stat, and their record as "
+          "teammates and against each other.",
+          "players", ("Compare me and my teammate",)),
     Topic("history", "Match History",
           ("match history", "history", "past matches", "old matches", "tag a match", "tags", "notes", "note",
            "video link", "delete a match", "remove a match", "scrim tag", "edit a match"),
