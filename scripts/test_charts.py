@@ -228,6 +228,14 @@ class TestChartsTab(unittest.TestCase):
         self.at.run()
         self.at.switch_page("charts.py").run()
 
+    def test_the_example_names_a_real_teammate(self):
+        placeholder = self.at.text_input(key="chart_prompt").placeholder
+        db = StatsDB(":memory:")
+        demo_season.load(db)  # what the demo shows
+        mate = db.teammates(db.me(), limit=1)[0][0]
+        db.close()
+        self.assertIn(f"vs {mate}", placeholder)  # someone you play with
+
     def test_a_request_fills_in_the_menus(self):
         at = self.at
         self.assertFalse(at.exception)
