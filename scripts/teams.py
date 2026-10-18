@@ -214,7 +214,9 @@ class TeamsTab(Tab):
             size = min(MAX_ROSTER, max(ROSTER_SIZE, len(players) + (choice != NEW)))
             self.session.set(f"roster_size_{choice}", size)
             players = (players + [""] * size)[:size]
-            with st.form(f"roster_form_{choice}"):
+            # a saved team's stats come first; its roster is a click away. A new team starts with the form.
+            editor = st.expander(f"Edit {md(choice)}", icon=":material/edit:") if choice != NEW else st.container()
+            with editor, st.form(f"roster_form_{choice}"):
                 st.text_input("Team name", value=name, placeholder="e.g. Varsity", key=f"team_name_{choice}")
                 for row in range(0, size, ROSTER_SIZE):
                     for i, col in enumerate(st.columns(ROSTER_SIZE), row):
@@ -227,16 +229,20 @@ class TeamsTab(Tab):
             if error := self.session.pop("team_error"):
                 st.error(error)
             if choice != NEW:
-                st.button(f"Delete {md(choice)}", on_click=_delete_team, args=(choice,), type="tertiary")
+                editor.button(f"Delete {md(choice)}", on_click=_delete_team, args=(choice,), type="tertiary")
 
+            # the stats of the team picked above (never another one shown before), with the number of its
+            # players last asked for
             shown = self.session.get("team_shown")
-            if shown and shown[0] in teams:
+            need = shown[1] if shown and shown[0] == choice else self.session.get(f"roster_min_{choice}", 3)
+            shown = (choice, need) if choice in teams else None
+            if shown:
                 with self.stats() as db:
                     report = team_report(db, *shown)
                 team, need = shown
                 if not report["matches"]:
                     st.warning(f"No match had {need}+ of {md(team)}'s players on the same side. Check the spelling of "
-                               "the names, or lower the number above.")
+                               f"the names, or lower the number in **Edit {md(team)}**.")
                 else:
                     _team_stats(report["summary"])
                     if report["missing"]:

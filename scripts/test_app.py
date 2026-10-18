@@ -415,6 +415,24 @@ class TestAnalyticsPages(unittest.TestCase):
         self.assertEqual(players[0], "Fabian")
         self.assertEqual(sorted(players), sorted(TEAM0))  # Fabian's four teammates fill the rest
 
+    def test_picking_a_saved_team_shows_its_own_stats(self):
+        """Another saved team picked in Team shows that team's stats at once, never the last one built."""
+        at = with_matches(run_app())
+        at.switch_page("teams.py").run()
+        players = [at.text_input(key=f"roster_New team_{i}").value for i in range(5)]
+        at.text_input(key="team_name_New team").set_value("Liquid")
+        at = next(b for b in at.button if b.label == "Show team stats").click().run()
+        at.selectbox(key="team_choice").set_value("New team").run()
+        at.text_input(key="team_name_New team").set_value("Duo")
+        for i in range(2, 5):
+            at.text_input(key=f"roster_New team_{i}").set_value("")
+        at = next(b for b in at.button if b.label == "Show team stats").click().run()
+        self.assertEqual(sorted(at.dataframe[1].value["Player"]), sorted(players[:2]))
+        at = at.selectbox(key="team_choice").set_value("Liquid").run()
+        self.assertFalse(at.exception)
+        self.assertEqual(sorted(at.dataframe[1].value["Player"]), sorted(players))
+        self.assertTrue(any(e.label.startswith("Edit Liquid") for e in at.expander))
+
     def test_build_a_team(self):
         from metrics_engine import compute_match_metrics
         from sample_data import SAMPLE_MATCH
