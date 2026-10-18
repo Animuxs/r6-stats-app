@@ -652,7 +652,7 @@ class TestTags(unittest.TestCase):
     def test_a_tag_nothing_has(self):
         answer = self.ask("my kd in practice")
         self.assertFalse(answer.rows)
-        self.assertTrue(any("No match is tagged Practice" in n for n in answer.notes))
+        self.assertTrue(answer.headline.startswith("No match is tagged Practice yet"), answer.headline)
 
     def test_two_tags_at_once(self):
         answer = self.ask("my kills in scrims and official matches")
