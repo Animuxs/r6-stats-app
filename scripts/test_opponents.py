@@ -63,6 +63,11 @@ class TestDemoSeason(unittest.TestCase):
         last = self.ask("my last match")
         self.assertIn(f" against {last.rows[0]['Opponent']}, ", last.headline)
 
+    def test_two_opponents_compared(self):
+        answer = self.ask("compare Metro Tech and Harbor State")
+        self.assertEqual({r["Opponent"] for r in answer.rows}, {"Metro Tech", "Harbor State"})
+        self.assertTrue(answer.headline.startswith("You do better against "), answer.headline)
+
     def test_a_chart_keeps_to_the_opponent(self):
         spec = chart_engine.parse("my K/D over time against Metro Tech", self.vocab)
         self.assertEqual(spec.opponents, ["Metro Tech"])
