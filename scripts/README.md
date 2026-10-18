@@ -585,7 +585,7 @@ What they cover:
   by running it; only `Session` (and `sources.py` and `branding.py` under it) touches `st.session_state`;
   tabs never import each other and link through `Tab.go_to`; every `ReplaySource` kind passes the same
   contract test; every module ships in the Windows app. Each failure says what to change.
-- **Coverage**: `--coverage` fails if the tests cover less than 93% of the app or 75% of any one module.
+- **Coverage**: `--coverage` fails if the tests cover less than 92% of the app (statements and both ways of every branch) or 75% of any one module's statements.
 
 ## Troubleshooting
 
