@@ -31,6 +31,13 @@ class PlayersTab(Tab):
             me = db.me()
             keys = sorted(names, key=lambda k: (k != (me or "").casefold(), names[k].casefold()))
             label = lambda k: names[k] + (" (you)" if names[k] == me else "")  # noqa: E731
+            # opened from an answer ("compare me and Sacri"): those two, picked
+            if (asked := st.query_params.get("player")) and asked.casefold() in keys:
+                self.session.set("players_first", asked.casefold())
+                vs = (st.query_params.get("vs") or "").casefold()
+                self.session.set("players_second", vs if vs in keys and vs != asked.casefold() else NOBODY)
+            for param in ("player", "vs"):
+                st.query_params.pop(param, None)
             # a pick from another database (the demo season, before it was left) isn't one of these players
             # (set, not dropped: the picker on screen only follows a value it's given)
             if self.session.get("players_first") not in keys:
@@ -140,7 +147,7 @@ class PlayersTab(Tab):
         st.subheader("Best maps")
         for col, p in zip(st.columns(2), (a, b)):
             with col:
-                st.markdown(md(f"**{p.name}**"))
+                st.markdown(f"**{md(p.name)}**")
                 if p.maps:
                     st.dataframe(p.maps[:3], hide_index=True, column_config={
                         "Win %": st.column_config.NumberColumn(format="%d%%"),

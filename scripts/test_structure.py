@@ -260,6 +260,15 @@ class TestTheStructureHolds(unittest.TestCase):
                 imported |= {(n.module or "").split(".")[0] for n in ast.walk(_tree(name)) if isinstance(n, ast.ImportFrom)}
                 self.assertFalse(imported & pages, f"{name} imports the page(s) {imported & pages}")
 
+    def test_markdown_is_never_escaped_by_md(self):
+        """md() escapes a name so it shows as written; bold or italics inside it would show their asterisks
+        ("**Fabian**"). Escape just the name: f"**{md(name)}**"."""
+        pattern = re.compile(r"""\bmd\(f?(["'])(?:(?!\1).)*(\*\*|__)""")
+        for name in _app_modules():
+            with self.subTest(module=name):
+                for number, line in enumerate((SCRIPTS / name).read_text(encoding="utf-8").splitlines(), 1):
+                    self.assertIsNone(pattern.search(line), f"{name}:{number}: {line.strip()}")
+
     def test_links_between_tabs_go_through_the_tab_base(self):
         """st.switch_page is called in one place, Tab.go_to, with the page from tab.PAGES."""
         for name in _app_modules():

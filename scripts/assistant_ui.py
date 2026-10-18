@@ -193,9 +193,10 @@ def show_reply(message: dict[str, Any]) -> None:
                      hide_index=True)
         if message.get("more_rows"):
             st.caption(f"…and {message['more_rows']} more. Open it on Ask for the whole table.")
-    for page, label in message.get("links", []):
+    for page, label, *params in message.get("links", []):
         if page in PAGES and not (page == "charts" and message.get("kind") == "chart"):
-            st.page_link(page=PAGES[page], label=label, icon=_ICONS.get(page, ":material/arrow_forward:"))
+            st.page_link(page=PAGES[page], label=label, icon=_ICONS.get(page, ":material/arrow_forward:"),
+                         query_params=params[0] if params else None)
 
 
 # ------------------------------------------------------------- the panel --

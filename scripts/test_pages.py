@@ -310,6 +310,22 @@ class TestPlayersTab(unittest.TestCase):
         self.assertTrue(table.iloc[:, 1:].apply(lambda col: col.str.startswith("✅")).any().any())
         self.assertTrue(any(m.label == "Matches as teammates" for m in at.metric))
 
+    def test_opened_with_two_players(self):
+        """?player=...&vs=... (an answer's link) opens those two side by side, then leaves the address."""
+        from sample_data import SAMPLE_MATCH
+
+        a, b = (p["name"] for p in SAMPLE_MATCH["players"][1:3])
+        at = SITUATIONS[3].start(self)
+        at.query_params["player"], at.query_params["vs"] = a.upper(), b  # any spelling
+        at.switch_page("players.py").run()
+        self.assertFalse(problems(at))
+        self.assertEqual((at.selectbox(key="players_first").value, at.selectbox(key="players_second").value),
+                         (a.casefold(), b.casefold()))
+        self.assertNotIn("player", at.query_params)
+        at.query_params["player"] = "nobody we know"
+        at.run()
+        self.assertEqual(at.selectbox(key="players_first").value, a.casefold())  # left as it was
+
     def test_picking_the_compared_player_first_compares_with_nobody(self):
         at = SITUATIONS[3].start(self)
         at.switch_page("players.py").run()
