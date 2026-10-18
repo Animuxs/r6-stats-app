@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 import demo_season
 from ask_engine import Vocab, ask, interpret
-from assistant import answer_anything
+from assistant import Conversation, answer_anything
 from stats_db import StatsDB, nice_time
 
 
@@ -108,6 +108,41 @@ class TestEverydayQuestions(unittest.TestCase):
         reply = self.answer(f"my best round on {best['map']} as {best['operator']} in {month}")
         self.assertTrue(reply.startswith(f"Your most kills in a round: **{best['kills']}**"), reply)
         self.assertIn(f"on {best['map']} as {best['operator']}", reply)
+
+
+class TestFollowUps(unittest.TestCase):
+    """Follow-ups that lost the thread when asked about real replays."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.db = StatsDB(":memory:")
+        demo_season.load(cls.db)
+        cls.vocab = Vocab.from_db(cls.db)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.db.close()
+
+    def chat(self, *questions):
+        chat = Conversation()
+        return [chat.reply(q, self.db) for q in questions]
+
+    def test_the_other_end_of_a_ranking(self):  # was: "my map my worst", a summary
+        _, worst = self.chat("my best map", "and my worst?")
+        self.assertEqual(worst.resolved, "my worst map")
+        self.assertIn("worst map", worst.text)
+
+    def test_it_is_the_map_or_operator_just_named(self):  # was: "it" ignored
+        best, on_it = self.chat("what's my best map?", "how do I do on it?")
+        top = best.answer.rows[0]["Map"]
+        self.assertEqual(on_it.resolved, f"how do I do on {top}?")
+        played, as_it = self.chat("my most played operator", "my K/D as it")
+        self.assertEqual(as_it.resolved, f"my K/D as {played.answer.rows[0]['Operator']}")
+
+    def test_a_question_about_the_app_isnt_a_follow_up(self):  # was: glued onto the last stat question
+        _, safe = self.chat("my K/D on Bank", "is it safe?")
+        self.assertFalse(safe.resolved)
+        self.assertNotIn("K/D", safe.text)
 
 
 if __name__ == "__main__":
