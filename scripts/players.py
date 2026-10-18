@@ -101,6 +101,11 @@ class PlayersTab(Tab):
                         continue
                     st.caption(f"{numbers['rounds']} rounds · round win {fmt(numbers['win_rate'], 'pct')} · "
                                f"K/D {fmt(numbers['kd'], 'ratio')} · KOST {fmt(numbers['kost'], 'pct')}")
+        if p.opponents:
+            st.subheader("Against opponents")
+            st.dataframe(p.opponents, hide_index=True, column_config={
+                "Win %": st.column_config.NumberColumn(format="%d%%"),
+                "K/D": st.column_config.NumberColumn(format="%.2f")})
         st.page_link("charts.py", label="Chart any of these over time on Charts", icon=":material/insights:")
 
     @staticmethod
