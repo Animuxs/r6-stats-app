@@ -180,6 +180,65 @@ class TestMoreAnswers(unittest.TestCase):
         self.assertEqual(self.text("who has the most aces"), "Nobody has any aces yet.")
 
 
+class TestEverydayQuestions(unittest.TestCase):
+    """Questions people really ask, each sent where it belongs: found in a sweep where they were answered
+    the wrong way round ("who should I bench?" named the best player), without what was asked ("did we win
+    our last match?"), or not at all ("how was September?")."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.db = StatsDB(":memory:")
+        demo_season.load(cls.db)
+        cls.now = datetime(2026, 10, 12)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.db.close()
+
+    def answer(self, question: str):
+        return answer_anything(question, self.db, now=self.now)
+
+    def test_bench_names_the_lowest_eps(self):
+        reply = self.answer("who should I bench")
+        lowest = min(reply.rows, key=lambda r: r["EPS"])
+        self.assertIn(f"**{lowest['Player']}** has had the lowest EPS", reply.text)
+        self.assertEqual(self.answer("who is the weakest link on our team").text, reply.text)
+
+    def test_slump_leads_with_the_biggest_drop(self):
+        reply = self.answer("who's in a slump")
+        self.assertEqual(reply.rows[0]["Change"], min(r["Change"] for r in reply.rows))
+        self.assertIn("dropped the most", reply.text)
+        self.assertIn("improved the most", self.answer("who is improving").text)
+
+    def test_last_match_result(self):
+        for question in ("did we win our last match", "how did our last match go", "how was the match",
+                         "did I win last game"):
+            with self.subTest(question):
+                self.assertIn("and lost (5–7)", self.answer(question).text)  # the demo's last: lost 5-7 on Border
+
+    def test_how_was_a_period(self):
+        self.assertIn("from Sep 1 to Sep 30", self.answer("how was September").text)
+        self.assertIn("since Oct 1", self.answer("how was this month").text)
+        self.assertEqual(self.answer("how is the weather").kind, "fallback")
+
+    def test_about_the_app(self):
+        for question in ("who made this app", "who developed this", "what's new"):
+            with self.subTest(question):
+                self.assertEqual(self.answer(question).text.splitlines()[0], "**About R6 Match Stats**")
+        self.assertEqual(self.answer("is my data uploaded anywhere").text.splitlines()[0], "**Your data**")
+        self.assertEqual(self.answer("help").text.splitlines()[0], "**The assistant**")
+        for question in ("who built the best record", "who made the most kills"):  # stats, not the app
+            with self.subTest(question):
+                self.assertEqual(self.answer(question).kind, "stats")
+
+    def test_the_last_match_score_is_from_your_side(self):
+        from assistant import _last_played
+
+        last = self.db.match_list(self.db.me())[0]
+        with mock.patch.object(self.db, "match_list", return_value=[{**last, "team": 1, "score0": 7, "score1": 5}]):
+            self.assertIn("(5–7)", _last_played("when did I last play", self.db, Vocab.from_db(self.db)).text)
+
+
 class TestNeverCrashes(unittest.TestCase):
     """Random and hostile input never raises, always gets words back, and charts always draw."""
 

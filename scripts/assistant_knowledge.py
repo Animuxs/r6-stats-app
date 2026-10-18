@@ -84,6 +84,7 @@ GUIDE: list[Topic] = [
     Topic("history", "Match History",
           ("match history", "history", "past matches", "old matches", "tag a match", "tags", "notes", "note",
            "video link", "delete a match", "remove a match", "scrim tag", "edit a match", "session recap", "recap",
+           "match note", "match notes", "update a match", "edit a note", "change a note",
            "last night", "tonight's matches"),
           "**Match History** lists every match in your stats, newest first, with your result. Open a match to "
           "give it a tag (Official, Scrim, Practice, Casual), a note or a video link, change its tracked "
@@ -147,7 +148,7 @@ GUIDE: list[Topic] = [
           None, ("How do I add my matches?",)),
     Topic("assistant", "The assistant",
           ("assistant", "chatbot", "chat bot", "turn off", "turn on", "hide the assistant", "disable",
-           "what can you do", "help me", "who are you", "what are you", "how do you work", "commands"),
+           "what can you do", "help", "help me", "who are you", "what are you", "how do you work", "commands"),
           "I'm the R6 Match Stats assistant. I can:\n"
           "- **Answer questions about your matches**, anything the Ask page answers: “my K/D on Bank”, "
           "“compare me and Paltry”, “who's our best entry?”\n"
@@ -167,12 +168,24 @@ GUIDE: list[Topic] = [
           "ask"),
     Topic("privacy", "Your data",
           ("privacy", "my data", "data", "online", "offline", "internet", "ubisoft account", "ban", "banned",
-           "cheat", "cheating", "anti cheat", "battleye", "safe to use"),
+           "cheat", "cheating", "anti cheat", "battleye", "safe to use", "uploaded", "upload my data", "stored",
+           "who can see", "private", "shared"),
           "R6 Match Stats only reads the replay files Siege has already saved. It never connects to the game, "
           "Ubisoft's servers or your account, never touches the game while it runs, and gives no advantage in a "
           "match. The Windows app keeps everything on your PC and only asks GitHub whether there's a newer "
           "version. It's an unofficial fan project, not made or endorsed by Ubisoft.",
           None),
+    Topic("about", "About R6 Match Stats",
+          ("who made this", "who made the app", "who makes this", "who built this", "who built the app",
+           "who created this", "who created the app", "who wrote this", "who developed this", "who developed the app",
+           "made this app", "developer", "developers of",
+           "open source", "source code", "github", "whats new", "what s new", "what is new", "changelog",
+           "release notes",
+           "new version", "update", "updates", "version"),
+          "R6 Match Stats is an unofficial, free fan project, open source on GitHub. It isn't made or endorsed "
+          "by Ubisoft. The Windows app tells you when there's a new version; each release's notes on GitHub say "
+          "what's new. Questions or ideas? Press **Report** on an answer, or open an issue on GitHub.",
+          "download", ("How do I add my matches?", "Is my data private?")),
 ]
 
 # ------------------------------------------------------------- the stats --
@@ -254,7 +267,8 @@ _DEFINE = re.compile(r"\b(what (is|are|s|does|do)|whats|define|definition|meanin
                      r"stand for|stands for|how is .* (worked out|calculated|counted)|how do you (count|calculate))\b")
 _HOW_TO = re.compile(r"\b(how (do|can|to|should)|where (do|can|is|are)|can i|help|guide|walk me|show me how|"
                      r"tutorial|what does .* page|what is the .* (page|tab)|whats the .* (page|tab)|"
-                     r"turn (on|off)|is it|does it|will i)\b")
+                     r"turn (on|off)|is it|does it|will i|whats new|what s new|who (made|makes|built|created|wrote|developed) (this|the|r6)\b(?! best| most| top)|"
+                     r"(uploaded|uploads|sent|shared|stored) (anywhere|online|to|somewhere))\b")
 
 
 def define(question: str) -> Topic | None:
