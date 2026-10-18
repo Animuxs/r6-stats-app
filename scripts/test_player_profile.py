@@ -148,6 +148,14 @@ class TestBests(unittest.TestCase):
         self.assertEqual(pp.bests(db, "nobody"), [])
         db.close()
 
+    def test_best_kd_is_a_ratio_and_the_best_round_is_one_round(self):
+        me = self.db.me().casefold()
+        bests = {b["label"]: b for b in pp.bests(self.db, me)}
+        self.assertRegex(bests["Best K/D"]["value"], r"^\d+\.\d\d \(\d+–\d+\)$")  # "2.67 (16–6)"
+        most = self.db.query("SELECT MAX(kills) AS n FROM round_players WHERE player_key = ?", [me])[0]["n"]
+        self.assertTrue(bests["Most kills in a round"]["value"].startswith(f"{most} kills"))
+        self.assertIn("round", bests["Most kills in a round"]["when"])
+
     def test_profile_has_them(self):
         p = pp.profile(self.db, self.db.me())
         self.assertTrue(p.bests)

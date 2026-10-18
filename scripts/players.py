@@ -15,8 +15,8 @@ from tab import Tab
 from ui import md
 
 NOBODY = "\x00nobody"  # "Compare with": no one (a username can't be this)
-TREND = {"up": "📈 Trending up: their last few matches beat the ones before.",
-         "down": "📉 Trending down: their last few matches are below the ones before.",
+TREND = {"up": "📈 Trending up: the last few matches beat the ones before.",
+         "down": "📉 Trending down: the last few matches are below the ones before.",
          "steady": "➡️ Steady: about the same as the matches before."}
 
 

@@ -168,7 +168,7 @@ _BESTS = [
     ("Most kills", "t.kills", lambda r: _count(r["kills"], "kill")),
     ("Best EPS", "t.rating", lambda r: f"{round(100 * r['rating'])} EPS"),
     ("Best K/D", "CASE WHEN t.deaths = 0 THEN t.kills ELSE t.kills * 1.0 / t.deaths END",
-     lambda r: f"{r['kills']}-{r['deaths']} K-D"),
+     lambda r: f"{r['best']:.2f} ({r['kills']}–{r['deaths']})"),  # "2.67 (16–6)"
     ("Most entry kills", "t.entry_kills", lambda r: _count(r["entry_kills"], "entry kill")),
     ("Most multikill rounds", "t.multikills", lambda r: _count(r["multikills"], "multikill round")),
 ]
@@ -195,6 +195,15 @@ def bests(db: StatsDB, key: str) -> list[dict[str, Any]]:
             r = rows[0]
             out.append({"label": label, "value": shown(r), "match_id": r["match_id"], "when": nice_day(r["played_at"]),
                         "map": r["map"] or ""})
+    # the best single round: most kills, the newest if it's happened more than once
+    rounds = db.query("SELECT r.round, r.kills, r.operator, m.played_at, m.map FROM round_players r "
+                      "JOIN matches m ON m.match_id = r.match_id WHERE r.player_key = ? AND r.kills >= 2 "
+                      "ORDER BY r.kills DESC, m.played_at DESC LIMIT 1", (key,))
+    if rounds:
+        r = rounds[0]
+        as_op = f" as {r['operator']}" if r["operator"] else ""
+        out.append({"label": "Most kills in a round", "value": f"{_count(r['kills'], 'kill')}{as_op}",
+                    "match_id": None, "when": f"{nice_day(r['played_at'])}, round {r['round']}", "map": r["map"] or ""})
     totals = db.query("SELECT SUM(kills >= 5) AS aces, SUM(clutch IS NOT NULL) AS clutches, MAX(clutch) AS biggest "
                       "FROM round_players WHERE player_key = ?", (key,))[0]
     if totals["aces"]:
