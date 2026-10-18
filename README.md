@@ -34,7 +34,8 @@ Releases).
 The matches you confirm go into a local stats database, with only the
 players you pick in each one (a stranger on your team in Ranked never counts as
 your teammate), so the app adds match history, operator and team analytics
-(build a team from the players you queue with), plain-English questions about
+(build a team from the players you queue with, and every match of theirs in your
+replays is found: add them all in one click, or look through them and pick), plain-English questions about
 your trends ("What's my best map?"), and an opt-in season tracker. Tell it where
 your team competes: any [Liquipedia](https://liquipedia.net/rainbowsix) event from
 S- to D-Tier, a NECC division, or a league of your own (see
