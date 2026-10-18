@@ -174,6 +174,18 @@ class TestBuild(unittest.TestCase):
                 chart = build(ChartSpec(kind="line", split=split), self.db, self.vocab)
                 altair_chart(chart).to_dict()
 
+    def test_matches_are_evenly_spaced_and_shared_by_every_series(self):
+        """A night of three matches is three steps along, not a spike on a date axis; two players' lines
+        use the same steps, so they still line up in time."""
+        chart = self.chart("my K/D over time vs Sacri")
+        drawn = altair_chart(chart).to_dict()
+        self.assertEqual(drawn["encoding"]["x"]["field"], "step")
+        rows = drawn["data"]["values"]
+        stamps = sorted({r["x"] for r in rows})
+        self.assertEqual({r["step"] for r in rows}, set(range(len(stamps))))
+        self.assertTrue(all(r["step"] == stamps.index(r["x"]) for r in rows))
+        self.assertIn("datum.value", drawn["encoding"]["x"]["axis"]["labelExpr"])
+
     def test_the_table_has_readable_columns(self):
         table = self.chart("my K/D over time vs Sacri").table()
         self.assertEqual(set(table[0]), {"Match date", "K/D", "Series"})
