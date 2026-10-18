@@ -314,6 +314,15 @@ class TestDemoSeason(unittest.TestCase):
         charts = [c.proto.spec for c in at.get("vega_lite_chart")]
         self.assertTrue(any("(against Metro Tech)" in spec for spec in charts), "the chart is still against them")
 
+    def test_match_day_scouts_the_next_opponent(self):
+        at = run_app()
+        at.query_params["demo"] = "1"
+        at.run()
+        at.switch_page("matchday.py").run()
+        self.assertFalse(at.exception)
+        self.assertEqual(at.selectbox(key="scout_opponent").value, "Metro Tech")  # the demo schedule's next
+        self.assertTrue(any(m.value.startswith("2 meetings with Metro Tech: ") for m in at.markdown))
+
     def test_a_link_opens_the_demo(self):
         with mock.patch.object(app_info, "is_loopback", return_value=True):
             at = AppTest.from_file(APP, default_timeout=60)

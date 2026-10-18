@@ -39,6 +39,7 @@ from ask_engine import (_MONTH, _SQL, METRIC_WORDS, METRICS, Answer, Query, Voca
                         _filters_text, _find_metrics, _match_ids, _plural, ask, fmt, fold, interpret, operator_table,
                         rate, suggestions, team_report, team_summary)
 import recap
+import scouting
 from map_pool import map_pool, veto_hint
 from metrics_engine import round_eps
 from player_profile import streaks
@@ -141,6 +142,7 @@ _RECAP = re.compile(r"\b(session recap|recap|last session|this session|latest se
                     r"how (did|was|were|is|went|has|have|d)\b.{0,30}\b(last night|tonight)|"
                     r"(last night|tonight)\W*s? (scrims?|matches|games|session)|(last|today\W*s) (scrims|session))\b")
 _TONIGHT = re.compile(r"\b(last night|tonight)\b")
+_SCOUT = re.compile(r"\b(scout|scouting|scouting report|intel on|tell me about|what do we know about)\b")
 # the schedule, not the stats: "who are we playing tonight?", "when's our next match?"
 _SCHEDULE = re.compile(r"\b(who (are|do|will) (we|i) (play|playing|face|facing)\b(?! (best|better|worse|worst|well|"
                        r"badly|with|most|least|against))|when (do|are|will) (we|i) play(ing)?|"
@@ -986,6 +988,11 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
     # a chart: "chart my K/D over time", "pie of the operators I play"
     if _CHART.search(text) and not kb.guide(question):  # "how do charts work?" is the guide
         return _with_question(chart_reply(question, db, vocab, now), question)
+    if _SCOUT.search(text) and q and len(q.opponents) == 1:  # "scout Metro Tech"
+        report = scouting.scout(db, q.opponents[0])
+        return Reply(report.headline, "stats", rows=report.ours, columns=list(report.ours[0]) if report.ours else [],
+                     links=[("matchday", "Their full scouting report on Match day")], question=question,
+                     suggestions=[f"My stats vs {report.opponent}", "Which opponent is the hardest?"])
     # analysis: "analyze my team", "what should I work on?"
     if _ANALYZE.search(text) and not (stats_kind and clean_metrics and q.kind in ("trend", "rank")):
         reply = _analysis(question, db, vocab)

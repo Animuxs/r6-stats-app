@@ -109,9 +109,11 @@ GUIDE: list[Topic] = [
           "operators", ("Which operators do I play most?", "My best operators")),
     Topic("matchday", "Match day",
           ("match day", "matchday", "upcoming match", "upcoming matches", "schedule", "availability", "plan a match",
-           "fixture", "next match", "next opponent"),
+           "fixture", "next match", "next opponent", "scout", "scouting", "scouting report"),
           "**Match day** is for planning: add upcoming matches, track who's available and keep preparation "
-          "notes. The panel on the right of every page shows what's next.",
+          "notes. **Scout an opponent** there shows every meeting with a team you've played, the maps, who on your "
+          "side does best against them and their players your stats have. The panel on the right of every page "
+          "shows what's next, with your record against each opponent.",
           "matchday"),
     Topic("team_hub", "Team hub",
           ("team hub", "team login", "sign in", "log in", "login", "team account", "members", "roles",
