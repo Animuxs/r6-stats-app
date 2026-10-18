@@ -191,3 +191,46 @@ def scoreboard_png(match: dict, rows: list[dict], accent: str | None = None, whe
     out = io.BytesIO()
     image.save(out, "PNG", optimize=True)
     return out.getvalue()
+
+
+CARD_WIDTH = 900
+CARD_TILE = 92  # a stat's box
+
+
+def player_card_png(name: str, subtitle: str, stats: list[tuple[str, str]], bests: list[tuple[str, str]],
+                    accent: str | None = None) -> bytes:
+    """A player's card as PNG bytes, to post in a team chat: their name, a line under it ("12 matches ·
+    139 rounds"), their headline stats as tiles [(label, value)], four to a row, and their personal bests."""
+    accent = _color(accent)
+    title, big, regular, small = font(34, bold=True), font(28, bold=True), font(16), font(13)
+    rows = (len(stats) + 3) // 4
+    best_rows = (len(bests) + 1) // 2
+    height = PAD + 96 + rows * (CARD_TILE + 12) + (40 + best_rows * 34 if bests else 0) + 52
+    image = Image.new("RGB", (CARD_WIDTH, height), BACKGROUND)
+    draw = ImageDraw.Draw(image)
+    draw.rectangle([0, 0, 6, height], fill=accent)
+    draw.text((PAD, PAD), _fit(draw, name, title, CARD_WIDTH - 2 * PAD), font=title, fill=TEXT, anchor="lt")
+    draw.text((PAD, PAD + 50), subtitle, font=regular, fill=DIM, anchor="lt")
+    y = PAD + 96
+    tile = (CARD_WIDTH - 2 * PAD - 3 * 12) / 4
+    for i, (label, value) in enumerate(stats):
+        x = PAD + (i % 4) * (tile + 12)
+        top = y + (i // 4) * (CARD_TILE + 12)
+        draw.rectangle([x, top, x + tile, top + CARD_TILE], fill=PANEL)
+        draw.rectangle([x, top, x + tile, top + 3], fill=accent)
+        draw.text((x + 14, top + 16), _fit(draw, label.upper(), small, tile - 28), font=small, fill=DIM, anchor="lt")
+        draw.text((x + 14, top + 44), value, font=big, fill=accent, anchor="lt")
+    y += rows * (CARD_TILE + 12)
+    if bests:
+        draw.text((PAD, y + 12), "PERSONAL BESTS", font=small, fill=DIM, anchor="lt")
+        y += 40
+        half = (CARD_WIDTH - 2 * PAD) / 2
+        for i, (label, value) in enumerate(bests):
+            x = PAD + (i % 2) * half
+            line = y + (i // 2) * 34
+            draw.text((x, line), _fit(draw, label, regular, 200), font=regular, fill=DIM, anchor="lt")
+            draw.text((x + 210, line), _fit(draw, value, regular, half - 220), font=regular, fill=TEXT, anchor="lt")
+    draw.text((CARD_WIDTH / 2, height - PAD + 8), FOOTER, font=small, fill=DIM, anchor="mb")
+    out = io.BytesIO()
+    image.save(out, "PNG", optimize=True)
+    return out.getvalue()
