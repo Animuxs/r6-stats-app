@@ -800,12 +800,12 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
 
     # what kind of answer
     compare = [k for k, n in (("player", len(players)), ("team", len(q.teams)), ("map", len(q.maps)),
-                              ("operator", len(q.operators))) if n >= 2]
+                              ("operator", len(q.operators)), ("opponent", len(q.opponents))) if n >= 2]
     if len(q.periods) >= 2:
         q.kind, q.compare, q.group = "compare", "period", None
     elif compare and (_has(_WORDS["compare"], text) or group in (None, compare[0])):
         q.kind, q.compare = "compare", compare[0]
-        q.group = {"player": "player", "map": "map", "operator": "operator"}.get(q.compare)
+        q.group = {"player": "player", "map": "map", "operator": "operator", "opponent": "opponent"}.get(q.compare)
         if q.compare == "player":
             q.who, q.players = "players", players
         elif q.compare == "team":
@@ -1521,6 +1521,11 @@ def _answer_compare(db: StatsDB, q: Query, vocab: Vocab) -> Answer:
     if a == b and len(rows) == 2:  # the same as shown: nobody's ahead
         names = [("you" if r.get("key") == vocab.me else r["name"]) for r in (lead, other)]
         headline = f"{_cap(names[0])} and {names[1]} are level on {_phrase(first, level)}: {a} each."
+    elif q.compare == "opponent":  # your numbers against each, not theirs: "you do better against Metro Tech"
+        who = _subject(q, vocab)[0]
+        verb = "do" if who in ("you", "your teammates", "your opponents", "these players") else "does"
+        headline = (f"{_cap(who)} {verb} better against {lead['name']} by {_phrase(first, level)}: {a} vs {b} "
+                    f"(against {other['name']}).")
     elif q.compare in ("side", "match_type"):
         better = "stronger side" if q.compare == "side" else "better match type"
         headline = f"{lead['name']} is {_subject(q, vocab)[1]} {better} by {_phrase(first, level)}: {a} vs {b}."
