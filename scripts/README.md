@@ -80,10 +80,11 @@ Below the scoreboards you'll find the downloads and a round-by-round section:
   (2K to ACE), entry kills and deaths, trade kills, traded deaths, plants,
   disables and clutches. Rounds they weren't in say so. Above it, their attack
   and defense split: rounds, rounds won, K-D and the operators they played.
-- **Downloads**: CSV (the scoreboard's numbers), JSON (the scoreboard plus every
-  round), TXT (the scoreboard and the round list as plain text), Rounds CSV
-  (one row per player per round, for spreadsheets) and **Scoreboard image** (a
-  PNG of the scoreboard in your Team Theme's color, to post in a team chat).
+- **Download**: a menu with CSV (the scoreboard's numbers), JSON (the scoreboard
+  plus every round), TXT (the scoreboard and the round list as plain text) and
+  Rounds CSV (one row per player per round, for spreadsheets). Beside it,
+  **Scoreboard image** (a PNG of the scoreboard in your Team Theme's color, to
+  post in a team chat).
 
 Operator Analytics also shows which side each operator is played on.
 

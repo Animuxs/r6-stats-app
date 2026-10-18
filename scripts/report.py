@@ -540,28 +540,34 @@ class DashboardTab(Tab):
     def exports(self, match: dict, stats: dict, rows: list[dict]) -> None:
         team_names, score = match["team_names"], match["final_score"]
         rounds = round_rows(match, stats)
-        c1, c2, c3, c4, c5 = st.columns([1, 1, 1, 1.4, 2])
-        c1.download_button("⬇ CSV", rows_csv([{"Player": r["Player"], "Team Name": team_names[r["Team"]], **r}
-                                               for r in leaderboard_rows(stats)]).encode("utf-8"),
-                           file_name=f"{match['match_id']}_stats.csv", mime="text/csv")
-        c2.download_button("⬇ JSON", json.dumps({
+        # the data files in one menu; the picture, the one people share, beside it
+        files, picture, _ = st.columns([1, 1.2, 2.5])
+        menu = files.popover("⬇ Download", width="stretch",
+                             help="The scoreboard and every round, as CSV, JSON or plain text.")
+        menu.download_button("⬇ CSV", rows_csv([{"Player": r["Player"], "Team Name": team_names[r["Team"]], **r}
+                                                 for r in leaderboard_rows(stats)]).encode("utf-8"),
+                             file_name=f"{match['match_id']}_stats.csv", mime="text/csv", width="stretch",
+                             help="The scoreboard's numbers, for a spreadsheet.")
+        menu.download_button("⬇ JSON", json.dumps({
             "map": match["map"], "match_id": match["match_id"], "teams": team_names,
             "score": score, "players": rows, "rounds": rounds},
             indent=2, ensure_ascii=False).encode("utf-8"),
-            file_name=f"{match['match_id']}_stats.json", mime="application/json")
-        c3.download_button("⬇ TXT", (scoreboard_text(match, rows) + "\n\n" + rounds_text(match) + "\n").encode("utf-8"),
-                           file_name=f"{match['match_id']}_stats.txt", mime="text/plain")
-        c4.download_button("⬇ Rounds CSV", rows_csv(round_player_rows(rounds)).encode("utf-8"),
-                           file_name=f"{match['match_id']}_rounds.csv", mime="text/csv",
-                           help="One row per player per round: side, operator, result, K-D-A and highlights.")
+            file_name=f"{match['match_id']}_stats.json", mime="application/json", width="stretch",
+            help="The scoreboard and every round, for other programs.")
+        menu.download_button("⬇ TXT", (scoreboard_text(match, rows) + "\n\n" + rounds_text(match) + "\n").encode("utf-8"),
+                             file_name=f"{match['match_id']}_stats.txt", mime="text/plain", width="stretch",
+                             help="The scoreboard and the round list as plain text.")
+        menu.download_button("⬇ Rounds CSV", rows_csv(round_player_rows(rounds)).encode("utf-8"),
+                             file_name=f"{match['match_id']}_rounds.csv", mime="text/csv", width="stretch",
+                             help="One row per player per round: side, operator, result, K-D-A and highlights.")
         accent = current_theme()["primary"]
         # everything the picture shows: the cache is shared by every visitor to the website
         key = (match.get("match_id"), match.get("played_at"), match.get("map"), match.get("match_type"),
                len(match["rounds"]), tuple(match["team_names"][:2]), tuple(match["final_score"]),
                tuple(tuple(r.values()) for r in rows))
-        c5.download_button("⬇ Scoreboard image", _scoreboard_image(key, match, rows, accent),
-                           file_name=f"{match['match_id']}_scoreboard.png", mime="image/png",
-                           help="The scoreboard as a picture, in your Team Theme's color, to post in a team chat.")
+        picture.download_button("⬇ Scoreboard image", _scoreboard_image(key, match, rows, accent),
+                                file_name=f"{match['match_id']}_scoreboard.png", mime="image/png", width="stretch",
+                                help="The scoreboard as a picture, in your Team Theme's color, to post in a team chat.")
 
     def breakdown(self, match: dict, stats: dict, rows: list[dict]) -> None:
         team_names = match["team_names"]
