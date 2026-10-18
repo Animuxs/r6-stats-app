@@ -64,6 +64,14 @@ class TestDemoSeason(unittest.TestCase):
         chart = chart_engine.build(spec, self.db, self.vocab)
         self.assertEqual(len(chart.rows), self.record["Metro Tech"][0])
 
+    def test_a_chart_along_the_opponents(self):
+        spec = chart_engine.parse("win rate by opponent", self.vocab)
+        self.assertEqual((spec.kind, spec.x, spec.metric), ("bar", "opponent", "win_rate"))
+        chart = chart_engine.build(spec, self.db, self.vocab)
+        self.assertEqual({r["x"] for r in chart.rows}, set(self.record))
+        self.assertEqual(chart_engine.parse("pie of matches against each opponent", self.vocab).x, "opponent")
+        self.assertNotEqual(chart_engine.parse("top opponents by K/D", self.vocab).x, "opponent")  # their players
+
 
 class TestNamelessTeams(unittest.TestCase):
     def test_stand_in_names_arent_opponents(self):

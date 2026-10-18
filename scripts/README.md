@@ -233,6 +233,7 @@ menus (a request fills them in, so it can be adjusted):
 - **line** and **area** for progress: "my K/D over time vs Sacri", "headshot rate
   per week", "rolling average of my EPS", "running total of my kills";
 - **bar**, **horizontal bar** and **stacked bar** for comparisons: "win rate by map",
+  "win rate by opponent",
   "top 5 players by EPS", "stacked bar of rounds won by map and side";
 - **pie** for shares: "pie of the operators I play";
 - **scatter** for two stats: "scatter K/D vs KOST for every player" (or operators, maps);
