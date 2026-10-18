@@ -592,7 +592,11 @@ def _read_time(text: str, q: Query, now: datetime) -> str:
         q.since = _stamp(today - timedelta(days=_number(m.group(2)) * _UNIT_DAYS[m.group(3)] - 1))
     original = text
     periods: list[tuple[int, str, datetime, datetime | None]] = []  # (where in the question, label, start, end)
+    # an evening's matches run past midnight: last night is yesterday noon to 6 am today, tonight from noon on
+    evening = today + timedelta(hours=12) if now.hour >= 6 else today - timedelta(hours=12)
     ranges = [
+        ("last night", today - timedelta(hours=12), today + timedelta(hours=6)),
+        ("tonight", evening, None),
         ("yesterday", today - timedelta(days=1), today),
         ("today", today, None),
         ("last week", today - timedelta(days=today.weekday() + 7), today - timedelta(days=today.weekday())),
