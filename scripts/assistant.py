@@ -36,8 +36,8 @@ from typing import Any
 import assistant_knowledge as kb
 import chart_engine
 from ask_engine import (_MONTH, _SQL, METRIC_WORDS, METRICS, Answer, Query, Vocab, _aggregate, _cap, _clean,
-                        _filters_text, _find_metrics, _match_ids, _plural, ask, fmt, fold, interpret, operator_table,
-                        rate, suggestions, team_report, team_summary)
+                        _filters_text, _find_metrics, _match_ids, _plural, ask, fmt, fold, interpret, named_team,
+                        operator_table, rate, suggestions, team_report, team_summary)
 import recap
 import scouting
 from map_pool import map_pool, veto_hint
@@ -151,6 +151,12 @@ _RECAP = re.compile(r"\b(session recap|recap|last session|this session|latest se
 # "my most kills in a round", "who had the best round?": one round, not a match's or a season's total
 _ROUND_BEST = re.compile(r"\b(most|best) (\w+ ){0,2}in (a|one|1|a single|any) round\b|"
                          r"\b(best|biggest) (single )?round\b|\bmost kills (in )?(a|one) round\b")
+# "which teams have we played?", "who have we beaten?", "who beat us?", "how many teams have we played?"
+_OPPONENTS = re.compile(r"\b((which|what) (teams|opponents) (have|did) (we|i) (play|played|face|faced)|"
+                        r"(teams|opponents) (we|i)('ve|ve| have)? (played|faced)|"
+                        r"who (have|did) (we|i) (played|play|faced|face|beat|beaten|lose to|lost to)(?! last)|"
+                        r"who (has |have )?(beat|beaten) (us|me)|how many (teams|opponents)|"
+                        r"(list|show)( me)? (our|my|the|all)? ?opponents|(our|my) opponents so far)\b")
 _ROUND_RESULT = re.compile(r"\brounds? (win|wins|won|loss|losses|lost|rate|percent|played)\b")  # a rate, not one round
 _GOALS = re.compile(r"\bgoals?\b|\btargets?\b")
 _OPEN_PAGE = re.compile(r"^(open|go to|goto|take me to|navigate to|bring up|show)\b.*\b(page|tab)\b|"
@@ -165,7 +171,8 @@ _SCHEDULE = re.compile(r"\b(who (are|do|will) (we|i) (play|playing|face|facing)\
                        r"our schedule|my schedule|upcoming (matches|games|fixtures))\b")
 _LAST_PLAYED = re.compile(r"\b(when did (i|we) (last )?play|last time (i|we) played|when was my last (match|game)|"
                           r"how long since|last played|(what|which) map (did|have) (i|we) (last )?play(ed)?( last)?|"
-                          r"(what|which) map was (our|my|the) last (match|game)|last map (i|we) played)\b")
+                          r"(what|which) map was (our|my|the) last (match|game)|last map (i|we) played|"
+                          r"who did (i|we) (last )?(play|face)( last)?|who was (our|my) last (opponent|match))\b")
 _FIRST_PLAYED = re.compile(r"\b(first (match|game)|when did (i|we) (start|first play)|oldest (match|game))\b")
 _DUO = re.compile(r"\b(duo|who do (i|we) win (the )?most with|best teammates?|who should i (play|queue) with|"
                   r"who (do i|i|do we|we) play best with|win rate with (each|my) teammates?|best partner|"
@@ -555,7 +562,9 @@ def _last_played(question: str, db: StatsDB, vocab: Vocab, first: bool = False, 
     result = {1: ", and won", 0: ", and lost"}.get(m.get("won"), "")
     own, other = (m["score1"], m["score0"]) if m.get("team") == 1 else (m["score0"], m["score1"])
     lead = f"{who} {'first' if first else 'last'} played" if key else f"The {what} match in your stats was"
-    return Reply(f"{lead} on **{nice_time(m['played_at'])}**, on {m.get('map') or 'an unknown map'}"
+    them = m.get(f"team{1 - (m.get('team') or 0)}") if m.get("player") else None
+    against = f" against **{them}**" if named_team(them) else ""
+    return Reply(f"{lead}{against} on **{nice_time(m['played_at'])}**, on {m.get('map') or 'an unknown map'}"
                  f"{result} ({own}–{other}).", "stats",
                  suggestions=["Analyze my last match", "Show my last 5 matches"])
 
@@ -643,6 +652,32 @@ def _goals(question: str, db: StatsDB, vocab: Vocab) -> Reply:
     return Reply(f"{who} {'have' if who == 'You' else 'has'} met {met} of {len(goals)} goal"
                  f"{'s' if len(goals) != 1 else ''} over the last {player_profile.GOAL_MATCHES} matches:\n"
                  + "\n".join(lines), "stats", links=link)
+
+
+def _opponents(text: str, db: StatsDB, vocab: Vocab) -> Reply:
+    """The teams you've played, with your record against each: all of them, the ones you've beaten or the ones
+    who've beaten you. Only teams with names of their own (Ranked's "ENEMY TEAM" isn't one)."""
+    if not vocab.me:
+        return Reply("I need to know which player is you first: add a match you recorded.", "stats", answered=False)
+    rows = player_profile.against(db, vocab.me)
+    for r in rows:
+        r["wins"], r["losses"] = (int(n) for n in r["Record"].split("–"))
+    beaten = bool(re.search(r"\b(beat|beaten) (us|me)\b|\blose to\b|\blost to\b", text))
+    won = not beaten and bool(re.search(r"\b(have|did) (we|i) (beat|beaten)\b", text))
+    shown = [r for r in rows if r["losses"]] if beaten else [r for r in rows if r["wins"]] if won else rows
+    link = [("matchday", "Scout one on Match day")]
+    if not rows:
+        return Reply("No opponents with names of their own yet. Custom and league matches name the other team "
+                     "(on the Dashboard, from your league's rosters); Ranked only says \"ENEMY TEAM\".", "stats")
+    if not shown:
+        return Reply("Nobody has beaten you yet: " if beaten else "You haven't beaten anyone yet: "
+                     + ", ".join(f"**{r['Opponent']}** {r['Record']}" for r in rows) + ".", "stats", links=link)
+    listed = ", ".join(f"**{r['Opponent']}** {r['Record']}" for r in shown)
+    teams = f"{len(shown)} team{'s' if len(shown) != 1 else ''}"
+    lead = (f"{teams} {'has' if len(shown) == 1 else 'have'} beaten you" if beaten else
+            f"You've beaten {teams}" if won else f"You've played {teams}")
+    return Reply(f"{lead}: {listed}.", "stats", links=link,
+                 suggestions=[f"Scout {shown[0]['Opponent']}", "Which opponent is the hardest?"])
 
 
 def _round_best(question: str, db: StatsDB, vocab: Vocab, q: Query | None) -> Reply:
@@ -1097,6 +1132,8 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
         return _with_question(_situations(text, db, vocab, q), question)
     if _BENCH.search(text):
         return _with_question(_bench(db, vocab), question)
+    if _OPPONENTS.search(text) and not _HOW_TO.search(text):
+        return _with_question(_opponents(text, db, vocab), question)
     if _ROUND_BEST.search(text) and not _ROUND_RESULT.search(text) and not _HOW_TO.search(text):
         return _with_question(_round_best(question, db, vocab, q), question)
     one_last = _LAST_RESULT.search(text) and not re.search(r"\blast (\d+|two|three|four|five|six|seven|eight|nine|ten)\b",
