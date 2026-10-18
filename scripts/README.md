@@ -196,13 +196,14 @@ It understands:
 - **who**: you (the player who recorded the replays), any player by name or
   part of it ("Paltry" for Paltry.FBRD; typos are forgiven), your teammates,
   your opponents, everyone, or a team you built;
-- **filters**: a map, an operator ("as Ash"), attack or defense, Ranked,
+- **filters**: a map, an opponent by its team name ("vs Metro Tech",
+  "against Harbor State"), an operator ("as Ash"), attack or defense, Ranked,
   Unranked, Quick Match or custom games, a Match History tag ("in scrims",
   "in official matches"), wins or losses, dates ("this week",
   "since Sep 20", "in September", "yesterday"), your last or first N matches,
   and conditions ("matches where I had at least 3 kills");
 - **answers**: a single number, rankings ("top 5 players by EPS", "best map",
-  "where do I rank"), trends ("over time", "per week"), comparisons ("me vs
+  "where do I rank", "which opponent is the hardest"), trends ("over time", "per week"), comparisons ("me vs
   Talus", "attack vs defense", "ranked vs custom", "this week vs last week"),
   your best single matches ("most kills in a match"), summaries ("how am I
   doing") and match lists ("my last 5 matches").

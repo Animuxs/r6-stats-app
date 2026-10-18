@@ -162,6 +162,7 @@ DIMS: dict[str, Dim] = {d.key: d for d in [
     Dim("side", "Side", "t.side"),
     Dim("site", "Site", "t.site"),
     Dim("match_type", "Match type", "m.match_type"),
+    Dim("opponent", "Opponent", "CASE t.team WHEN 0 THEN m.team1 ELSE m.team0 END"),
     Dim("match", "Match", "t.match_id"),
     Dim("player_match", "Player · match", "t.player_key || ' ' || t.match_id"),  # one player's one match
     Dim("day", "Day", "substr(m.played_at, 1, 10)"),
@@ -226,6 +227,10 @@ _WORDS = {  # each idea's wordings, matched as whole words in the cleaned questi
                    r"played with most|play with the most|played with the most)\b",
 }
 _GROUP_WORDS = {  # the first that matches decides the grouping
+    "opponent": r"\b(which opponents?|what opponents?|by opponent|per opponent|each opponent|every opponent|"
+                r"(hardest|toughest|easiest|best|worst|strongest|weakest) (opponents?|teams? (we|i) (play|played|face|faced))|"
+                r"opponents? (we|i) (beat|lose to|lost to|struggle against)|which teams? (do|did|have) (we|i) "
+                r"(beat|lose to|lost to|struggle against|play|played)|against which teams?|record against (each|every))\b",
     "side": r"\b(sides|by side|per side|each side|which side|what side)\b",
     "site": r"\b(sites|by site|per site|each site|which site|what site|bomb sites?|best site|worst site)\b",
     "match_type": r"\b(ranked (vs|or|and|versus) unranked|unranked (vs|or|and|versus) ranked|match types?|"
@@ -287,11 +292,26 @@ _KNOWN_WORDS = set(_COMMON) | {loose(p) for p, _ in _PHRASES}
 
 @dataclass
 class Entity:
-    kind: str       # player, team, map, operator
+    kind: str       # player, team, opponent, map, operator
     value: str      # player key, team name, map, operator
     display: str
     start: int      # character span in the question
     end: int
+
+
+# team names a replay gives when it has none of its own: not an opponent anyone means
+_NAMELESS_TEAMS = {"team a", "team b", "team 1", "team 2", "blue", "orange", "your team", "opponents", "opponent",
+                   "enemy", "enemies", "allies", "attackers", "defenders", "yellow", "alpha", "bravo"}
+
+
+def opponent_names(db: StatsDB, me: str | None) -> list[str]:
+    """The teams `me` has played against, by the names the replays give them (not "Team A" or "Blue")."""
+    if not me:
+        return []
+    rows = db.query("SELECT DISTINCT CASE mp.team WHEN 0 THEN m.team1 ELSE m.team0 END AS name FROM match_players mp "
+                    "JOIN matches m ON m.match_id = mp.match_id WHERE mp.player_key = ?", [me.casefold()])
+    names = {r["name"].strip() for r in rows if r["name"] and r["name"].strip()}
+    return sorted((n for n in names if " ".join(n.casefold().split()) not in _NAMELESS_TEAMS), key=str.casefold)
 
 
 @dataclass
@@ -305,6 +325,7 @@ class Vocab:
     match_types: list[str]
     aliases: dict[str, list[tuple[str, str]]] = field(default_factory=dict)  # loose text -> [(kind, value)]
     tags: list[str] = field(default_factory=list)  # the tags given to matches on Match History
+    opponents: list[str] = field(default_factory=list)  # the teams you've played against, by name
 
     @classmethod
     def from_db(cls, db: StatsDB) -> "Vocab":
@@ -312,7 +333,7 @@ class Vocab:
         vocab = cls(players=db.players(), me=me.casefold() if me else None,
                     rosters={t: [p.casefold() for p in ps] for t, ps in db.rosters().items()},
                     maps=db.distinct("map"), operators=db.distinct("operator"),
-                    match_types=db.distinct("match_type"), tags=db.tags())
+                    match_types=db.distinct("match_type"), tags=db.tags(), opponents=opponent_names(db, me))
         vocab.build_aliases()
         return vocab
 
@@ -325,6 +346,9 @@ class Vocab:
 
         for team in self.rosters:
             add(loose(team), "team", team)
+        for team in self.opponents:
+            if loose(team) not in aliases:  # a saved team of yours with the same name is yours
+                add(loose(team), "opponent", team)
         firsts = [loose(m.split()[0]) for m in self.maps]
         for m, first in zip(self.maps, firsts):
             add(loose(m), "map", m)
@@ -395,7 +419,7 @@ class Vocab:
         for kind, value in candidates:
             if kind == "player" and fold(self.players.get(value, "")) == fold(text):
                 return kind, value, None
-        order = {"team": 0, "map": 1, "operator": 2, "player": 3}
+        order = {"team": 0, "opponent": 1, "map": 2, "operator": 3, "player": 4}
         first = min(candidates, key=lambda c: order[c[0]])
         player = next((c for c in candidates if c[0] == "player"), None)
         if player is None or player == first or (as_operator and first[0] == "operator"):  # "as Rook"
@@ -483,6 +507,7 @@ class Query:
     compare: str | None = None   # what a comparison is between: player, team, map, operator, side, match_type
     maps: list[str] = field(default_factory=list)
     operators: list[str] = field(default_factory=list)
+    opponents: list[str] = field(default_factory=list)  # only matches against these teams ("vs Metro Tech")
     side: str | None = None
     match_type: str | None = None
     match_types: list[str] = field(default_factory=list)  # the two compared in "ranked vs custom"
@@ -627,6 +652,7 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
     q.team = q.teams[0] if q.teams else None
     q.maps = list(dict.fromkeys(e.value for e in entities if e.kind == "map"))
     q.operators = list(dict.fromkeys(e.value for e in entities if e.kind == "operator"))
+    q.opponents = list(dict.fromkeys(e.value for e in entities if e.kind == "opponent"))
     wants_we = _has(_WORDS["we"], text)
     wants_me = _has(_WORDS["me"], re.sub(_WORDS["we"], " ", text))
     if wants_me and vocab.me and vocab.me not in players:
@@ -698,7 +724,7 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
             q.who, q.highlight_me = "my_team", True  # my whole side, me included
         else:
             q.who = "teammates"
-    elif _has(_WORDS["opponents"], text):
+    elif _has(_WORDS["opponents"], text) and group != "opponent":
         q.who = "opponents"
     elif _has(_WORDS["everyone"], text):
         q.who = "everyone"
@@ -735,6 +761,11 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
         q.order = "low"
     if q.most_played:
         q.order = "high"
+    if group == "opponent":  # a hard opponent is one you win little against, an easy one much
+        if _has(r"\b(hardest|toughest|strongest|best|struggle|lose to|lost to)\b", text):
+            q.order = "worst"
+        elif _has(r"\b(easiest|weakest|worst|beat)\b", text):
+            q.order = "best"
     if m := re.search(r"\b(?:top|best|worst|bottom|highest|lowest) " + _NUM + r"\b", text) or \
             re.search(r"\b" + _NUM + r" (?:best|worst|top|highest|lowest|most|least)\b", text):
         q.limit = _number(m.group(1))
@@ -797,7 +828,8 @@ def _fill_defaults(q: Query, vocab: Vocab) -> None:
             q.metrics = ["eps"]  # "my best game"
         elif q.kind == "rank" and q.most_played:
             q.metrics = ["rounds" if round_level else "matches"]
-        elif q.kind in ("rank", "compare") and q.group in ("map", "operator", "side", "site", "match_type"):
+        elif q.kind in ("rank", "compare") and q.group in ("map", "operator", "side", "site", "match_type",
+                                                            "opponent"):
             q.metrics = ["win_rate", "kd"]
         elif q.kind == "trend":
             q.metrics = ["kd"]
@@ -884,6 +916,8 @@ class _SQL:
         q = self.q
         if q.maps:
             self._in("m.map", q.maps)
+        if q.opponents:
+            self._in(DIMS["opponent"].sql, q.opponents)
         if q.operators and self.level == "round":
             self._in("t.operator", q.operators)
         if q.side and self.level == "round":
@@ -1083,6 +1117,8 @@ def _subject(q: Query, vocab: Vocab) -> tuple[str, str]:
 
 def _filters_text(q: Query, *, conditions: bool = True) -> str:
     bits = []
+    if q.opponents:
+        bits.append("against " + " / ".join(q.opponents))
     if q.maps:
         bits.append("on " + " / ".join(q.maps))
     if q.operators:
@@ -1350,6 +1386,8 @@ def _answer_rank(db: StatsDB, q: Query, vocab: Vocab) -> Answer:
             headline = f"{_cap(whose)} most played {what} is {top['name']}: {value} {_phrase(first, level)}."
         else:
             # "Your best map by K/D is Bank", "Your map with the most kills is Border"
+            if q.group == "opponent":  # the opponent you win least against is the hardest, not the "worst"
+                word = {"best": "easiest", "worst": "hardest"}.get(word, word)
             by = f"{word} {what} by {_phrase(first, level)}" if word not in ("most", "fewest", "least") else \
                 f"{what} with the {word} {_phrase(first, level)}"
             headline = f"{_cap(whose)} {by} is {top['name']}: {value} ({sample})."
