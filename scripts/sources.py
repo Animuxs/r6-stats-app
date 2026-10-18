@@ -4,7 +4,8 @@ sources.py
 Where every page's replays come from, so the pages don't each load them their own way:
 
 - the replay source picked on the Dashboard (a folder, a zip, uploads): its matches
-  are found once, and each is parsed at most once per session (load_source, parse);
+  are found once, and each is parsed at most once per session; a folder on this PC keeps
+  its parsed matches on disk, so each is parsed once per PC (load_source, parse, parse_cache);
 - on this PC, the game's MatchReplay folder when nothing was picked yet (current_source);
 - the stats database (open_stats_db). Replays never go into it on their own: a match is
   added only when it's confirmed on the Dashboard, with the players picked there;
@@ -31,6 +32,7 @@ from typing import Any, Callable
 import streamlit as st
 
 import app_info
+import parse_cache
 import parser as replay_parser
 from file_guard import ReplayScanner
 from parser import ReplayParseError, collect_rec_files, group_by_match, parse_match, replay_source_version
@@ -164,10 +166,14 @@ def current_source() -> dict[str, Any] | None:
 
 
 def parse(state: dict[str, Any], name: str):
-    """(match, raw, warnings) for one match of the source, or its ReplayParseError; parsed once."""
+    """(match, raw, warnings) for one match of the source, or its ReplayParseError; parsed once per
+    session and, for a folder on this PC, kept on disk so it's parsed once per PC (parse_cache)."""
     if name not in state["parsed"]:
         try:
-            state["parsed"][name] = parse_match(state["groups"][name])
+            if state["sig"][0] == "path" and not app_info.is_public_host():
+                state["parsed"][name] = parse_cache.parse(state["groups"][name], parse_match)
+            else:
+                state["parsed"][name] = parse_match(state["groups"][name])
         except ReplayParseError as e:
             state["parsed"][name] = e
         except Exception as e:  # shown like any unreadable replay, not as a crash
