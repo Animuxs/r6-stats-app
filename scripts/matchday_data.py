@@ -5,6 +5,8 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from html import escape
 
+from stats_db import nice_day
+
 AVAILABILITY = ("Unconfirmed", "Confirmed", "Unavailable")
 
 
@@ -59,27 +61,54 @@ def demo_workspace(today: date | None = None) -> MatchdayWorkspace:
         {"id": f"demo-{i}", "opponent": opponent, "team": "Lakeside Varsity", "kind": kind,
          "when": f"{today + timedelta(days=days)}T19:00:00", "timezone": "Central Time"}
         for i, (days, opponent, kind) in enumerate(((2, "Metro Tech", "League · BO3"),
-                                                  (4, "Northbridge Esports", "Practice · BO3"),
+                                                  (4, "Northgate Esports", "Practice · BO3"),
                                                   (7, "Harbor State", "League · BO3")))
     ], {"Fabian": "Confirmed", "Kanto": "Confirmed", "Sens": "Unconfirmed", "Sacri": "Confirmed", "BC": "Confirmed"},
        "Example preparation notes: review retakes and confirm the map veto before match time.")
 
 
-def panel_html(workspace: MatchdayWorkspace, recent: list[dict], roster: list[str], demo: bool = False) -> str:
+def head_to_head(db, opponent: str) -> str | None:
+    """Your record against a team, by the name the replays give it, and how the last meeting went:
+    "Your record: 1–1 · last met Oct 9, lost 5–7". None when you haven't played it (or don't know who you are)."""
+    me = db.me()
+    if not me or not opponent.strip():
+        return None
+    rows = db.query(
+        """SELECT m.played_at, m.score0, m.score1, mp.team, mp.won FROM match_players mp
+           JOIN matches m ON m.match_id = mp.match_id
+           WHERE mp.player_key = ? AND lower(trim(CASE mp.team WHEN 0 THEN m.team1 ELSE m.team0 END)) = ?
+           ORDER BY m.played_at DESC""", [me.casefold(), " ".join(opponent.casefold().split())])
+    if not rows:
+        return "First meeting in your stats"
+    wins, losses = sum(r["won"] == 1 for r in rows), sum(r["won"] == 0 for r in rows)
+    last = rows[0]
+    own, other = (last["score1"], last["score0"]) if last["team"] == 1 else (last["score0"], last["score1"])
+    result = {1: "won", 0: "lost"}.get(last["won"], "drew")
+    return f"Your record: {wins}–{losses} · last met {nice_day(last['played_at'])}, {result} {own}–{other}"
+
+
+def panel_html(workspace: MatchdayWorkspace, recent: list[dict], roster: list[str], demo: bool = False,
+               records: dict[str, str] | None = None) -> str:
+    """The match-day panel. `records` is each upcoming opponent's head-to-head line (see head_to_head)."""
     esc = lambda value: escape(str(value), quote=True)
     label = "Example schedule · demo only" if demo else "Manually entered schedule"
     cards = []
     for fixture in workspace.upcoming()[:3]:
         when = datetime.fromisoformat(fixture["when"]).strftime("%a, %b %d · %H:%M")
+        record = (records or {}).get(fixture["opponent"].casefold())
+        record_html = f'<small class="md-record">{esc(record)}</small>' if record else ""
         cards.append(f'<article class="md-fixture"><small>{esc(when)} · {esc(fixture["timezone"])}</small>'
-                     f'<b>vs {esc(fixture["opponent"])}</b><small>{esc(fixture["team"])} · {esc(fixture["kind"])}</small></article>')
+                     f'<b>vs {esc(fixture["opponent"])}</b><small>{esc(fixture["team"])} · {esc(fixture["kind"])}</small>'
+                     f'{record_html}</article>')
     upcoming = ''.join(cards) or '<p class="md-empty">No upcoming matches entered.</p>'
     form = []
     for match in recent[:5]:
         result = {1: "W", 0: "L"}.get(match.get("won"), "—")
+        own, other = ((match.get("score1"), match.get("score0")) if match.get("team") == 1
+                      else (match.get("score0"), match.get("score1")))
         form.append(f'<div class="md-recent"><b class="md-result">{result}</b><span>{esc(match.get("map") or "Unknown map")}'
                     f'<small>{esc((match.get("played_at") or "")[:10])}</small></span>'
-                    f'<span>{esc(match.get("score0", "—"))}–{esc(match.get("score1", "—"))}</span></div>')
+                    f'<span>{esc("—" if own is None else own)}–{esc("—" if other is None else other)}</span></div>')
     recent_html = ''.join(form) or '<p class="md-empty">Confirm matches to see recent form.</p>'
     people = ''.join(f'<div class="md-person"><span>{esc(name)}</span><small>{esc(workspace.availability.get(name, "Unconfirmed"))}</small></div>'
                      for name in roster[:10]) or '<p class="md-empty">Save a team to see its roster.</p>'
