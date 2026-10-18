@@ -60,6 +60,7 @@ class Reply:
     question: str = ""             # what was asked
     resolved: str = ""             # the question as it was looked up, after reading it as a follow-up
     chart: chart_engine.Chart | None = None  # a chart to draw
+    subject: str = ""              # the player the answer is about ("Sacri" for "who should I bench?"), for "him"
 
     @property
     def table(self) -> tuple[list[str], list[dict[str, Any]], dict[str, str]]:
@@ -598,7 +599,7 @@ def _bench(db: StatsDB, vocab: Vocab) -> Reply:
     return Reply(f"On the numbers, **{low['Player']}** has had the lowest EPS on your side: {low['EPS']} over "
                  f"{low['Matches']} matches (your side's average is {average}). One number isn't the whole story: "
                  f"role, KOST and trades matter too.", "stats", rows=table, columns=list(table[0]),
-                 suggestions=[f"Analyze {low['Player']}", f"Is {low['Player']} improving?"])
+                 suggestions=[f"Analyze {low['Player']}", f"Is {low['Player']} improving?"], subject=low["Player"])
 
 
 def _duos(question: str, db: StatsDB, vocab: Vocab) -> Reply:
@@ -1074,8 +1075,12 @@ class Conversation:
             if vocab:
                 found, _ = vocab.find(resolved)
                 person = next((e for e in found if e.kind == "player"), None)
-                if person:
-                    self.state["last_player"] = person.display
+                answer = reply.answer
+                top = answer.rows[0].get("Player") if answer and answer.ok and answer.rows and \
+                    answer.query and answer.query.group == "player" else None
+                # "who should I bench?" then "analyze him": the player the answer named, before the one asked about
+                if subject := reply.subject or top or (person.display if person else None):
+                    self.state["last_player"] = subject
         return reply
 
     def resolve(self, message: str, vocab: Vocab) -> str:
@@ -1102,6 +1107,15 @@ class Conversation:
             for e in vocab.find(last)[0]:
                 if e.kind in ("player", "team"):
                     base = base.replace(last[e.start:e.end], " ")
+        for kind in ("opponent", "map", "operator"):  # "what about against Harbor State?": instead of Metro Tech
+            if any(e.kind == kind for e in entities):
+                for e in vocab.find(last)[0]:
+                    if e.kind == kind:  # the name and the word before it: "on Bank", "vs Metro Tech"
+                        base = re.sub(r"(\b(vs|versus|against|on|as)\s+)?" + re.escape(last[e.start:e.end]), " ", base,
+                                      flags=re.I)
+        superlative = r"\b(best|worst|hardest|easiest|toughest|strongest|weakest|highest|lowest|most|least|top|bottom)\b"
+        if re.search(superlative, rest, re.I):  # "and the easiest?" after "the hardest"
+            base = re.sub(superlative, " ", base, flags=re.I)
         if _find_metrics(_clean(rest, entities)):  # a new stat replaces the old one
             for phrase in sorted((p for ps in METRIC_WORDS.values() for p in ps), key=len, reverse=True):
                 base = re.sub(r"\b" + re.escape(phrase) + r"\b", " ", base, flags=re.I)

@@ -312,6 +312,32 @@ class TestConversation(unittest.TestCase):
         self.assertIn("Sacri", kills.text)
         self.assertEqual(chat.reply("more", self.db).links, [("ask", "Open it on Ask")])
 
+    def test_a_new_name_replaces_the_old_one(self):
+        """"What about against Harbor State?" is instead of Metro Tech, not as well; the same for maps and
+        operators, and "the easiest" after "the hardest"."""
+        chat = Conversation()
+        chat.reply("my K/D vs Metro Tech", self.db, now=NOW)
+        other = chat.reply("what about against Harbor State?", self.db, now=NOW)
+        self.assertNotIn("Metro Tech", other.resolved)
+        self.assertTrue(other.text.endswith("against Harbor State."), other.text)
+        chat = Conversation()
+        chat.reply("my K/D as Thorn", self.db, now=NOW)
+        self.assertTrue(chat.reply("and as Solis?", self.db, now=NOW).text.endswith(" as Solis."))
+        chat = Conversation()
+        chat.reply("which opponent is the hardest", self.db, now=NOW)
+        self.assertIn("easiest opponent", chat.reply("and the easiest?", self.db, now=NOW).text)
+
+    def test_he_is_the_player_the_answer_named(self):
+        """"Who should I bench?" names a player: "analyze him" is about them, not you."""
+        chat = Conversation()
+        bench = chat.reply("who should I bench", self.db, now=NOW)
+        low = min(bench.rows, key=lambda r: r["EPS"])["Player"]
+        self.assertEqual(chat.reply("analyze him", self.db, now=NOW).resolved, f"analyze {low}")
+
+    def test_a_tie_is_a_tie(self):
+        answer = Conversation().reply("compare me and Sacri on Bank", self.db, now=NOW)
+        self.assertEqual(answer.text, "You and Sacri are level on K/D: 1.20 each.")
+
     def test_a_new_question_isnt_read_as_a_follow_up(self):
         chat = Conversation()
         chat.reply("my K/D on Bank", self.db, now=NOW)

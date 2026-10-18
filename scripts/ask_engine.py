@@ -1492,7 +1492,10 @@ def _answer_compare(db: StatsDB, q: Query, vocab: Vocab) -> Answer:
                                          -(r.get(first) or 0) if metric.higher_is_better else (r.get(first) or 0)))
     lead, other = ranked[0], ranked[1]
     a, b = (fmt(_value(r.get(first), metric.kind), metric.kind) for r in (lead, other))
-    if q.compare in ("side", "match_type"):
+    if a == b and len(rows) == 2:  # the same as shown: nobody's ahead
+        names = [("you" if r.get("key") == vocab.me else r["name"]) for r in (lead, other)]
+        headline = f"{_cap(names[0])} and {names[1]} are level on {_phrase(first, level)}: {a} each."
+    elif q.compare in ("side", "match_type"):
         better = "stronger side" if q.compare == "side" else "better match type"
         headline = f"{lead['name']} is {_subject(q, vocab)[1]} {better} by {_phrase(first, level)}: {a} vs {b}."
     else:
