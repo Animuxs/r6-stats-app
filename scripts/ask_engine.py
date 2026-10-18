@@ -379,8 +379,10 @@ class Vocab:
         parts: dict[str, set[str]] = {}
         for key, name in self.players.items():
             for part in re.split(r"[^0-9a-z]+", fold(name)):
-                if len(part) >= 3 and part not in taken:
-                    parts.setdefault(part, set()).add(key)
+                # and the name before its trailing digits: "GoDz" for GoDz5042, "Zapper" for Zapper1205
+                for piece in {part, re.sub(r"\d+$", "", part)}:
+                    if len(piece) >= 3 and piece not in taken:
+                        parts.setdefault(piece, set()).add(key)
         for part, keys in parts.items():
             if len(keys) == 1 and part not in aliases:
                 add(part, "player", next(iter(keys)))
@@ -1124,9 +1126,15 @@ def _count(value: str, phrase: str) -> str:
     return f"{value} {_SINGULAR.get(phrase, phrase) if value == '1' else phrase}"
 
 
+# the words a sentence can start with that aren't a name: only these are capitalized
+_SENTENCE_WORDS = re.compile(r"^(you|your|yours|everyone|everyone's|these|the|nobody|no one|none|your team|"
+                             r"your teammates|your opponents|this|that|it|a|an|one|only|some|all)\b")
+
+
 def _cap(text: str) -> str:
-    """The first letter capitalized, and only it: "typhoon.FBRD's" -> "Typhoon.FBRD's"."""
-    return text[:1].upper() + text[1:]
+    """A sentence's first letter capitalized ("your K/D" -> "Your K/D"), unless the sentence starts with a name:
+    gamertags are written exactly as they are ("bryannikolas has the best KOST", never "Bryannikolas")."""
+    return text[:1].upper() + text[1:] if _SENTENCE_WORDS.match(text) else text
 
 
 def _subject(q: Query, vocab: Vocab) -> tuple[str, str]:
@@ -1232,7 +1240,7 @@ def ask(question: str, db: StatsDB, now: datetime | None = None, vocab: Vocab | 
     except (ValueError, sqlite3.Error):  # a question read in a way that can't be looked up
         return Answer(False, "", "Sorry, I couldn't work that one out. Try asking it another way.",
                       notes=q.notes, query=q)
-    answer.headline = answer.headline[:1].upper() + answer.headline[1:]
+    answer.headline = _cap(answer.headline)  # a sentence's first word, never a gamertag
     answer.notes = q.notes + answer.notes
     answer.query = q
     return answer

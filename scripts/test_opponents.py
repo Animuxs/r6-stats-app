@@ -118,5 +118,23 @@ class TestNamelessTeams(unittest.TestCase):
         db.close()
 
 
+class TestRealNames(unittest.TestCase):
+    """Gamertags as players write them: never capitalized, and found by the name before their digits."""
+
+    def test_names(self):
+        db = StatsDB(":memory:")
+        match = copy.deepcopy(SAMPLE_MATCH)
+        names = {p["name"]: n for p, n in zip(match["players"], ["bryannikolas", "GoDz5042"])}
+        for p in match["players"]:
+            p["name"] = names.get(p["name"], p["name"])
+        db.import_match("names", {**match, "recording_player": "GoDz5042"})
+        vocab = Vocab.from_db(db)
+        self.assertEqual(vocab.find("how did GoDz do")[0][0].value, "godz5042")
+        headline = ask("bryannikolas K/D", db, vocab=vocab).headline
+        self.assertTrue(headline.startswith("bryannikolas"), headline)
+        self.assertTrue(ask("my K/D", db, vocab=vocab).headline.startswith("Your K/D"))
+        db.close()
+
+
 if __name__ == "__main__":
     unittest.main()
