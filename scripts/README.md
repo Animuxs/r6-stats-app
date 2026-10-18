@@ -115,7 +115,8 @@ Dashboard:
 - **Ask**: type a question, or tap one of the examples (see below).
 - **Charts**: any chart of any stat (see below).
 - **Players**: one player's profile (headline numbers, recent form and whether
-  it's trending up or down, best maps, top operators, attack vs defense), or two
+  it's trending up or down, personal bests down to the best single round, best
+  maps, top operators, attack vs defense), or two
   players side by side under **Compare with**: who's ahead on each stat, and
   their record as teammates and against each other. **Goals** on a profile: pick
   a stat and a target ("K/D 1.20") and see how the last 10 matches measure up;
