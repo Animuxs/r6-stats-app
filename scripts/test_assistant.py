@@ -231,6 +231,23 @@ class TestEverydayQuestions(unittest.TestCase):
             with self.subTest(question):
                 self.assertEqual(self.answer(question).kind, "stats")
 
+    def test_round_situations(self):
+        """Post-plant, retakes and man down: your side's numbers, the one asked about first."""
+        from ask_engine import team_summary
+
+        s = team_summary(self.db, [self.db.me()], 1)
+        reply = self.answer("how often do we win when we plant")
+        self.assertTrue(reply.text.startswith("After planting, "), reply.text)
+        self.assertIn(f"({s['post_plant_won']} of {s['post_plant']})", reply.text)
+        self.assertTrue(self.answer("retake percentage").text.startswith("After the other team planted, "))
+        self.assertIn(f"({s['retakes_won']} of {s['retakes']})", self.answer("our retakes").text)
+        self.assertTrue(self.answer("how do we do man down").text.startswith("Down 2+ players, "))
+        self.assertTrue(self.answer("plant rate").text.startswith("On attack, "))
+        self.assertEqual([r["Situation"] for r in reply.rows][:2], ["Attack: planted the defuser",
+                                                                     "Attack: won after planting"])
+        self.assertEqual(self.answer("what is a retake").kind, "define")
+        self.assertEqual(self.answer("how many plants do I have").text[:12], "You have 4 p"[:12])
+
     def test_the_last_match_score_is_from_your_side(self):
         from assistant import _last_played
 

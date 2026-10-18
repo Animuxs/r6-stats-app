@@ -1692,6 +1692,8 @@ def suggestions(vocab: Vocab, db: StatsDB, count: int = 8) -> list[str]:
             mine.append(f"Compare me and {mates[0][0]}")
     if vocab.rosters:
         mine.append(f"How is {next(iter(vocab.rosters))} doing?")
+    if len(vocab.opponents) >= 2:
+        mine.append("Which opponent is the hardest?")
     out = ["How has my K/D changed over my last 10 matches?", "What's my best map?", "My most kills in a match",
            "Which operators do I play most?", *mine, "Attack vs defense win rate", "My record this week",
            "Top 5 players by EPS"]

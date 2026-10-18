@@ -220,6 +220,14 @@ GLOSSARY: list[Topic] = [
           "A **trade kill** is killing the opponent who just killed your teammate, within a few seconds. "
           "**Deaths traded** counts your deaths a teammate avenged: a high number means you're dying in places "
           "your team can cover."),
+    Topic("situations", "Round situations", ("retake", "retakes", "post plant", "post-plant", "postplant",
+                                             "man down", "plant rate", "round situations"),
+          "The situations that decide rounds, counted once per round for your side:\n"
+          "- **Plant rate**: attack rounds where the defuser got planted.\n"
+          "- **Post-plant**: attack rounds won after planting.\n"
+          "- **Retake**: defense rounds won after the other team planted.\n"
+          "- **Man down**: rounds your side went 2+ players down, how often it got back to even, and won anyway.\n\n"
+          "Ask “how often do we win after planting?” or “our retakes”, or see them on Team Analytics."),
     Topic("hs", "Headshot %", ("headshot", "headshots", "hs", "headshot rate", "headshot percentage"),
           "**Headshot %** is the share of your kills that were headshots. 40–50% is typical; higher usually means "
           "good crosshair placement."),
