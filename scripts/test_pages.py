@@ -310,6 +310,17 @@ class TestPlayersTab(unittest.TestCase):
         self.assertTrue(table.iloc[:, 1:].apply(lambda col: col.str.startswith("✅")).any().any())
         self.assertTrue(any(m.label == "Matches as teammates" for m in at.metric))
 
+    def test_picking_the_compared_player_first_compares_with_nobody(self):
+        at = SITUATIONS[3].start(self)
+        at.switch_page("players.py").run()
+        other = at.selectbox(key="players_second").options[1]
+        at.selectbox(key="players_second").select(other).run()
+        self.assertTrue(any(m.label == "Matches as teammates" for m in at.metric))  # compared
+        at.selectbox(key="players_first").select(other).run()
+        self.assertFalse(problems(at))
+        self.assertEqual(at.selectbox(key="players_second").index, 0)  # Nobody
+        self.assertFalse(any(m.label == "Matches as teammates" for m in at.metric))
+
 
 if __name__ == "__main__":
     unittest.main()
