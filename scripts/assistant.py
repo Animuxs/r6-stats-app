@@ -1039,6 +1039,10 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
         if answer.ok and q and q.kind == "compare" and q.compare == "player" and len(q.players) == 2:
             reply.links.append(("players", "See them side by side on Players",
                                 {"player": q.players[0], "vs": q.players[1]}))
+        elif answer.ok and q and q.kind == "summary" and not q.group:  # "tell me about Sacri", "my profile"
+            key = q.players[0] if q.who == "players" and len(q.players) == 1 else vocab.me if q.who == "me" else None
+            if key:
+                reply.links.append(("players", "Full profile on Players", {"player": key}))
         return reply
     reply = _best_guess(question, db, vocab, answer.notes)
     reply.question = question
