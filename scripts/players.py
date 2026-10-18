@@ -31,9 +31,15 @@ class PlayersTab(Tab):
             me = db.me()
             keys = sorted(names, key=lambda k: (k != (me or "").casefold(), names[k].casefold()))
             label = lambda k: names[k] + (" (you)" if names[k] == me else "")  # noqa: E731
+            # a pick from another database (the demo season, before it was left) isn't one of these players
+            # (set, not dropped: the picker on screen only follows a value it's given)
+            if self.session.get("players_first") not in keys:
+                self.session.set("players_first", keys[0])
             left, right = st.columns(2)
             first = left.selectbox("Player", keys, format_func=label, key="players_first")
             others = [NOBODY] + [k for k in keys if k != first]
+            if self.session.get("players_second") not in others:  # the player just picked first
+                self.session.set("players_second", NOBODY)
             second = right.selectbox("Compare with", others, key="players_second",
                                      format_func=lambda k: "Nobody: just this player" if k == NOBODY else label(k))
             a = profile(db, first)
