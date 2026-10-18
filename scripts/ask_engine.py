@@ -708,8 +708,13 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
     attack = _has(r"\b(attack|attacking|attacker|attackers|atk|offense|offence)\b", text)
     defense = _has(r"\b(defen[cs]e|defending|defender|defenders|def|defend)\b", text)
     q.most_played = _has(_WORDS["most_played"], text)
+    # "who plays Twitch?": the players who've played that operator, most rounds first
+    who_plays = bool(q.operators) and _has(r"\bwho (plays|played|mains|picks|picked|uses|used|runs|ran)\b", text)
+    q.most_played = q.most_played or who_plays
 
     group = next((g for g, pattern in _GROUP_WORDS.items() if _has(pattern, text)), None)
+    if who_plays:
+        group = "player"
     if group == "rank":  # "where do I rank", "leaderboard": players, unless it says what else to rank
         group = next((g for g in ("map", "operator", "side", "site") if _has(_GROUP_WORDS[g], text)), "player")
     if q.most_played and group is None:
@@ -853,7 +858,7 @@ def _fill_defaults(q: Query, vocab: Vocab) -> None:
         any(METRICS[m].match_sql is None for m in q.metrics)
     if not q.metrics:
         if q.kind == "rank" and q.group == "player":
-            q.metrics = ["matches"] if q.most_played else ["eps"]
+            q.metrics = [("rounds" if round_level else "matches") if q.most_played else "eps"]
         elif q.kind == "rank" and q.group in ("match", "player_match"):
             q.metrics = ["eps"]  # "my best game"
         elif q.kind == "rank" and q.most_played:
@@ -1407,9 +1412,10 @@ def _answer_rank(db: StatsDB, q: Query, vocab: Vocab) -> Answer:
         name = "You" if top["key"] == vocab.me else top["name"]
         verb = "have" if name == "You" else "has"
         if q.most_played:
-            headline = f"{name} played the most matches{among}: {top['matches']}."
+            unit = "rounds" if first == "rounds" else "matches"  # "who plays Twitch?" counts rounds on Twitch
+            headline = f"{name} played the most {unit}{_filters_text(q)}{among}: {top[unit]}."
         else:
-            headline = f"{name} {verb} the {word} {_phrase(first, level)}{among}: {value} ({sample})."
+            headline = f"{name} {verb} the {word} {_phrase(first, level)}{_filters_text(q)}{among}: {value} ({sample})."
         if q.highlight_me and vocab.me:
             place = next((i for i, r in enumerate(rows, 1) if r["key"] == vocab.me), None)
             if place is None and q.min_matches:

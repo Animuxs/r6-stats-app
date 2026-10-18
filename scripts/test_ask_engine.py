@@ -263,6 +263,18 @@ class TestRoundLevel(EngineTest):
         self.assertEqual({r["Operator"]: r["Rounds"] for r in answer.rows}, counts)
         self.assertEqual(answer.rows[0]["Rounds"], max(counts.values()))
 
+    def test_who_plays_an_operator(self):  # players ranked by their rounds on it, not by K/D
+        counts = {}
+        for match in MATCHES.values():
+            for rnd in match["rounds"]:
+                for player, op in rnd["operators"].items():
+                    if op == "Jäger":
+                        counts[player] = counts.get(player, 0) + 1
+        answer = self.ask("who plays Jäger?")
+        self.assertEqual(answer.query.group, "player")
+        self.assertEqual(answer.rows[0]["Rounds"], max(counts.values()))
+        self.assertIn("the most rounds as Jäger", answer.headline)
+
     def test_attack_vs_defense(self):
         answer = self.ask("attack vs defense win rate")
         self.assertEqual(answer.query.kind, "compare")
