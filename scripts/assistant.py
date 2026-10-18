@@ -156,7 +156,8 @@ _SCHEDULE = re.compile(r"\b(who (are|do|will) (we|i) (play|playing|face|facing)\
                        r"what time (do|are|will) (we|i) play|next (match|game|opponent|fixture)|whens our next|"
                        r"our schedule|my schedule|upcoming (matches|games|fixtures))\b")
 _LAST_PLAYED = re.compile(r"\b(when did (i|we) (last )?play|last time (i|we) played|when was my last (match|game)|"
-                          r"how long since|last played)\b")
+                          r"how long since|last played|(what|which) map (did|have) (i|we) (last )?play(ed)?( last)?|"
+                          r"(what|which) map was (our|my|the) last (match|game)|last map (i|we) played)\b")
 _FIRST_PLAYED = re.compile(r"\b(first (match|game)|when did (i|we) (start|first play)|oldest (match|game))\b")
 _DUO = re.compile(r"\b(duo|who do (i|we) win (the )?most with|best teammates?|who should i (play|queue) with|"
                   r"who (do i|i|do we|we) play best with|win rate with (each|my) teammates?|best partner|"
@@ -523,13 +524,23 @@ def _session_recap(db: StatsDB, vocab: Vocab) -> Reply:
                  suggestions=["My win streak", "Analyze my stats"])
 
 
-def _last_played(question: str, db: StatsDB, vocab: Vocab, first: bool = False) -> Reply:
+def _last_played(question: str, db: StatsDB, vocab: Vocab, first: bool = False, q: Query | None = None) -> Reply:
+    """Your last (or first) match: on a map or against an opponent when the question names one ("when did we last
+    play Villa?")."""
     kind, key = _who(question, vocab)
     if kind == "my_team":
         key = vocab.me  # "did we win our last match?": your side's result
     played = [m for m in db.match_list(key) if m.get("player")] if key else db.match_list()
+    where = ""
+    if q and q.maps:
+        played = [m for m in played if m.get("map") in q.maps]
+        where = f" on {' or '.join(q.maps)}"
+    if q and q.opponents:
+        played = [m for m in played if any(scouting.same_team(m.get(f"team{1 - (m.get('team') or 0)}"), o)
+                                           for o in q.opponents)]
+        where += f" against {' or '.join(q.opponents)}"
     if not played:
-        return Reply("There are no matches for that yet.", "stats")
+        return Reply(f"There are no matches{where} yet." if where else "There are no matches for that yet.", "stats")
     m = played[-1] if first else played[0]
     who = "You" if key == vocab.me else _name(vocab, key) if key else "The"
     what = "first" if first else "last"
@@ -1038,11 +1049,11 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
     if _BENCH.search(text):
         return _with_question(_bench(db, vocab), question)
     one_last = _LAST_RESULT.search(text) and not re.search(r"\blast (\d+|two|three|four|five|six|seven|eight|nine|ten)\b",
-                                                             text) and not (q and (q.maps or q.opponents or q.operators))
+                                                             text) and not (q and q.operators)
     if one_last or _LAST_PLAYED.search(text):
-        return _with_question(_last_played(question, db, vocab), question)
+        return _with_question(_last_played(question, db, vocab, q=q), question)
     if _FIRST_PLAYED.search(text) and not clean_metrics:
-        return _with_question(_last_played(question, db, vocab, first=True), question)
+        return _with_question(_last_played(question, db, vocab, first=True, q=q), question)
     if _DUO.search(text):
         return _with_question(_duos(question, db, vocab), question)
     if _BAN_LOOSE.search(text) and (_NOT_MAPS.search(text) or (q and q.maps)) and matches:

@@ -38,11 +38,11 @@ SPLITS = {"none": "Nothing", "who": "Who (each player or team)", "side": "Side",
           "match_type": "Match type"}
 TIME_AXES = {"match", "day", "week", "month"}
 # stats a chart can show (aces only exist per round, EPS only per match: build() handles both)
-CHART_METRICS = ["kd", "eps", "kills", "deaths", "assists", "kpr", "dpr", "hs", "kost", "survival", "entry",
-                 "entry_rate", "entry_kills", "entry_deaths", "clutches", "multikills", "aces", "trade_kills", "traded", "plants",
-                 "defuses", "objectives", "win_rate", "wins", "losses", "matches", "rounds"]
-COUNTS = {"kills", "deaths", "assists", "clutches", "multikills", "aces", "trade_kills", "traded", "plants",
-          "defuses", "objectives", "wins", "losses", "matches", "rounds", "entry_kills", "entry_deaths"}
+CHART_METRICS = ["kd", "eps", "kills", "deaths", "assists", "kpr", "dpr", "hs", "headshots", "kost", "survival",
+                 "entry", "entry_rate", "entry_kills", "entry_deaths", "clutches", "multikills", "aces", "trade_kills",
+                 "traded", "plants", "defuses", "objectives", "win_rate", "wins", "losses", "matches", "rounds"]
+COUNTS = {"kills", "deaths", "assists", "headshots", "clutches", "multikills", "aces", "trade_kills", "traded",
+          "plants", "defuses", "objectives", "wins", "losses", "matches", "rounds", "entry_kills", "entry_deaths"}
 
 _KIND_WORDS = [  # the first that matches decides the kind
     ("heatmap", r"\b(heat ?maps?|grid|matrix)\b"),
