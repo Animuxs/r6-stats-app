@@ -75,12 +75,13 @@ GUIDE: list[Topic] = [
           "charts", ("My K/D over time", "Pie of the operators I play")),
     Topic("players", "Players",
           ("players page", "players tab", "player profile", "profile", "head to head", "head-to-head",
-           "side by side", "compare two players", "recent form", "my form"),
+           "side by side", "compare two players", "recent form", "my form", "set a goal", "goal", "goals"),
           "**Players** (in the **Stats** menu) shows one player's profile: their headline numbers, recent form "
           "(and whether it's trending up or down), best maps, top operators and attack vs defense. Pick a second "
           "player under **Compare with** to put them side by side: who's ahead on each stat, and their record as "
-          "teammates and against each other.",
-          "players", ("Compare me and my teammate",)),
+          "teammates and against each other. **Goals** on a profile: pick a stat and a target, and see how the "
+          "last 10 matches measure up.",
+          "players", ("Compare me and my teammate", "My goals")),
     Topic("history", "Match History",
           ("match history", "history", "past matches", "old matches", "tag a match", "tags", "notes", "note",
            "video link", "delete a match", "remove a match", "scrim tag", "edit a match", "session recap", "recap",

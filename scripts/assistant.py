@@ -42,6 +42,7 @@ import recap
 import scouting
 from map_pool import map_pool, veto_hint
 from metrics_engine import round_eps
+import player_profile
 from player_profile import streaks
 from stats_db import StatsDB, nice_time
 
@@ -145,6 +146,7 @@ _RECAP = re.compile(r"\b(session recap|recap|last session|this session|latest se
                     r"how (did|was|were|is|went|has|have|d)\b.{0,30}\b(last night|tonight)|"
                     r"(last night|tonight)\W*s? (scrims?|matches|games|session)|(last|today\W*s) (scrims|session))\b")
 _TONIGHT = re.compile(r"\b(last night|tonight)\b")
+_GOALS = re.compile(r"\bgoals?\b|\btargets?\b")
 _OPEN_PAGE = re.compile(r"^(open|go to|goto|take me to|navigate to|bring up|show)\b.*\b(page|tab)\b|"
                         r"^(open|go to|goto|take me to|navigate to)\b")
 _SCOUT = re.compile(r"\b(scout|scouting|scouting report|intel on|tell me about|what do we know about)\b")
@@ -604,6 +606,26 @@ def _situations(text: str, db: StatsDB, vocab: Vocab, q: Query | None = None) ->
                  links=[("teams", "Team Analytics")], suggestions=["Analyze my team", "Which opponent is the hardest?"])
 
 
+def _goals(question: str, db: StatsDB, vocab: Vocab) -> Reply:
+    """A player's goals (set on Players), each measured over their newest matches."""
+    kind, key = _who(question, vocab)
+    key = key if kind == "player" else vocab.me
+    if not key:
+        return Reply("Name a player and I'll show their goals.", "stats", answered=False)
+    who = "You" if key == vocab.me else _name(vocab, key)
+    goals = player_profile.goal_progress(db, key)
+    link = [("players", "Set goals on Players", {"player": key})]
+    if not goals:
+        return Reply(f"{who} {'have' if who == 'You' else 'has'} no goals yet. Set one on a player's profile on "
+                     f"**Players**: a stat and a target, measured over the last {player_profile.GOAL_MATCHES} "
+                     "matches.", "stats", links=link)
+    met = sum(g["met"] for g in goals)
+    lines = [f"- {'✅' if g['met'] else '🎯'} **{g['label']}**: {g['shown']} (goal {g['target_shown']})" for g in goals]
+    return Reply(f"{who} {'have' if who == 'You' else 'has'} met {met} of {len(goals)} goal"
+                 f"{'s' if len(goals) != 1 else ''} over the last {player_profile.GOAL_MATCHES} matches:\n"
+                 + "\n".join(lines), "stats", links=link)
+
+
 def _bench(db: StatsDB, vocab: Vocab) -> Reply:
     """"Who should I bench?": your side's players by EPS, lowest first, with the numbers behind it."""
     if not vocab.me:
@@ -1002,6 +1024,8 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
         return Reply(report.headline, "stats", rows=report.ours, columns=list(report.ours[0]) if report.ours else [],
                      links=[("matchday", "Their full scouting report on Match day")], question=question,
                      suggestions=[f"My stats vs {report.opponent}", "Which opponent is the hardest?"])
+    if _GOALS.search(text) and matches and not kb.guide(question):  # "how am I doing on my goals?"
+        return _with_question(_goals(question, db, vocab), question)
     # analysis: "analyze my team", "what should I work on?"
     if _ANALYZE.search(text) and not (stats_kind and clean_metrics and q.kind in ("trend", "rank")):
         reply = _analysis(question, db, vocab)

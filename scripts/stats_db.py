@@ -35,6 +35,8 @@ this time), so nothing is ever counted twice.
 
 from __future__ import annotations
 
+import json
+
 import re
 import sqlite3
 from datetime import datetime
@@ -423,6 +425,36 @@ class StatsDB:
                                    (match_id, tag, note, vod, datetime.now().isoformat(timespec="seconds")))
             else:
                 self._conn.execute("DELETE FROM match_notes WHERE match_id = ?", (match_id,))
+
+    # -------------------------------------------------------------- goals ----
+
+    def goals(self, player: str) -> dict[str, float]:
+        """A player's goals: {stat key: target} (Players sets them; kept in stats_meta, like the data version)."""
+        row = self._conn.execute("SELECT value FROM stats_meta WHERE key = 'goals'").fetchone()
+        try:
+            every = json.loads(row["value"]) if row else {}
+        except ValueError:  # never a page down over a damaged setting
+            every = {}
+        mine = every.get(player.casefold(), {}) if isinstance(every, dict) else {}
+        return {k: float(v) for k, v in mine.items() if isinstance(v, (int, float))} if isinstance(mine, dict) else {}
+
+    def save_goal(self, player: str, stat: str, target: float | None) -> None:
+        """Set a player's goal for a stat, or clear it with None."""
+        row = self._conn.execute("SELECT value FROM stats_meta WHERE key = 'goals'").fetchone()
+        try:
+            every = json.loads(row["value"]) if row else {}
+        except ValueError:
+            every = {}
+        every = every if isinstance(every, dict) else {}
+        mine = every.setdefault(player.casefold(), {})
+        if target is None:
+            mine.pop(stat, None)
+        else:
+            mine[stat] = float(target)
+        if not mine:
+            every.pop(player.casefold(), None)
+        with self._conn:
+            self._conn.execute("INSERT OR REPLACE INTO stats_meta VALUES ('goals', ?)", (json.dumps(every),))
 
     def notes(self) -> dict[str, dict[str, str]]:
         """{match_id: {"tag", "note", "vod"}} for every match in your stats with a note."""

@@ -7,7 +7,8 @@ from __future__ import annotations
 import streamlit as st
 
 from ask_engine import METRICS, fmt
-from player_profile import HEADLINE, comparison, form_trend, profile, shared, verdict
+from player_profile import GOAL_MATCHES, GOAL_STATS, HEADLINE, comparison, form_trend, goal_progress, profile, shared, verdict
+from session import Session
 from tab import Tab
 from ui import md
 
@@ -15,6 +16,17 @@ NOBODY = "\x00nobody"  # "Compare with": no one (a username can't be this)
 TREND = {"up": "📈 Trending up: their last few matches beat the ones before.",
          "down": "📉 Trending down: their last few matches are below the ones before.",
          "steady": "➡️ Steady: about the same as the matches before."}
+
+
+def _save_goal(player: str) -> None:
+    session = Session()
+    with session.stats() as db:
+        db.save_goal(player, session.get("goal_stat"), session.get("goal_target"))
+
+
+def _clear_goal(player: str, stat: str) -> None:
+    with Session().stats() as db:
+        db.save_goal(player, stat, None)
 
 
 class PlayersTab(Tab):
@@ -68,6 +80,7 @@ class PlayersTab(Tab):
             for col, key in zip(st.columns(len(row)), row):
                 col.metric(METRICS[key].label, p.show(key))
         self.bests(p)
+        self.goals(p)
         st.subheader("Recent form")
         if trend := form_trend(p.form):
             st.caption(TREND[trend])
@@ -125,6 +138,26 @@ class PlayersTab(Tab):
             for col, best in zip(st.columns(4), row):
                 where = " · ".join(x for x in (best["when"], best["map"]) if x)
                 col.metric(best["label"], best["value"], help=where or None)
+
+    def goals(self, p) -> None:
+        """The player's goals, each measured over their newest matches, and a form to set or clear one."""
+        st.subheader("Goals")
+        with self.stats() as db:
+            progress = goal_progress(db, p.key)
+        if progress:
+            st.caption(f"Measured over {md(p.name)}'s last {GOAL_MATCHES} matches.")
+        for goal in progress:
+            mark = "✅" if goal["met"] else "🎯"
+            text, clear = st.columns([5, 1], vertical_alignment="center")
+            text.progress(goal["progress"], text=f"{mark} {goal['label']}: {goal['shown']} "
+                                                f"(goal {goal['target_shown']})")
+            clear.button("Clear", key=f"goal_clear_{goal['key']}", on_click=_clear_goal, args=(p.key, goal["key"]),
+                         type="tertiary")
+        with st.form(f"goal_form_{p.key}", border=False):
+            stat, target, save = st.columns([2, 1, 1], vertical_alignment="bottom")
+            stat.selectbox("Set a goal", GOAL_STATS, format_func=lambda k: METRICS[k].label, key="goal_stat")
+            target.number_input("Target", min_value=0.0, max_value=1000.0, value=1.0, step=0.05, key="goal_target")
+            save.form_submit_button("Save goal", on_click=_save_goal, args=(p.key,))
 
     # ------------------------------------------------------------ two players --
     def compare(self, a, b, both) -> None:

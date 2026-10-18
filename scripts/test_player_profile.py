@@ -195,5 +195,47 @@ class TestAgainstOpponents(unittest.TestCase):
         db.close()
 
 
+class TestGoals(unittest.TestCase):
+    def setUp(self):
+        self.db = StatsDB(":memory:")
+        demo_season.load(self.db)
+
+    def tearDown(self):
+        self.db.close()
+
+    def test_set_measure_and_clear(self):
+        self.assertEqual(pp.goal_progress(self.db, "Fabian"), [])
+        self.db.save_goal("Fabian", "kd", 99)  # out of reach
+        self.db.save_goal("FABIAN", "dpr", 5)  # deaths per round: lower is better, so met
+        goals = {g["key"]: g for g in pp.goal_progress(self.db, "fabian")}
+        recent = pp.stats_for(self.db, "fabian", [r["match_id"] for r in pp.form(self.db, "fabian", pp.GOAL_MATCHES)])
+        self.assertAlmostEqual(goals["kd"]["value"], recent["kd"])
+        self.assertFalse(goals["kd"]["met"])
+        self.assertLess(goals["kd"]["progress"], 0.1)
+        self.assertTrue(goals["dpr"]["met"])
+        self.assertEqual(goals["dpr"]["progress"], 1.0)
+        self.db.save_goal("Fabian", "kd", None)
+        self.assertEqual(set(self.db.goals("fabian")), {"dpr"})
+        self.db.save_goal("Fabian", "dpr", None)
+        self.assertEqual(self.db.goals("fabian"), {})
+
+    def test_a_damaged_setting_is_no_goals(self):
+        with self.db._conn:
+            self.db._conn.execute("INSERT OR REPLACE INTO stats_meta VALUES ('goals', 'not json')")
+        self.assertEqual(self.db.goals("fabian"), {})
+        self.db.save_goal("Fabian", "kd", 1.0)  # and saving starts over
+        self.assertEqual(self.db.goals("fabian"), {"kd": 1.0})
+
+    def test_the_assistant_reports_them(self):
+        import assistant
+
+        self.assertIn("no goals yet", assistant.answer_anything("my goals", self.db).text)
+        self.db.save_goal("Fabian", "kd", 99)
+        reply = assistant.answer_anything("how am I doing on my goals", self.db)
+        self.assertTrue(reply.text.startswith("You have met 0 of 1 goal"))
+        self.assertEqual(reply.links, [("players", "Set goals on Players", {"player": "fabian"})])
+        self.assertEqual(assistant.answer_anything("how do I set a goal", self.db).kind, "guide")
+
+
 if __name__ == "__main__":
     unittest.main()

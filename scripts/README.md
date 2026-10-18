@@ -117,7 +117,9 @@ Dashboard:
 - **Players**: one player's profile (headline numbers, recent form and whether
   it's trending up or down, best maps, top operators, attack vs defense), or two
   players side by side under **Compare with**: who's ahead on each stat, and
-  their record as teammates and against each other.
+  their record as teammates and against each other. **Goals** on a profile: pick
+  a stat and a target ("K/D 1.20") and see how the last 10 matches measure up;
+  ask the assistant "my goals" too.
 - **The assistant**: the **Assistant** button in the bottom-right corner of every
   page opens a chat (see below). Turn it off with the **Assistant** switch in the
   sidebar.
