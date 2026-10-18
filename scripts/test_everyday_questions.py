@@ -201,6 +201,48 @@ class TestOpponents(unittest.TestCase):
         mine = {self.vocab.players[k] for k in self.db.players() if k == self.vocab.me}
         self.assertNotIn(theirs.rows[0]["Player"] if theirs.ok else None, mine)
 
+    def test_an_opponent_on_top_is_named_as_one(self):  # was: "FullyHectic. has the best K/D", no word of whose
+        mine = {r["player_key"] for r in self.db.query(
+            "SELECT DISTINCT t.player_key FROM match_players t JOIN match_players s ON s.match_id = t.match_id "
+            "AND s.player_key = ? AND s.team = t.team", [self.vocab.me])}
+        for question, metric in (("who has the best K/D?", "K/D"), ("who has the most kills?", "Kills"),
+                                 ("who has the best EPS?", "EPS")):
+            answer = ask(question, self.db, vocab=self.vocab)
+            top = next(k for k, n in self.vocab.players.items() if n == answer.rows[0]["Player"])
+            if top in mine:
+                self.assertNotIn("(an opponent)", answer.headline, question)
+            else:
+                self.assertIn("(an opponent)", answer.headline, question)
+                ours = next(r for r in answer.rows if r["Player"] in {self.vocab.players[k] for k in mine})
+                self.assertIn("On your side:", answer.headline, question)
+                self.assertIn(f"({ours[metric]}", answer.headline.split("On your side:")[1], question)
+
+    def test_an_opponent_on_top_says_whos_best_on_your_side(self):
+        from sample_data import SAMPLE_MATCH
+
+        def season(me: str | None) -> StatsDB:  # three matches: a ranking needs players with a few
+            db = StatsDB(":memory:")
+            for n in range(3):
+                db.import_match(f"m{n}", dict(SAMPLE_MATCH, match_id=f"m{n}", **({"recording_player": me} if me else {})))
+            return db
+
+        db = season(None)
+        top = ask("who has the best K/D?", db).rows[0]["Player"]
+        db.close()
+        team = next(p["team"] for p in SAMPLE_MATCH["players"] if p["name"] == top)
+        me = next(p["name"] for p in SAMPLE_MATCH["players"] if p["team"] != team)  # you, on the other side
+        db = season(me)
+        answer = ask("who has the best K/D?", db)
+        self.assertTrue(answer.headline.startswith(f"{top} (an opponent) has the best K/D"), answer.headline)
+        ours = next(r for r in answer.rows
+                    if any(p["name"] == r["Player"] and p["team"] != team for p in SAMPLE_MATCH["players"]))
+        side = "you" if ours["Player"] == me else ours["Player"]
+        self.assertIn(f"On your side: {side} ({ours['K/D']:.2f})", answer.headline)
+        db.close()
+
+    def test_who_carries_is_one_of_yours(self):  # was: anyone, opponents too
+        self.assertEqual(ask("who carries?", self.db, vocab=self.vocab).query.who, "my_team")
+
     def test_who_did_we_play_last(self):  # was: every opponent
         newest = next(m for m in self.db.match_list(self.vocab.me) if m.get("player"))
         them = newest[f"team{1 - newest['team']}"]

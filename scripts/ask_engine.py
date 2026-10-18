@@ -781,6 +781,8 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
             q.who = "teammates"
     elif (_has(_WORDS["opponents"], text) or their) and group != "opponent":
         q.who = "opponents"  # "PSU's best player": one of theirs, from the matches against them
+    elif vocab.me and ranking_players and _has(r"\b(carr(y|ies|ied|ying)|mvp|most valuable)\b", text):
+        q.who = "my_team"  # "who carries?": one of yours
     elif _has(_WORDS["everyone"], text):
         q.who = "everyone"
     elif q.team:
@@ -1472,6 +1474,16 @@ def _answer_rank(db: StatsDB, q: Query, vocab: Vocab) -> Answer:
             headline = f"{name} played the most {unit}{_filters_text(q)}{among}: {top[unit]}."
         else:
             headline = f"{name} {verb} the {word} {_phrase(first, level)}{_filters_text(q)}{among}: {value} ({sample})."
+            # everyone ranked and an opponent on top: say so, and who leads your side
+            if q.who == "everyone" and vocab.me and top["key"] != vocab.me:
+                mine = {r["player_key"] for r in db.query(
+                    "SELECT DISTINCT t.player_key FROM match_players t JOIN match_players s "
+                    "ON s.match_id = t.match_id AND s.player_key = ? AND s.team = t.team", [vocab.me])}
+                ours = next((r for r in rows if r["key"] in mine), None)
+                if top["key"] not in mine and ours:
+                    headline = headline.replace(f"{name} {verb}", f"{name} (an opponent) {verb}", 1)
+                    who_ours = "you" if ours["key"] == vocab.me else ours["name"]
+                    headline += f" On your side: {who_ours} ({fmt(_value(ours.get(first), kind), kind)})."
         if q.highlight_me and vocab.me:
             place = next((i for i, r in enumerate(rows, 1) if r["key"] == vocab.me), None)
             if place is None and q.min_matches:
