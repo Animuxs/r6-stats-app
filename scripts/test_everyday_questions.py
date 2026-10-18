@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import re
 import unittest
 from datetime import datetime, timedelta
 
+import assistant_knowledge as kb
 import demo_season
 import player_profile
 from ask_engine import Vocab, ask, interpret
@@ -198,6 +200,23 @@ class TestOpponents(unittest.TestCase):
         newest = next(m for m in self.db.match_list(self.vocab.me) if m.get("player"))
         them = newest[f"team{1 - newest['team']}"]
         self.assertIn(f"against **{them}**", self.answer("who did we play last?"))
+
+
+class TestTheHelpsExamples(unittest.TestCase):
+    """Every question the assistant's "what can you do?" quotes as an example is one it answers."""
+
+    def test_each_example_is_answered(self):
+        db = StatsDB(":memory:")
+        demo_season.load(db)
+        standalone = kb.topic("assistant").text.split("I remember the conversation")[0]  # not the follow-ups
+        examples = re.findall(r"“([^”]+)”", standalone)
+        self.assertGreaterEqual(len(examples), 10)
+        for example in examples:
+            reply = answer_anything(example, db)
+            self.assertTrue(reply.answered, example)
+            self.assertNotIn("couldn't work that one out", reply.text, example)
+            self.assertNotIn("No matches found", reply.text, example)
+        db.close()
 
 
 if __name__ == "__main__":
