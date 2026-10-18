@@ -5,8 +5,11 @@ from uuid import uuid4
 
 import streamlit as st
 
+from ask_engine import opponent_names
 from matchday_data import AVAILABILITY, MatchdayWorkspace
+from scouting import scout
 from tab import Tab
+from ui import md
 
 
 class MatchdayTab(Tab):
@@ -46,6 +49,7 @@ class MatchdayTab(Tab):
                 workspace.fixtures = [f for f in workspace.fixtures if f["id"] != selected]
                 self.session.save_matchday(workspace)
                 st.rerun()
+        self.scouting(workspace)
         with self.stats() as db:
             teams = db.rosters()
         st.subheader("Roster availability & preparation")
@@ -75,6 +79,39 @@ class MatchdayTab(Tab):
             except (ValueError, OSError) as exc:
                 st.error(str(exc))
         st.caption("The Windows app saves planning data on this computer. The hosted app keeps it in your private browser session; export a backup before leaving.")
+
+
+    def scouting(self, workspace) -> None:
+        """A report on a team you've played: the next fixture's opponent first, then everyone else you've met."""
+        with self.stats() as db:
+            met = opponent_names(db, db.me())
+            upcoming = [f["opponent"] for f in workspace.upcoming()]
+            choices = list(dict.fromkeys(upcoming + met))
+            if not choices:
+                return
+            st.subheader("Scout an opponent")
+            if self.session.get("scout_opponent") not in choices:  # one from the demo season, or a fixture gone
+                self.session.set("scout_opponent", choices[0])
+            picked = st.selectbox("Opponent", choices, key="scout_opponent",
+                                  help="Your next opponents first, then every team you've played, from your replays.")
+            report = scout(db, picked)
+        st.markdown(md(report.headline))
+        if not report.meetings:
+            return
+        games, maps = st.columns([3, 2])
+        games.caption("Every meeting, newest first")
+        games.dataframe(report.meetings, hide_index=True)
+        maps.caption("Maps you've played them on")
+        maps.dataframe(report.maps, hide_index=True, column_config={"Win %": st.column_config.NumberColumn(format="%d%%")})
+        ours, theirs = st.columns(2)
+        ours.caption("Your side against them, best EPS first")
+        ours.dataframe(report.ours, hide_index=True, column_config={"K/D": st.column_config.NumberColumn(format="%.2f")})
+        theirs.caption("Their players in your stats")
+        if report.theirs:
+            theirs.dataframe(report.theirs, hide_index=True,
+                             column_config={"K/D": st.column_config.NumberColumn(format="%.2f")})
+        else:
+            theirs.info("None yet: track their players too when you add a match against them.", icon=":material/info:")
 
 
 MatchdayTab().run()
