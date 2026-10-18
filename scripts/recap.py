@@ -96,10 +96,13 @@ def recap(db: StatsDB, sitting: Sitting, me: str | None = None) -> Recap:
               sum(r["won"] is None for r in played))
     keys = ["matches", "kills", "deaths", "kd", "eps", "kost", "entry", "clutches"]
     select = ", ".join(f"{METRICS[k].match_sql} AS {k}" for k in keys)
+    # your side's players when you played (the other team's best isn't your session's standout), else everyone
+    side = ("AND EXISTS (SELECT 1 FROM match_players s WHERE s.match_id = t.match_id AND s.player_key = ? "
+            "AND s.team = t.team)") if played else ""
     rows = db.query(
         f"""SELECT MAX(t.player) AS player, {select}
             FROM match_players t JOIN matches m ON m.match_id = t.match_id
-            WHERE t.match_id IN ({marks}) GROUP BY t.player_key""", ids)
+            WHERE t.match_id IN ({marks}) {side} GROUP BY t.player_key""", [*ids, *([me_key] if played else [])])
     rows.sort(key=lambda r: (-(r["eps"] or 0), r["player"].casefold()))
     players = [{"Player": r["player"], "Matches": r["matches"], "K-D": f"{r['kills']}-{r['deaths']}",
                 "K/D": round(r["kd"], 2) if r["kd"] is not None else None,
@@ -122,4 +125,4 @@ def headline(r: Recap) -> str:
         return f"One match, {'won' if wins else 'lost' if losses else 'drawn'}.{top}"
     tone = "a winning session" if wins > losses else "a losing session" if losses > wins else "an even session"
     record = f"{wins}–{losses}" + (f"–{draws}" if draws else "")
-    return f"{n} matches, {record}: {tone}.{top}"
+    return f"{record}, {tone}.{top}"  # the session's label already says how many matches

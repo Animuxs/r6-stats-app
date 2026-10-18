@@ -61,13 +61,15 @@ class TestRecap(unittest.TestCase):
         self.assertEqual(r.record, (3, 0, 0) if won else (0, 3, 0))
         self.assertEqual(len(r.matches), 3)
         self.assertEqual({m["Result"] for m in r.matches}, {"Won" if won else "Lost"})
-        self.assertEqual(len(r.players), len(SAMPLE_MATCH["players"]))
+        # Fabian's side only: the other team's best isn't the session's standout
+        fabians = {p["name"] for p in SAMPLE_MATCH["players"] if p["team"] == 0}
+        self.assertEqual({p["Player"] for p in r.players}, fabians)
         self.assertTrue(all(p["Matches"] == 3 for p in r.players))
         eps = [p["EPS"] for p in r.players]
         self.assertEqual(eps, sorted(eps, reverse=True))
         self.assertEqual(r.standout, r.players[0]["Player"])
         text = recap.headline(r)
-        self.assertTrue(text.startswith("3 matches, "))
+        self.assertTrue(text.startswith("3–0, " if won else "0–3, "), text)
         self.assertIn("winning" if won else "losing", text)
         self.assertIn(f"Top EPS: {r.standout}", text)
 
@@ -83,9 +85,9 @@ class TestRecap(unittest.TestCase):
 
     def test_a_draw_and_an_even_night(self):
         r = recap.Recap(self.night, [{}, {}], (1, 1, 0), [], None)
-        self.assertEqual(recap.headline(r), "2 matches, 1–1: an even session.")
+        self.assertEqual(recap.headline(r), "1–1, an even session.")
         r = recap.Recap(self.night, [{}, {}, {}], (1, 1, 1), [], None)
-        self.assertEqual(recap.headline(r), "3 matches, 1–1–1: an even session.")
+        self.assertEqual(recap.headline(r), "1–1–1, an even session.")
 
 
 class TestDemoSeason(unittest.TestCase):
