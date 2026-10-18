@@ -7,6 +7,7 @@ from __future__ import annotations
 import streamlit as st
 
 from metrics_engine import eps_from_rating, round_eps, rows_csv
+from recap import headline, recap, sittings
 from session import Session
 from sources import match_label
 from stats_db import MAX_NOTE, MAX_VOD, NOTE_TAGS, BadNote, NotAdded, nice_time
@@ -132,6 +133,7 @@ class HistoryTab(Tab):
         if rows:
             self.summary(rows, me)
             self.matches(rows, tracked, notes, tags)
+            self.session_recap(me)
 
     def summary(self, rows: list[dict], me: str | None) -> None:
         mine = [r for r in rows if r["player"]]
@@ -149,6 +151,27 @@ class HistoryTab(Tab):
                    + "**Tracked** is who you picked when you added the match: only their stats are kept. "
                      "Select a match to open it on the Dashboard, tag it (scrim, official...), write a note or "
                      "link its video, or remove it.")
+
+    def session_recap(self, me: str | None) -> None:
+        """The matches played in one sitting: the newest session, or an earlier one picked."""
+        with self.stats() as db:
+            found = sittings(db)
+            if not found:
+                return
+            # picked by position (newest first): two undated matches have the same label
+            if self.session.get("history_sitting") not in range(len(found)):
+                self.session.set("history_sitting", 0)  # the newest
+            with st.expander("Session recap", icon=":material/nights_stay:", expanded=True):
+                picked = st.selectbox("Session", range(len(found)), key="history_sitting",
+                                      format_func=lambda i: found[i].label, label_visibility="collapsed",
+                                      help="Matches with less than 4 hours between them are one session.")
+                summary = recap(db, found[picked], me)
+                st.markdown(f"**{md(headline(summary))}**")
+                games, people = st.columns([2, 3])
+                games.dataframe(summary.matches, hide_index=True)
+                people.dataframe(summary.players, hide_index=True, column_config={
+                    "K/D": st.column_config.NumberColumn(format="%.2f"),
+                    "KOST %": st.column_config.NumberColumn(format="%d%%")})
 
     def matches(self, rows: list[dict], tracked: dict[str, list[str]], notes: dict[str, dict],
                 tags: list[str]) -> None:

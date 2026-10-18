@@ -83,10 +83,13 @@ GUIDE: list[Topic] = [
           "players", ("Compare me and my teammate",)),
     Topic("history", "Match History",
           ("match history", "history", "past matches", "old matches", "tag a match", "tags", "notes", "note",
-           "video link", "delete a match", "remove a match", "scrim tag", "edit a match"),
+           "video link", "delete a match", "remove a match", "scrim tag", "edit a match", "session recap", "recap",
+           "last night", "tonight's matches"),
           "**Match History** lists every match in your stats, newest first, with your result. Open a match to "
           "give it a tag (Official, Scrim, Practice, Casual), a note or a video link, change its tracked "
-          "players, open it on the Dashboard or remove it. Ask understands tags: “my K/D in scrims”.",
+          "players, open it on the Dashboard or remove it. Ask understands tags: “my K/D in scrims”. Below the "
+          "list, **Session recap** sums up one sitting (matches less than 4 hours apart): the record, each match "
+          "and every player's numbers.",
           "history", ("My record in scrims",)),
     Topic("teams", "Team Analytics",
           ("team analytics", "build a team", "make a team", "create a team", "roster", "season teams",

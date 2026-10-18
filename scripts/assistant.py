@@ -40,6 +40,7 @@ from ask_engine import (METRIC_WORDS, METRICS, Answer, Query, Vocab, _aggregate,
                         team_report, team_summary)
 from map_pool import map_pool, veto_hint
 from player_profile import streaks
+import recap
 from stats_db import StatsDB, nice_time
 
 
@@ -115,6 +116,10 @@ _AVERAGE = re.compile(r"\b(average|avg|on average|typical|usually)\b.*\bper (gam
                       r"\b(average|avg) (\w+ ){0,2}(a|each|every) (game|match)\b|\bon average\b")
 _STATS_CONTEXT = re.compile(r"\b(our|we|team|teams|when|in my|in our|since|last|this|on|as|vs|versus|by|per|over)\b")
 _STREAK = re.compile(r"\bstreaks?\b|\bin a row\b|\bstraight (wins|losses)\b")
+_HOW_TO = re.compile(r"^(how (do|can|to)|where|what is|what's|what does)\b")  # about the app, not the stats
+# a sitting's recap: "how did I do last night?", "recap tonight", "my last session"
+_RECAP = re.compile(r"\b(last night|tonight|last session|this session|latest session|session recap|recap|"
+                    r"(last|tonight'?s|today'?s) (scrims?|matches|games))\b")
 _LAST_PLAYED = re.compile(r"\b(when did (i|we) (last )?play|last time (i|we) played|when was my last (match|game)|"
                           r"how long since|last played)\b")
 _FIRST_PLAYED = re.compile(r"\b(first (match|game)|when did (i|we) (start|first play)|oldest (match|game))\b")
@@ -470,6 +475,19 @@ def _streaks(question: str, db: StatsDB, vocab: Vocab) -> Reply:
                  suggestions=["My record this week", "Analyze my stats"])
 
 
+def _session_recap(db: StatsDB, vocab: Vocab) -> Reply:
+    """The newest session (matches played in one sitting): the record and everyone's numbers."""
+    found = recap.sittings(db)
+    if not found:
+        return Reply("No matches yet, so there's no session to recap.", "stats", links=[("dashboard", "Add matches")])
+    me = vocab.players.get(vocab.me, vocab.me) if vocab.me else None
+    summary = recap.recap(db, found[0], me)
+    return Reply(f"**{found[0].label}**: {recap.headline(summary)}", "stats", rows=summary.players,
+                 columns=["Player", "Matches", "K-D", "K/D", "EPS", "KOST %"],
+                 links=[("history", "Earlier sessions on Match History")],
+                 suggestions=["My win streak", "Analyze my stats"])
+
+
 def _last_played(question: str, db: StatsDB, vocab: Vocab, first: bool = False) -> Reply:
     kind, key = _who(question, vocab)
     played = [m for m in db.match_list(key) if m.get("player")] if key else db.match_list()
@@ -810,6 +828,9 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
         reply = _topic_reply(topic, question, "define")
         reply.suggestions = [f"My {topic.title} over time" if topic.key in METRIC_WORDS else "Analyze my stats"]
         return reply
+    # a session's recap: "how did I do last night?" (not the time of day, nor "where's the session recap?")
+    if matches and _RECAP.search(text) and not _HOW_TO.search(text):
+        return _with_question(_session_recap(db, vocab), question)
     # the app: "how do I add my matches?"
     if (topic := kb.guide(question)) and not (stats_kind and (clean_metrics or q.kind in ("rank", "compare", "count"))):
         return _topic_reply(topic, question)
