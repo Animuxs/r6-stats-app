@@ -44,7 +44,8 @@ class MatchdayTab(Tab):
         if workspace.fixtures:
             choices = {f["id"]: f for f in workspace.fixtures}
             selected = st.selectbox("Saved fixture", list(choices),
-                                    format_func=lambda key: f'{choices[key]["when"][:16]} · {choices[key]["opponent"]}')
+                                    format_func=lambda key: f'{datetime.fromisoformat(choices[key]["when"]):%a %b %d · %H:%M} · '
+                                                            f'{choices[key]["opponent"]}')
             if st.button("Remove fixture"):
                 workspace.fixtures = [f for f in workspace.fixtures if f["id"] != selected]
                 self.session.save_matchday(workspace)
