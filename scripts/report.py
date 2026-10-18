@@ -549,7 +549,7 @@ class DashboardTab(Tab):
                 mine = next((p["team"] for p in match.get("players", []) if me and p["name"].casefold() == me), None)
             if mine not in (0, 1) or not named_team(opponent := match["team_names"][1 - mine]):
                 return
-            record = head_to_head(db, opponent, before=match.get("played_at"))
+            record = head_to_head(db, opponent, before=match.get("played_at"), leave_out=match.get("match_id"))
         if record:
             st.caption(md(f"Against {opponent} before this match · {record.removeprefix('Your record: ')}"))
 

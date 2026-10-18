@@ -108,7 +108,8 @@ GUIDE: list[Topic] = [
           "open on the Dashboard, plus how each bomb site goes.",
           "operators", ("Which operators do I play most?", "My best operators")),
     Topic("matchday", "Match day",
-          ("match day", "matchday", "upcoming match", "schedule", "availability", "plan a match", "fixture"),
+          ("match day", "matchday", "upcoming match", "upcoming matches", "schedule", "availability", "plan a match",
+           "fixture", "next match", "next opponent"),
           "**Match day** is for planning: add upcoming matches, track who's available and keep preparation "
           "notes. The panel on the right of every page shows what's next.",
           "matchday"),
