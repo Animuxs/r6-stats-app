@@ -218,6 +218,26 @@ class TestTheHelpsExamples(unittest.TestCase):
             self.assertNotIn("No matches found", reply.text, example)
         db.close()
 
+    def test_each_pages_starters_are_answered(self):
+        """The questions the chat offers on each page, and Charts' example buttons, all work."""
+        import chart_engine
+        import charts
+        from assistant import PAGE_STARTERS, starters
+
+        db = StatsDB(":memory:")
+        demo_season.load(db)
+        vocab = Vocab.from_db(db)
+        for question in {q for qs in PAGE_STARTERS.values() for q in qs} | set(starters(None)):
+            reply = answer_anything(question, db)
+            self.assertTrue(reply.answered, question)
+            self.assertNotIn("couldn't work that one out", reply.text, question)
+        # a "how does X work?" starter explains X: it isn't X's stats
+        self.assertTrue(answer_anything("How does the team hub work?", db).text.startswith("**Team hub**"))
+        self.assertTrue(answer_anything("how does EPS work?", db).text.startswith("**EPS**"))
+        for example in charts.EXAMPLES:
+            self.assertTrue(chart_engine.build(chart_engine.parse(example, vocab), db, vocab).ok, example)
+        db.close()
+
 
 if __name__ == "__main__":
     unittest.main()
