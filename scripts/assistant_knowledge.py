@@ -213,9 +213,9 @@ GLOSSARY: list[Topic] = [
           "**Survival** is the share of rounds you were still alive at the end. High survival with low kills can "
           "mean you're playing too passively; low survival can mean taking fights without support."),
     Topic("entry", "Entry", ("entry", "entries", "entry kill", "entry death", "opening kill", "opening duel",
-                             "first blood", "entry differential"),
+                             "first blood", "entry differential", "opening duel win rate", "first kill rate"),
           "An **entry** is the round's first kill (entry kill) or first death (entry death). **Entry +/-** is "
-          "entry kills minus entry deaths. Winning the opening duel wins the round far more often, so a "
+          "entry kills minus entry deaths, and **opening duel %** the share of those first fights you won. Winning the opening duel wins the round far more often, so a "
           "negative entry number costs your team rounds."),
     Topic("clutch", "Clutch", ("clutch", "clutches", "1vx", "1v2", "1v3"),
           "A **clutch** is a round you win as your team's last player alive against one or more opponents "

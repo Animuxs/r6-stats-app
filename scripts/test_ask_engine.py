@@ -275,6 +275,16 @@ class TestRoundLevel(EngineTest):
         self.assertEqual(answer.rows[0]["Rounds"], max(counts.values()))
         self.assertIn("the most rounds as Jäger", answer.headline)
 
+    def test_opening_duel_win_rate(self):  # the share of the first fights won
+        won = self.ask("my entry kills").rows[0]["Entry kills"]
+        lost = self.ask("my entry deaths").rows[0]["Entry deaths"]
+        for question in ("my opening duel win rate", "how often do I win the first kill?"):
+            answer = self.ask(question)
+            self.assertEqual(answer.query.metrics, ["entry_rate"])
+            self.assertAlmostEqual(answer.rows[0]["Opening duel %"], 100 * won / (won + lost), places=1)
+        self.assertEqual(self.ask("who dies first the most?").query.metrics, ["entry_deaths"])
+        self.assertEqual(self.ask("who wins the most opening duels?").query.metrics, ["entry_kills"])
+
     def test_attack_vs_defense(self):
         answer = self.ask("attack vs defense win rate")
         self.assertEqual(answer.query.kind, "compare")

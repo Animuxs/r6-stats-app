@@ -145,6 +145,11 @@ class TestBuild(unittest.TestCase):
         self.assertEqual(chart.spec.metric, "kd")
         self.assertTrue(any("EPS" in n for n in chart.notes))
 
+    def test_percentages_are_described_with_a_percent_sign(self):
+        self.assertRegex(describe(self.chart("my win rate by map")), r"^Highest: .+ \(\d+(\.\d+)?%\)\. Lowest: ")
+        self.assertRegex(describe(self.chart("my headshot % over time")), r"early on, [\d.]+% lately")
+        self.assertNotIn("%", describe(self.chart("my K/D by map")))
+
     def test_nothing_to_chart(self):
         spec = ChartSpec(kind="bar", metric="kd", x="map", who="players", players=["nobody"])
         chart = build(spec, self.db, self.vocab)

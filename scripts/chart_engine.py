@@ -39,7 +39,7 @@ SPLITS = {"none": "Nothing", "who": "Who (each player or team)", "side": "Side",
 TIME_AXES = {"match", "day", "week", "month"}
 # stats a chart can show (aces only exist per round, EPS only per match: build() handles both)
 CHART_METRICS = ["kd", "eps", "kills", "deaths", "assists", "kpr", "dpr", "hs", "kost", "survival", "entry",
-                 "entry_kills", "entry_deaths", "clutches", "multikills", "aces", "trade_kills", "traded", "plants",
+                 "entry_rate", "entry_kills", "entry_deaths", "clutches", "multikills", "aces", "trade_kills", "traded", "plants",
                  "defuses", "objectives", "win_rate", "wins", "losses", "matches", "rounds"]
 COUNTS = {"kills", "deaths", "assists", "clutches", "multikills", "aces", "trade_kills", "traded", "plants",
           "defuses", "objectives", "wins", "losses", "matches", "rounds", "entry_kills", "entry_deaths"}
@@ -464,6 +464,7 @@ def describe(chart: Chart) -> str:
     if not chart.rows:
         return "There's nothing to chart for that."
     spec = chart.spec
+    unit = "%" if METRICS[spec.metric].kind == "pct" and not spec.cumulative else ""  # "about 31%", not "about 31"
     if spec.kind in ("line", "area") and spec.x in TIME_AXES:
         by_series: dict[str, list[float]] = {}
         for r in chart.rows:
@@ -476,9 +477,9 @@ def describe(chart: Chart) -> str:
                 half = len(values) // 2
                 early, late = sum(values[:half]) / half, sum(values[-half:]) / half
                 change = "up" if late > early * 1.03 else "down" if late < early * 0.97 else "steady"
-                bits.append(f"{name}: about {early:.3g} early on, {late:.3g} lately ({change})")
+                bits.append(f"{name}: about {early:.3g}{unit} early on, {late:.3g}{unit} lately ({change})")
             elif values:
-                bits.append(f"{name}: {', '.join(f'{v:g}' for v in values)}")
+                bits.append(f"{name}: {', '.join(f'{v:g}{unit}' for v in values)}")
         return "; ".join(bits) + "."
     if spec.kind in ("bar", "hbar", "pie", "stacked", "heatmap"):
         top = max(chart.rows, key=lambda r: r["y"])
@@ -488,8 +489,8 @@ def describe(chart: Chart) -> str:
             total = sum(r["y"] for r in chart.rows) or 1
             return f"Biggest share: {name(top)} ({100 * top['y'] / total:.0f}%)."
         if top is low:
-            return f"{name(top)}: {top['y']:g}."
-        return f"Highest: {name(top)} ({top['y']:g}). Lowest: {name(low)} ({low['y']:g})."
+            return f"{name(top)}: {top['y']:g}{unit}."
+        return f"Highest: {name(top)} ({top['y']:g}{unit}). Lowest: {name(low)} ({low['y']:g}{unit})."
     if spec.kind == "scatter":
         return f"{len(chart.rows)} dots: {chart.x_label} across, {chart.y_label} up. Top right is best at both."
     values = sorted(r["y"] for r in chart.rows)
