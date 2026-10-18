@@ -10,7 +10,7 @@ import unittest
 from dataclasses import dataclass, replace
 from datetime import datetime
 
-from ask_engine import Vocab, ask, interpret, suggestions, team_report
+from ask_engine import Vocab, ask, fmt, interpret, suggestions, team_report
 from metrics_engine import compute_match_metrics, round_eps
 from stats_db import StatsDB, nice_day, nice_time
 
@@ -402,6 +402,16 @@ class TestRankings(EngineTest):
 
 
 class TestTrends(EngineTest):
+    def test_everyday_trend_wording(self):
+        for question, metric in (("is my kd going up?", "kd"), ("is my win rate dropping?", "win_rate"),
+                                 ("has my KOST gone down?", "kost"), ("is my aim slipping?", "hs")):
+            answer = self.ask(question)
+            self.assertEqual((answer.query.kind, answer.query.metrics[0]), ("trend", metric), question)
+
+    def test_a_zero_difference_has_no_sign(self):
+        self.assertEqual(fmt(0, "signed"), "0")
+        self.assertEqual((fmt(3, "signed"), fmt(-2, "signed")), ("+3", "-2"))
+
     def test_kd_over_time(self):
         answer = self.ask("how has my K/D changed over time?")
         self.assertEqual(answer.query.kind, "trend")
