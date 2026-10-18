@@ -202,6 +202,43 @@ func main() {
 }
 ```
 
+## Code signing policy
+
+Free code signing for the Windows app is provided by [SignPath.io](https://about.signpath.io/),
+certificate by [SignPath Foundation](https://signpath.org/) (applied for; until it's approved,
+releases are unsigned and Windows SmartScreen warns about them).
+
+Only the R6 Match Stats Windows app's own files are signed: `R6MatchStats.exe`, `r6-dissect.exe`,
+and the installer and uninstaller. They are built from this repository's source by the
+**Windows app** GitHub Actions workflow (`.github/workflows/windows-app.yaml`) on GitHub's hosted
+runners, never on a personal computer, and only builds of a published release are signed.
+
+Team roles:
+
+- Committers and reviewers: [julio208920](https://github.com/julio208920)
+- Approvers: [julio208920](https://github.com/julio208920)
+
+Every signing request is approved by hand. Changes from other contributors are reviewed before
+they are merged, and the release workflow's tests and Microsoft Defender scan must pass before
+anything is published.
+
+## Privacy
+
+R6 Match Stats doesn't collect or send any personal data, usage statistics or telemetry, and it has
+no accounts or ads. Your replays and stats stay on your computer (see
+[Safety](scripts/README.md#safety)). The Windows app connects to other systems only for these:
+
+- **Team rosters:** once a day when it starts, it downloads the published NECC roster list from
+  this repository on GitHub (`raw.githubusercontent.com`). Nothing about you is sent.
+- **Updates:** when you open the **Get the Windows app** page, it asks GitHub's API for the latest
+  release.
+- **Events:** when you click **Check Liquipedia for new events**, it reads the public event list
+  from [Liquipedia](https://liquipedia.net/rainbowsix).
+
+Those sites see the request as any website would (your IP address and the app's name and
+version). The app's window talks to its own server on your computer (`127.0.0.1`), which isn't
+reachable from other machines, and Streamlit's usage statistics are turned off.
+
 #
 I would like to thank [stnokott](https://github.com/stnokott) for their work on r6-dissect, along with [draguve](https://github.com/draguve) & other contributors at [draguve/R6-Replays](https://github.com/draguve/R6-Replays) for their additional reverse engineering work.
 
