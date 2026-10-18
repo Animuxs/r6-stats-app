@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import unittest
+from datetime import datetime, timedelta
 
 import demo_season
-from ask_engine import Vocab, ask
+from ask_engine import Vocab, ask, interpret
 from assistant import answer_anything
 from stats_db import StatsDB, nice_time
 
@@ -59,6 +60,33 @@ class TestEverydayQuestions(unittest.TestCase):
 
     def test_what_operators_does_someone_play(self):  # was: their best operator by win rate
         self.assertIn("most played operator", self.answer("what operators do I play?"))
+
+    def test_last_night_and_tonight(self):  # were: the time of day ("plays best in the Late night")
+        played = datetime.strptime(self.mine[0]["played_at"][:19], "%Y-%m-%d %H:%M:%S")
+        morning_after = played.replace(hour=10) + timedelta(days=1)
+        query = interpret("my K/D last night", self.vocab, morning_after)
+        self.assertLessEqual(query.since, self.mine[0]["played_at"])
+        self.assertGreater(query.until, self.mine[0]["played_at"])
+        # past midnight, tonight is still the evening that began yesterday
+        after_midnight = played.replace(hour=1) + timedelta(days=1)
+        self.assertLessEqual(interpret("my K/D tonight", self.vocab, after_midnight).since, self.mine[0]["played_at"])
+        mate = self.db.query("SELECT player FROM match_players WHERE match_id = ? AND team = ? AND player_key != ?",
+                             [self.mine[0]["match_id"], self.mine[0]["team"], self.vocab.me])[0]["player"]
+        reply = answer_anything(f"how did {mate} do last night?", self.db, now=morning_after).text
+        self.assertTrue(reply.startswith(mate), reply)  # their numbers, not the session's recap
+
+    def test_when_do_i_play_best_or_worst(self):  # were: Match day's schedule; and "best" for "worst"
+        self.assertIn("play best in the", self.answer("what time do I play best?"))
+        self.assertIn("Match day", self.answer("when do we play next?"))
+        db = StatsDB(":memory:")
+        demo_season.load(db)
+        late = [m["match_id"] for m in self.mine[::2]]  # half the matches late at night, so there's a worst time
+        db._conn.execute(f"UPDATE matches SET played_at = substr(played_at, 1, 11) || '23:30:00' "
+                        f"WHERE match_id IN ({', '.join('?' * len(late))})", late)
+        best, worst = (answer_anything(f"when do I play {w}?", db).text for w in ("best", "worst"))
+        self.assertIn("play worst in the", worst)
+        self.assertNotEqual(best.split("**")[1], worst.split("**")[1])
+        db.close()
 
 
 if __name__ == "__main__":

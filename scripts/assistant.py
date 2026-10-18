@@ -114,7 +114,7 @@ _BAN_LOOSE = re.compile(r"\b(ban|veto|pick) (suggestions?|advice|ideas?)\b|\bwha
 _NOT_MAPS = re.compile(r"\b(on (attack|defen[cs]e)|attack|defen[cs]e|operators?|ops?|as)\b")
 _TIME_OF_DAY = re.compile(r"\b(morning|afternoon|evening|night|late|what time|time of day|which day|what day|"
                           r"weekdays?|weekends?|mondays?|tuesdays?|wednesdays?|thursdays?|fridays?|saturdays?|"
-                          r"sundays?|day of the week)\b")
+                          r"sundays?|day of the week|when (do|did) (i|we) play (best|better|worst|worse))\b")
 _CONSISTENT = re.compile(r"\b(consistent|consistency|inconsistent|steady|streaky|up and down|reliable|variance|"
                          r"volatile|swingy)\b")
 _IMPROVING = re.compile(r"\b(improv\w* the most|most improved|who\W*s improving|who is improving|who improved|"
@@ -151,9 +151,11 @@ _OPEN_PAGE = re.compile(r"^(open|go to|goto|take me to|navigate to|bring up|show
                         r"^(open|go to|goto|take me to|navigate to)\b")
 _SCOUT = re.compile(r"\b(scout|scouting|scouting report|intel on|tell me about|what do we know about)\b")
 # the schedule, not the stats: "who are we playing tonight?", "when's our next match?"
-_SCHEDULE = re.compile(r"\b(who (are|do|will) (we|i) (play|playing|face|facing)\b(?! (best|better|worse|worst|well|"
-                       r"badly|with|most|least|against))|when (do|are|will) (we|i) play(ing)?|"
-                       r"what time (do|are|will) (we|i) play|next (match|game|opponent|fixture)|whens our next|"
+_HOW_WELL = r"(?! (best|better|worse|worst|well|badly|with|most|least|against))"  # "when do I play best": stats
+_SCHEDULE = re.compile(r"\b(who (are|do|will) (we|i) (play|playing|face|facing)\b" + _HOW_WELL + r"|"
+                       r"when (do|are|will) (we|i) play(ing)?\b" + _HOW_WELL + r"|"
+                       r"what time (do|are|will) (we|i) play(ing)?\b" + _HOW_WELL + r"|"
+                       r"next (match|game|opponent|fixture)|whens our next|"
                        r"our schedule|my schedule|upcoming (matches|games|fixtures))\b")
 _LAST_PLAYED = re.compile(r"\b(when did (i|we) (last )?play|last time (i|we) played|when was my last (match|game)|"
                           r"how long since|last played|(what|which) map (did|have) (i|we) (last )?play(ed)?( last)?|"
@@ -784,8 +786,9 @@ def _when_best(question: str, db: StatsDB, vocab: Vocab) -> Reply:
     if not rows:
         return Reply(f"No matches for {who} yet.", "stats")
     fair = [r for r in rows if r["Matches"] >= 2] or rows
-    best = max(fair, key=lambda r: scores[r["When"]])
-    text = (f"{who} {'play' if who == 'You' else 'plays'} best {'on' if by_day else 'in the'} "
+    worst = bool(re.search(r"\b(worst|worse)\b", text)) and len(fair) > 1  # "when do I play worst?"
+    best = (min if worst else max)(fair, key=lambda r: scores[r["When"]])
+    text = (f"{who} {'play' if who == 'You' else 'plays'} {'worst' if worst else 'best'} {'on' if by_day else 'in the'} "
             f"**{best['When'] + ('s' if by_day else '')}**: EPS {best['EPS']}, K/D {best['K/D']} over {best['Matches']} "
             f"match{'es' if best['Matches'] != 1 else ''}.")
     if len(fair) < 2:
@@ -993,10 +996,6 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
         return _topic_reply(topic, question)  # "open the players page": what's there, and a link
     if _SCHEDULE.search(text):  # Match day has the schedule; the stats don't
         return _topic_reply(kb.topic("matchday"), question)
-    if _TONIGHT.search(text) and _find_metrics(text) and not _RECAP.search(text):  # "my kills last night"
-        question = re.sub(r"\blast night\b", "yesterday", re.sub(r"\btonight\b", "today", question, flags=re.I),
-                          flags=re.I)
-        text = _norm(question)
 
     matches = db.summary()["matches"]
     if matches:
@@ -1013,7 +1012,9 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
         reply.suggestions = [f"My {topic.title} over time" if topic.key in METRIC_WORDS else "Analyze my stats"]
         return reply
     # a session's recap: "how did I do last night?" (not the time of day, nor "where's the session recap?")
-    if matches and _RECAP.search(text) and not _HOW_TO.search(text):
+    # (a teammate named: "how did Typhoon do last night?" is their numbers, from Ask)
+    kind, key = _who(question, vocab) if matches else (None, None)
+    if matches and _RECAP.search(text) and not _HOW_TO.search(text) and (kind != "player" or key == vocab.me):
         return _with_question(_session_recap(db, vocab), question)
     # the app: "how do I add my matches?"
     if (topic := kb.guide(question)) and (topic.key in ("about", "privacy") or not (
