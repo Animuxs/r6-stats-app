@@ -168,6 +168,10 @@ class TestLinkFromAnswers(unittest.TestCase):
         self.assertEqual(reply.links, [("players", "See them side by side on Players",
                                         {"player": me.casefold(), "vs": mate.casefold()})])
         self.assertEqual(assistant.answer_anything("my K/D", db).links, [])
+        # a summary of one player links to their profile
+        self.assertEqual(assistant.answer_anything(f"tell me about {mate}", db).links,
+                         [("players", "Full profile on Players", {"player": mate.casefold()})])
+        self.assertEqual(assistant.answer_anything("how is our team doing", db).links, [])
         db.close()
 
 
