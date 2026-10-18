@@ -18,7 +18,7 @@ from metrics_engine import rows_csv
 from stats_db import nice_day
 from branding import current_theme, readable_accent
 from session import Session
-from tab import Tab
+from tab import PAGES, Tab
 from ui import md
 
 _FORMATS = {"ratio": "%.2f", "pct": "%.0f%%", "eps": "%d", "count": "%d", "signed": "%+d"}
@@ -110,6 +110,9 @@ class AskTab(Tab):
             self.show_answer(reply.answer, me)
             if reply.rows and not reply.answer.rows:
                 st.dataframe(reply.rows, column_order=reply.columns, hide_index=True)
+            for page, label, *params in reply.links:  # "compare me and Sacri": the two on Players
+                st.page_link(page=PAGES[page], label=label, icon=":material/arrow_forward:",
+                             query_params=params[0] if params else None)
         else:
             st.divider()
             show_message(as_message(reply))

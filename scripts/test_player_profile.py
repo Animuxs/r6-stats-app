@@ -155,5 +155,21 @@ class TestBests(unittest.TestCase):
         self.assertIsNone(pp.profile(self.db, "nobody").streak)
 
 
+class TestLinkFromAnswers(unittest.TestCase):
+    """Asking to compare two players links to Players with both of them picked."""
+
+    def test_two_players_link_to_players(self):
+        import assistant
+
+        db = StatsDB(":memory:")
+        demo_season.load(db)
+        me, mate = db.me(), db.teammates(db.me(), 1)[0][0]
+        reply = assistant.answer_anything(f"compare me and {mate}", db)
+        self.assertEqual(reply.links, [("players", "See them side by side on Players",
+                                        {"player": me.casefold(), "vs": mate.casefold()})])
+        self.assertEqual(assistant.answer_anything("my K/D", db).links, [])
+        db.close()
+
+
 if __name__ == "__main__":
     unittest.main()

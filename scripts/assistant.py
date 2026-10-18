@@ -52,7 +52,8 @@ class Reply:
     answer: Answer | None = None   # the Ask engine's answer, for its table and chart
     rows: list[dict[str, Any]] = field(default_factory=list)  # a table that isn't the Ask engine's
     columns: list[str] = field(default_factory=list)
-    links: list[tuple[str, str]] = field(default_factory=list)  # (tab key in tab.PAGES, label)
+    # (tab key in tab.PAGES, label), or (key, label, {query parameter: value}) to open it on something
+    links: list[tuple] = field(default_factory=list)
     suggestions: list[str] = field(default_factory=list)       # follow-up questions to offer
     question: str = ""             # what was asked
     resolved: str = ""             # the question as it was looked up, after reading it as a follow-up
@@ -850,8 +851,13 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
 
     answer = ask(question, db, now=now, vocab=vocab)
     if answer.ok or (answer.understood and answer.query and answer.query.kind != "unknown"):
-        return Reply(answer.headline, "stats", answered=True, answer=answer, question=question,
-                     suggestions=_next_questions(answer, vocab))
+        reply = Reply(answer.headline, "stats", answered=True, answer=answer, question=question,
+                      suggestions=_next_questions(answer, vocab))
+        q = answer.query
+        if answer.ok and q and q.kind == "compare" and q.compare == "player" and len(q.players) == 2:
+            reply.links.append(("players", "See them side by side on Players",
+                                {"player": q.players[0], "vs": q.players[1]}))
+        return reply
     reply = _best_guess(question, db, vocab, answer.notes)
     reply.question = question
     return reply
