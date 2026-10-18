@@ -290,6 +290,15 @@ class TestDemoSeason(unittest.TestCase):
         self.assertTrue(any("No matches yet" in i.value for i in at.info))
         self.assertNotIn("Lakeside Varsity", "".join(m.value for m in at.markdown if "identity-banner" in m.value))
 
+    def test_the_dashboard_gives_the_record_against_the_other_team(self):
+        """The demo's newest match is against Metro Tech: the Dashboard has how you'd done against them before."""
+        at = run_app()
+        at.query_params["demo"] = "1"
+        at.run()
+        lines = [c.value for c in at.caption if "before this match" in c.value]
+        self.assertEqual(len(lines), 1, [c.value for c in at.caption])
+        self.assertRegex(lines[0], r"^Against Metro Tech before this match · \d+–\d+ · last met ")
+
     def test_a_link_opens_the_demo(self):
         with mock.patch.object(app_info, "is_loopback", return_value=True):
             at = AppTest.from_file(APP, default_timeout=60)
