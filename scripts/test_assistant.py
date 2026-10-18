@@ -248,6 +248,12 @@ class TestEverydayQuestions(unittest.TestCase):
         self.assertEqual(self.answer("what is a retake").kind, "define")
         self.assertEqual(self.answer("how many plants do I have").text[:12], "You have 4 p"[:12])
 
+    def test_tell_me_is_who_asks(self):
+        """"Tell me about Sacri": the "me" asking isn't whose stats, so it's Sacri's, not you against Sacri."""
+        self.assertTrue(self.answer("tell me about Sacri").text.startswith("Sacri: "))
+        self.assertTrue(self.answer("show me my K/D").text.startswith("Your K/D is "))
+        self.assertIn("vs", self.answer("show me Sacri vs me").text)
+
     def test_the_last_match_score_is_from_your_side(self):
         from assistant import _last_played
 
