@@ -61,6 +61,11 @@ class TestEverydayQuestions(unittest.TestCase):
             self.assertEqual((query.metrics, query.operators), (["aces"], []), question)
         self.assertEqual(ask("my K/D as Ace", self.db, vocab=self.vocab).query.operators, ["Ace"])
 
+    def test_a_tag_no_match_has_says_how_to_tag(self):  # was: "No matches found" (the History page's starter)
+        for question in ("My record in scrims", "who's best in scrims?", "best map in scrims"):
+            self.assertTrue(self.answer(question).startswith("No match is tagged Scrim yet: tag your matches on "
+                                                             "Match History"), question)
+
     def test_what_operators_does_someone_play(self):  # was: their best operator by win rate
         self.assertIn("most played operator", self.answer("what operators do I play?"))
 

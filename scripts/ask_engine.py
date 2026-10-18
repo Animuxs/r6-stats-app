@@ -721,8 +721,7 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
     if len(tags) > 1:
         q.notes.append(f"Ask looks at one tag at a time, so this is every match: ask about {' and '.join(tags)} "
                        "matches separately.")
-    if q.tag and q.tag not in vocab.tags:  # finds nothing, and says why
-        q.notes.append(f"No match is tagged {q.tag} yet: tag your matches on Match History.")
+    # (a tag no match has finds nothing: the answer says why)
     # only wins / losses: the words go once read, so "wins" isn't also taken as the thing to count
     for won, pattern in ((1, r"\b(in|from|during|only) (my |our |the )?(wins|victories)\b|\bwhen (i|we) (won|win)\b|"
                              r"\bmatches (i|we) won\b"),
@@ -1297,7 +1296,13 @@ def _no_matches(q: Query, vocab: Vocab, understood: str) -> Answer:
     who = _subject(q, vocab)[0]
     if q.who == "opponents" and q.opponents:  # "PSU's K/D", their players never picked
         return Answer(False, understood, _untracked(q))
+    if q.tag and q.tag not in vocab.tags:  # "my record in scrims" before any match is tagged one
+        return Answer(False, understood, _untagged(q))
     return Answer(False, understood, f"No matches found for {who}{_filters_text(q)}.")
+
+
+def _untagged(q: Query) -> str:
+    return f"No match is tagged {q.tag} yet: tag your matches on Match History (select one, then pick its tag)."
 
 
 def _answer_value(db: StatsDB, q: Query, vocab: Vocab) -> Answer:
@@ -1439,6 +1444,8 @@ def _answer_rank(db: StatsDB, q: Query, vocab: Vocab) -> Answer:
     if not shown:
         if q.who == "opponents" and q.opponents and q.group == "player":
             return Answer(False, understood, _untracked(q), notes=notes)
+        if q.tag and q.tag not in vocab.tags:
+            return Answer(False, understood, _untagged(q), notes=notes)
         return Answer(False, understood, f"No {dim.label.lower()}s found{among}{_filters_text(q)}.", notes=notes)
     top = shown[0]
     kind = METRICS[first].kind
