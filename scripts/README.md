@@ -111,6 +111,7 @@ The other pages work from every match you've added, not just the one on the
 Dashboard:
 
 - **Ask**: type a question, or tap one of the examples (see below).
+- **Charts**: any chart of any stat (see below).
 - **The assistant**: the **Assistant** button in the bottom-right corner of every
   page opens a chat (see below). Turn it off with the **Assistant** switch in the
   sidebar.
@@ -215,6 +216,27 @@ folder; only for the session on the public website) and listed under **Reported
 questions** on Ask. **Send** opens a GitHub issue filled in with it, labeled
 `ask-report`, which you see and can edit before sending; no stats are included.
 Developers can list a PC's reports with `python scripts/question_reports.py`.
+
+**Charts** draws any stat any way. Type what you want to see, or pick it from the
+menus (a request fills them in, so it can be adjusted):
+
+- **line** and **area** for progress: "my K/D over time vs Sacri", "headshot rate
+  per week", "rolling average of my EPS", "running total of my kills";
+- **bar**, **horizontal bar** and **stacked bar** for comparisons: "win rate by map",
+  "top 5 players by EPS", "stacked bar of rounds won by map and side";
+- **pie** for shares: "pie of the operators I play";
+- **scatter** for two stats: "scatter K/D vs KOST for every player" (or operators, maps);
+- **heatmap** for two groupings: "heatmap of win rate by map and side";
+- **histogram** and **box plot** for how a stat is spread: "kills histogram", "box
+  plot of kills by side".
+
+Every stat Ask knows, for you, any players, saved teams, everyone, your teammates or
+your opponents (each player or team its own line or bar), filtered by map, side,
+operator, match type, tag, dates or your last N matches. **The numbers** shows the
+table (and a CSV); **Keep this chart** keeps it in a list for the session. Ask and
+the assistant draw charts too ("chart my K/D over time"), with a button to change
+it on Charts. The numbers come from the same queries as Ask (`chart_engine.py`),
+drawn with Altair (`chart_view.py`).
 
 **The assistant** is a chat in the corner of every page that answers everything
 Ask does, plus small talk and follow-ups: it remembers the conversation, so

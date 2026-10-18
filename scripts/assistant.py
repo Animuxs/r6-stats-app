@@ -5,6 +5,7 @@ The assistant's brain, shared by the chat panel on every page (assistant_ui.py) 
 Whatever is asked, it gives an answer: one of these, tried in order.
 
     small talk      "hi", "thanks", "what can you do?"
+    a chart         "chart my K/D over time", "pie of my operators" (chart_engine.py)
     analysis        "analyze my stats", "analyze Paltry", "analyze my team", "analyze my last match",
                     "what should I work on?": strengths, what to work on and why, form, maps, operators
     a stat          "what is KOST?" (assistant_knowledge.GLOSSARY)
@@ -33,6 +34,7 @@ from datetime import datetime
 from typing import Any
 
 import assistant_knowledge as kb
+import chart_engine
 from ask_engine import (METRIC_WORDS, METRICS, Answer, Query, Vocab, _aggregate, _clean,
                         _find_metrics, ask, fmt, fold, interpret, operator_table, rate, suggestions,
                         team_report, team_summary)
@@ -53,6 +55,7 @@ class Reply:
     suggestions: list[str] = field(default_factory=list)       # follow-up questions to offer
     question: str = ""             # what was asked
     resolved: str = ""             # the question as it was looked up, after reading it as a follow-up
+    chart: chart_engine.Chart | None = None  # a chart to draw
 
     @property
     def table(self) -> tuple[list[str], list[dict[str, Any]], dict[str, str]]:
@@ -60,6 +63,11 @@ class Reply:
         if self.answer and self.answer.ok and self.answer.rows:
             return self.answer.columns, self.answer.rows, self.answer.formats
         return self.columns, self.rows, {}
+
+    def next_questions(self) -> list[str]:
+        """Its suggestions, without the question just asked."""
+        asked = {fold(self.question).strip(" ?!."), fold(self.resolved).strip(" ?!.")}
+        return [s for s in self.suggestions if fold(s).strip(" ?!.") not in asked]
 
     def summary(self) -> str:
         """The reply in one line, for a report."""
@@ -90,6 +98,8 @@ _FOLLOW_UP = re.compile(r"^(and|what about|how about|same for|same but|now|ok an
 _WHY = re.compile(r"^(why|how come|how did you (get|work out|figure) (that|this)|explain( that| this)?|"
                   r"where did (that|this) come from|how do you know)\W*$", re.I)
 _MORE = re.compile(r"^(more|show more|tell me more|details|more details|go on|elaborate|expand)\W*$", re.I)
+_CHART = re.compile(r"\b(chart|charts|graph|graphs|plot|plots|visuali[sz]e|visuali[sz]ation|pie|donut|heat ?map|"
+                    r"scatter|histogram|box ?plot|bar chart|line chart|diagram)\b")
 _STREAK = re.compile(r"\bstreaks?\b|\bin a row\b|\bstraight (wins|losses)\b")
 _LAST_PLAYED = re.compile(r"\b(when did (i|we) (last )?play|last time (i|we) played|when was my last (match|game)|"
                           r"how long since|last played)\b")
@@ -636,6 +646,9 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
             reply = _topic_reply(topic, question)
             reply.text = "There are no matches in your stats yet, so there's nothing to look at. " + reply.text
             return reply
+    # a chart: "chart my K/D over time", "pie of the operators I play"
+    if _CHART.search(text) and not kb.guide(question):  # "how do charts work?" is the guide
+        return _with_question(chart_reply(question, db, vocab, now), question)
     # analysis: "analyze my team", "what should I work on?"
     if _ANALYZE.search(text) and not (stats_kind and clean_metrics and q.kind in ("trend", "rank")):
         reply = _analysis(question, db, vocab)
@@ -659,6 +672,18 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
     reply = _best_guess(question, db, vocab, answer.notes)
     reply.question = question
     return reply
+
+
+def chart_reply(question: str, db: StatsDB, vocab: Vocab, now: datetime | None = None) -> Reply:
+    """A chart of what was asked for."""
+    spec = chart_engine.parse(question, vocab, now)
+    chart = chart_engine.build(spec, db, vocab)
+    if not chart.ok:
+        return Reply(f"I couldn't draw that: {' '.join(chart.notes)}", "chart", answered=False,
+                     links=[("charts", "Build it on Charts")])
+    return Reply(f"**{chart.title}**. {chart_engine.describe(chart)}", "chart", chart=chart,
+                 links=[("charts", "Open on Charts to change it")],
+                 suggestions=["Pie of the operators I play", "Heatmap of win rate by map and side"])
 
 
 def _with_question(reply: Reply, question: str) -> Reply:
@@ -761,6 +786,7 @@ class Conversation:
 PAGE_STARTERS: dict[str, list[str]] = {
     "dashboard": ["Analyze my last match", "How do I add my matches?", "What is EPS?"],
     "ask": ["Analyze my stats", "What should I work on?", "My win streak"],
+    "charts": ["Chart my K/D over time", "Pie of the operators I play", "Heatmap of win rate by map and side"],
     "history": ["Show my last 5 matches", "My record in scrims", "When did I last play?"],
     "teams": ["Analyze my team", "Who do I win most with?", "What's my best map?"],
     "operators": ["My best operators", "Which operators do I play most?", "My K/D on attack"],

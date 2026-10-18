@@ -23,7 +23,7 @@ from ui import md
 from team_accounts import AccountError
 
 # each tab's page file, for links between tabs
-PAGES = {"dashboard": "report.py", "ask": "ask.py", "history": "history.py", "teams": "teams.py",
+PAGES = {"dashboard": "report.py", "ask": "ask.py", "charts": "charts.py", "history": "history.py", "teams": "teams.py",
          "operators": "operators.py", "matchday": "matchday.py", "team": "team_hub.py", "league": "league.py", "theme": "appearance.py", "download": "download.py",
          "dock": "dock.py"}
 

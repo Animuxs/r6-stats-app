@@ -3,7 +3,7 @@ app.py
 ======
 Entry point of the R6 Match Stats website and Windows app (Streamlit).
 Pages: report.py (Dashboard: one match's scoreboards), ask.py (plain-English questions about
-every match), history.py (every match), teams.py (build a team; season teams), operators.py,
+every match), charts.py (any chart of any stat), history.py (every match), teams.py (build a team; season teams), operators.py,
 league.py (your league or tournament: Liquipedia events, NECC divisions, or your own; NECC's school
 directory), appearance.py (team colors and logo) and download.py (get the Windows app). The assistant
 (assistant_ui.py) floats in the corner of every page. The sidebar's
@@ -70,6 +70,7 @@ if st.query_params.get("view") == "dock":
 page = st.navigation([
     st.Page("report.py", title="Dashboard", icon=":material/dashboard:", default=True),
     st.Page("ask.py", title="Ask", icon=":material/chat:"),
+    st.Page("charts.py", title="Charts", icon=":material/insights:"),
     st.Page("history.py", title="Match History", icon=":material/history:"),
     st.Page("teams.py", title="Team Analytics", icon=":material/groups:"),
     st.Page("operators.py", title="Operator Analytics", icon=":material/target:"),

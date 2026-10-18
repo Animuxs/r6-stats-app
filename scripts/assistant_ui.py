@@ -10,6 +10,7 @@ It can be turned off from the sidebar; the Windows app remembers that choice.
 
 from __future__ import annotations
 
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +18,8 @@ import streamlit as st
 
 from app_info import APP_VERSION, GITHUB_REPO, desktop_data_dir, is_public_host, is_windows_app
 from assistant import Conversation, Reply, starters
+from chart_engine import Chart, ChartSpec
+from chart_view import draw
 from desktop_settings import save_setting, setting
 from question_reports import delete_report, issue_url, load_reports, new_report, save_report
 from session import Session
@@ -28,10 +31,10 @@ _ON, _OPEN, _CHAT, _MEMORY, _PENDING = "assistant_on", "assistant_open", "assist
 _SESSION_REPORTS = "question_reports"  # on the public website, where nothing is kept on disk
 MAX_MESSAGES = 60  # the oldest go once a chat is longer
 # each page's title (app.py's st.navigation) -> its key in tab.PAGES
-PAGE_KEYS = {"Dashboard": "dashboard", "Ask": "ask", "Match History": "history", "Team Analytics": "teams",
+PAGE_KEYS = {"Dashboard": "dashboard", "Ask": "ask", "Charts": "charts", "Match History": "history", "Team Analytics": "teams",
              "Operator Analytics": "operators", "Match day": "matchday", "Team hub": "team",
              "League & Team": "league", "Team Theme": "theme", "Get the Windows app": "download"}
-_ICONS = {"dashboard": ":material/dashboard:", "ask": ":material/chat:", "history": ":material/history:",
+_ICONS = {"dashboard": ":material/dashboard:", "ask": ":material/chat:", "charts": ":material/insights:", "history": ":material/history:",
           "teams": ":material/groups:", "operators": ":material/target:", "matchday": ":material/event:",
           "team": ":material/badge:", "league": ":material/emoji_events:", "theme": ":material/palette:",
           "download": ":material/download:"}
@@ -156,9 +159,18 @@ def as_message(reply: Reply) -> dict[str, Any]:
     answer = reply.answer
     return {"role": "assistant", "text": reply.text, "kind": reply.kind, "answered": reply.answered,
             "columns": columns, "rows": rows[:12], "more_rows": max(0, len(rows) - 12), "formats": formats,
-            "links": reply.links, "suggestions": reply.suggestions, "question": reply.question,
+            "links": reply.links, "suggestions": reply.next_questions(), "question": reply.question,
             "resolved": reply.resolved, "understood": answer.understood if answer else "",
-            "notes": list(answer.notes) if answer else [], "plain": reply.kind == "stats"}
+            "notes": list(answer.notes) if answer else [], "plain": reply.kind == "stats",
+            "chart": asdict(reply.chart) if reply.chart else None}
+
+
+def _chart(message: dict[str, Any]) -> Chart | None:
+    """The chart a message keeps, rebuilt for drawing."""
+    data = message.get("chart")
+    if not data:
+        return None
+    return Chart(**{**data, "spec": ChartSpec(**data["spec"])})
 
 
 def show_reply(message: dict[str, Any]) -> None:
@@ -172,6 +184,8 @@ def show_reply(message: dict[str, Any]) -> None:
         st.info(text, icon=":material/lightbulb:")
     for note in message.get("notes", []):
         st.caption(md(note))
+    if chart := _chart(message):
+        draw(chart, height=260)
     if message.get("rows"):
         config = {c: st.column_config.NumberColumn(format=_FORMATS[k]) for c, k in message.get("formats", {}).items()
                   if k in _FORMATS}
@@ -180,7 +194,7 @@ def show_reply(message: dict[str, Any]) -> None:
         if message.get("more_rows"):
             st.caption(f"…and {message['more_rows']} more. Open it on Ask for the whole table.")
     for page, label in message.get("links", []):
-        if page in PAGES:
+        if page in PAGES and not (page == "charts" and message.get("kind") == "chart"):
             st.page_link(page=PAGES[page], label=label, icon=_ICONS.get(page, ":material/arrow_forward:"))
 
 
@@ -203,6 +217,12 @@ def _open_on_ask(question: str) -> None:
     session.set("assistant_go_ask", True)
 
 
+def _open_on_charts(question: str) -> None:
+    session = Session()
+    session.set("chart_from_elsewhere", question)
+    session.set("assistant_go_charts", True)
+
+
 def _clear() -> None:
     session = Session()
     session.set(_CHAT, [])
@@ -214,6 +234,8 @@ def _panel(page: str | None) -> None:
     session = Session()
     if session.pop("assistant_go_ask", False):
         switch_to("ask")
+    if session.pop("assistant_go_charts", False):
+        switch_to("charts")
     with st.container(key="r6_assistant"):
         if not session.get(_OPEN, False):
             st.button("Assistant", key="assistant_launch", icon=":material/forum:", on_click=session.set,
@@ -276,6 +298,9 @@ def _message(session: Session, i: int, message: dict[str, Any], page: str | None
         question = message.get("question", "")
         if not question:
             return
+        if message.get("kind") == "chart":
+            st.button("Change it on Charts", key=f"assistant_chart_{i}", icon=":material/tune:", type="tertiary",
+                      on_click=_open_on_charts, args=(question,))
         if message.get("kind") == "stats":
             st.button("Open on Ask", key=f"assistant_ask_{i}", icon=":material/open_in_full:", type="tertiary",
                       on_click=_open_on_ask, args=(message.get("resolved") or question,))

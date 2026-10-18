@@ -32,6 +32,12 @@ def _set_question(text: str) -> None:
     session.set("ask_now", True)
 
 
+def _to_charts(question: str) -> None:
+    session = Session()
+    session.set("chart_from_elsewhere", question)
+    session.set("ask_go_charts", True)
+
+
 def _chart(answer: Answer, me: str | None) -> None:
     """The answer as a chart, in the table's order (matches oldest first, rankings best first), with
     your own bar picked out in a ranking of players."""
@@ -59,6 +65,8 @@ class AskTab(Tab):
     title, name = "Ask", "ask"
 
     def render(self) -> None:
+        if self.session.pop("ask_go_charts", False):
+            self.go_to("charts")
         st.caption("Ask anything about your matches in plain English: trends, maps, operators, teammates, "
                    "your team. Ask for an analysis, what a stat means or how to use the app, too. Everything stays "
                    "on this computer.")
@@ -93,16 +101,21 @@ class AskTab(Tab):
     def show_reply(self, reply: Reply, me: str | None) -> None:
         """Any reply: a stats answer with its chart and table, or the assistant's words; then follow-up
         questions, and the Report button (for an answer that missed, too)."""
-        if reply.kind == "stats" and reply.answer is not None:
+        if reply.chart is not None:
+            st.divider()
+            show_message(as_message(reply))
+            st.button("Change it on Charts", icon=":material/tune:", key="ask_to_charts", on_click=_to_charts,
+                      args=(reply.question,))
+        elif reply.kind == "stats" and reply.answer is not None:
             self.show_answer(reply.answer, me)
             if reply.rows and not reply.answer.rows:
                 st.dataframe(reply.rows, column_order=reply.columns, hide_index=True)
         else:
             st.divider()
             show_message(as_message(reply))
-        if reply.suggestions:
-            columns = st.columns(min(3, len(reply.suggestions)))
-            for i, follow in enumerate(reply.suggestions[:3]):
+        if follow_ups := reply.next_questions():
+            columns = st.columns(min(3, len(follow_ups)))
+            for i, follow in enumerate(follow_ups[:3]):
                 columns[i].button(follow, key=f"ask_next_{i}", on_click=_set_question, args=(follow,),
                                   icon=":material/subdirectory_arrow_right:", width="stretch")
         understood = reply.answer.understood if reply.answer else ""

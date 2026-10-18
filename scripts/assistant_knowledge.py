@@ -64,6 +64,15 @@ GUIDE: list[Topic] = [
           "counts and match lists, with a table and a chart. If it can't answer something the way you asked, "
           "press **Report** so the developers can add it.",
           "ask", ("What's my best map?", "Top 5 players by EPS")),
+    Topic("charts", "Charts",
+          ("charts", "chart", "graph", "graphs", "plot", "visualize", "visualise", "visual", "pie chart",
+           "heatmap", "scatter", "histogram"),
+          "**Charts** draws any stat any way. Type what you want to see, like “my K/D over time vs Sacri”, "
+          "“pie of the operators I play”, “heatmap of win rate by map and side” or “scatter K/D vs KOST for every "
+          "player”, or pick the chart, stat, grouping, players and filters from the menus. Lines, areas, bars, "
+          "stacked bars, pies, scatters, heatmaps, histograms and box plots, with the numbers as a CSV. You can also "
+          "just ask me for a chart.",
+          "charts", ("My K/D over time", "Pie of the operators I play")),
     Topic("history", "Match History",
           ("match history", "history", "past matches", "old matches", "tag a match", "tags", "notes", "note",
            "video link", "delete a match", "remove a match", "scrim tag", "edit a match"),
