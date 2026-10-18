@@ -239,11 +239,9 @@ def _round(value: float | None, digits: int) -> float | int | None:
 
 # ------------------------------------------------------------- two players --
 def leader(key: str, a: Any, b: Any) -> int | None:
-    """Which of two values is better for this stat: 0, 1, or None for a tie (or nothing to compare)."""
-    if a is None or b is None:
-        return None
-    a, b = round(a, 2), round(b, 2)
-    if a == b:
+    """Which of two values is better for this stat: 0, 1, or None for a tie (or nothing to compare). Values that
+    look the same ("61%" and "61%", like Ask's "level") are a tie."""
+    if a is None or b is None or fmt(a, METRICS[key].kind) == fmt(b, METRICS[key].kind):
         return None
     better_a = a > b if METRICS[key].higher_is_better else a < b
     return 0 if better_a else 1

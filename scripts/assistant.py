@@ -29,15 +29,15 @@ import ast
 import difflib
 import operator as op
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from typing import Any
 
 import assistant_knowledge as kb
 import chart_engine
-from ask_engine import (_MONTH, METRIC_WORDS, METRICS, Answer, Query, Vocab, _aggregate, _clean,
-                        _find_metrics, ask, fmt, fold, interpret, operator_table, rate, suggestions,
-                        team_report, team_summary)
+from ask_engine import (_MONTH, _SQL, METRIC_WORDS, METRICS, Answer, Query, Vocab, _aggregate, _cap, _clean,
+                        _filters_text, _find_metrics, _match_ids, _plural, ask, fmt, fold, interpret, operator_table,
+                        rate, suggestions, team_report, team_summary)
 import recap
 from map_pool import map_pool, veto_hint
 from metrics_engine import round_eps
@@ -134,15 +134,23 @@ _SITUATION = re.compile(r"\b(post ?plants?|after (we|i) plant(ed)?|when (we|i) p
                         r"retakes?|retaking|after (they|the enemy|the other team) plant(ed)?|plant (rate|%|percent\w*)|"
                         r"how often (do|did) (we|i) plant|man ?down|men down|down (a|one|two|2) (players?|men|man)|"
                         r"player disadvantage|outnumbered|stop(ped)? the plant|deny the plant|situations?)\b")
-_HOW_TO = re.compile(r"^(how (do|can|to)|where|what is|what's|what does)\b")  # about the app, not the stats
-# a sitting's recap: "how did I do last night?", "recap tonight", "my last session"
-_RECAP = re.compile(r"\b(last night|tonight|last session|this session|latest session|session recap|recap|"
-                    r"(last|tonight'?s|today'?s) (scrims?|matches|games))\b")
+_HOW_TO = re.compile(r"^(how (do|can|to)|where|what is|what's|what does|is there)\b")  # about the app, not the stats
+# a sitting's recap: "how did I do last night?", "recap tonight", "my last session" (not "who do we play tonight?",
+# nor "how many kills did I get last night?": that's a stat, from yesterday)
+_RECAP = re.compile(r"\b(session recap|recap|last session|this session|latest session|"
+                    r"how (did|was|were|is|went|has|have|d)\b.{0,30}\b(last night|tonight)|"
+                    r"(last night|tonight)\W*s? (scrims?|matches|games|session)|(last|today\W*s) (scrims|session))\b")
+_TONIGHT = re.compile(r"\b(last night|tonight)\b")
+# the schedule, not the stats: "who are we playing tonight?", "when's our next match?"
+_SCHEDULE = re.compile(r"\b(who (are|do|will) (we|i) (play|playing|face|facing)\b(?! (best|better|worse|worst|well|"
+                       r"badly|with|most|least|against))|when (do|are|will) (we|i) play(ing)?|"
+                       r"what time (do|are|will) (we|i) play|next (match|game|opponent|fixture)|whens our next|"
+                       r"our schedule|my schedule|upcoming (matches|games|fixtures))\b")
 _LAST_PLAYED = re.compile(r"\b(when did (i|we) (last )?play|last time (i|we) played|when was my last (match|game)|"
                           r"how long since|last played)\b")
 _FIRST_PLAYED = re.compile(r"\b(first (match|game)|when did (i|we) (start|first play)|oldest (match|game))\b")
 _DUO = re.compile(r"\b(duo|who do (i|we) win (the )?most with|best teammates?|who should i (play|queue) with|"
-                  r"who (do i|i) play best with|win rate with (each|my) teammates?|best partner|"
+                  r"who (do i|i|do we|we) play best with|win rate with (each|my) teammates?|best partner|"
                   r"who (is|s) my best (teammate|partner|duo))\b")
 
 _GAME_GUIDE = re.compile(r"\bwhat (does|do|is) \w+( \w+)? (do|for|good at|like)\b|\bhow (does|do|to) (i )?(play|use) \w+|"
@@ -524,20 +532,30 @@ def _last_played(question: str, db: StatsDB, vocab: Vocab, first: bool = False) 
                  suggestions=["Analyze my last match", "Show my last 5 matches"])
 
 
-def _situations(text: str, db: StatsDB, vocab: Vocab) -> Reply:
+def _situations(text: str, db: StatsDB, vocab: Vocab, q: Query | None = None) -> Reply:
     """How your side does in the situations that decide rounds: post-plant, retakes, man down. Your saved team's
-    matches if you have one (like Team Analytics), else your side of every match you're in."""
+    matches if you have one (like Team Analytics), else your side of every match you're in; kept to the
+    question's map, opponent, dates, match type, tag or last N matches."""
     team = _my_team(vocab, db)
     if team:
         players, need, who = vocab.rosters[team], min(3, len(vocab.rosters[team])), team
     elif vocab.me:
-        players, need, who = [vocab.me], 1, "Your side"
+        players, need, who = [vocab.me], 1, "your side"
     else:
         return Reply("I need to know which player is you first: add a match you recorded.", "stats", answered=False)
-    s = team_summary(db, players, need)
+    ids, where = None, ""
+    if q and (q.maps or q.opponents or q.since or q.until or q.match_type or q.tag or q.last_matches
+              or q.won is not None):
+        scope = replace(q, who="me", side=None, kind="value", group=None, conditions=[])
+        ids = _match_ids(db, scope, vocab, "match")
+        if ids is None:
+            sql = _SQL(scope, vocab, "match")
+            ids = [r["match_id"] for r in db.query(f"SELECT DISTINCT t.match_id FROM {sql.from_}{sql.where_sql()}",
+                                                   sql.params)]
+        where = _filters_text(replace(scope, conditions=[], last_matches=None))
+    s = team_summary(db, players, need, ids)
     if not s["rounds"]:
-        return Reply(f"{who} has no rounds with the details this needs yet: replays from recent seasons have them.",
-                     "stats")
+        return Reply(f"{_cap(who)} has no rounds with the details this needs{where} yet.", "stats")
 
     def pct(part: int, whole: int) -> str:
         return f"{fmt(rate(part, whole), 'pct')} ({part} of {whole})" if whole else "— (no rounds yet)"
@@ -573,7 +591,9 @@ def _situations(text: str, db: StatsDB, vocab: Vocab) -> Reply:
     for r in rows:
         r["%"] = None if r["%"] is None else round(r["%"])
     note = "" if team else " Save your team on Team Analytics to count just its matches."
-    return Reply(" ".join(lines[k] for k in order) + note, "stats", rows=rows, columns=["Situation", "%", "Rounds"],
+    span = f"your last {_plural(q.last_matches, 'match')}" if q and q.last_matches else _plural(s["maps"], "match")
+    head = f"Over {span}{where}: " if ids is not None else ""
+    return Reply(head + " ".join(_cap(lines[k]) for k in order) + note, "stats", rows=rows, columns=["Situation", "%", "Rounds"],
                  links=[("teams", "Team Analytics")], suggestions=["Analyze my team", "Which opponent is the hardest?"])
 
 
@@ -929,6 +949,13 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
         question = f"how did I do {'in ' if re.fullmatch(_MONTH, period) else ''}{period}"
         text = _norm(question)
 
+    if _SCHEDULE.search(text):  # Match day has the schedule; the stats don't
+        return _topic_reply(kb.topic("matchday"), question)
+    if _TONIGHT.search(text) and _find_metrics(text) and not _RECAP.search(text):  # "my kills last night"
+        question = re.sub(r"\blast night\b", "yesterday", re.sub(r"\btonight\b", "today", question, flags=re.I),
+                          flags=re.I)
+        text = _norm(question)
+
     matches = db.summary()["matches"]
     if matches:
         vocab = vocab or Vocab.from_db(db)
@@ -967,10 +994,12 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
     if _STREAK.search(text):
         return _with_question(_streaks(question, db, vocab), question)
     if _SITUATION.search(text):  # "our post-plant win rate" too: it names a stat, but one only rounds can tell
-        return _with_question(_situations(text, db, vocab), question)
+        return _with_question(_situations(text, db, vocab, q), question)
     if _BENCH.search(text):
         return _with_question(_bench(db, vocab), question)
-    if _LAST_RESULT.search(text) or _LAST_PLAYED.search(text):
+    one_last = _LAST_RESULT.search(text) and not re.search(r"\blast (\d+|two|three|four|five|six|seven|eight|nine|ten)\b",
+                                                             text) and not (q and (q.maps or q.opponents or q.operators))
+    if one_last or _LAST_PLAYED.search(text):
         return _with_question(_last_played(question, db, vocab), question)
     if _FIRST_PLAYED.search(text) and not clean_metrics:
         return _with_question(_last_played(question, db, vocab, first=True), question)
@@ -1076,8 +1105,10 @@ class Conversation:
                 found, _ = vocab.find(resolved)
                 person = next((e for e in found if e.kind == "player"), None)
                 answer = reply.answer
-                top = answer.rows[0].get("Player") if answer and answer.ok and answer.rows and \
-                    answer.query and answer.query.group == "player" else None
+                top = answer.rows[0].get("Player") if answer and answer.ok and answer.rows and answer.query and \
+                    answer.query.kind == "rank" and answer.query.group == "player" else None
+                if person and person.value == vocab.me:  # "compare me and Paltry": "him" is Paltry, not you
+                    person = next((e for e in found if e.kind == "player" and e.value != vocab.me), person)
                 # "who should I bench?" then "analyze him": the player the answer named, before the one asked about
                 if subject := reply.subject or top or (person.display if person else None):
                     self.state["last_player"] = subject

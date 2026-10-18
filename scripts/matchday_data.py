@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from html import escape
 
+from ask_engine import OPPONENT_SQL
 from stats_db import nice_day
 
 AVAILABILITY = ("Unconfirmed", "Confirmed", "Unavailable")
@@ -67,19 +68,20 @@ def demo_workspace(today: date | None = None) -> MatchdayWorkspace:
        "Example preparation notes: review retakes and confirm the map veto before match time.")
 
 
-def head_to_head(db, opponent: str, before: str | None = None) -> str | None:
+def head_to_head(db, opponent: str, before: str | None = None, leave_out: str | None = None) -> str | None:
     """Your record against a team, by the name the replays give it, and how the last meeting went:
     "Your record: 1–1 · last met Oct 9, lost 5–7"; with `before` (a played_at), only the matches before
-    then. None when there's no name or it's not known who you are."""
+    then, and never the match `leave_out` (its id: the one on screen, whose saved time can be a little
+    earlier than the replay's). None when there's no name or it's not known who you are."""
     me = db.me()
     if not me or not opponent.strip():
         return None
     rows = db.query(
-        """SELECT m.played_at, m.score0, m.score1, mp.team, mp.won FROM match_players mp
-           JOIN matches m ON m.match_id = mp.match_id
-           WHERE mp.player_key = ? AND lower(trim(CASE mp.team WHEN 0 THEN m.team1 ELSE m.team0 END)) = ?
-             AND (? IS NULL OR m.played_at < ?)
-           ORDER BY m.played_at DESC""", [me.casefold(), " ".join(opponent.casefold().split()), before, before])
+        f"""SELECT m.played_at, m.score0, m.score1, t.team, t.won FROM match_players t
+            JOIN matches m ON m.match_id = t.match_id
+            WHERE t.player_key = ? AND LOWER({OPPONENT_SQL}) = ? AND m.match_id IS NOT ?
+              AND (? IS NULL OR m.played_at < ?)
+            ORDER BY m.played_at DESC""", [me.casefold(), " ".join(opponent.casefold().split()), leave_out, before, before])
     if not rows:
         return "First meeting in your stats"
     wins, losses = sum(r["won"] == 1 for r in rows), sum(r["won"] == 0 for r in rows)

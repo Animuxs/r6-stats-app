@@ -149,6 +149,25 @@ _KEY_OF = {p: k for k, ps in METRIC_WORDS.items() for p in ps}
 # ------------------------------------------------------------- dimensions --
 
 
+# team names a replay gives when it has none of its own: not an opponent anyone means
+# (Ranked replays say "YOUR TEAM" and "ENEMY TEAM": season_stats.GENERIC_TEAM_NAMES, which the season tracker uses)
+_NAMELESS_TEAMS = {n.casefold() for n in GENERIC_TEAM_NAMES} | {
+    "team 1", "team 2", "opponents", "opponent", "enemy", "enemies", "allies", "attackers", "defenders", "yellow",
+    "alpha", "bravo"}
+
+
+def named_team(name: str | None) -> bool:
+    """Whether a team name is a real one, not a replay's stand-in ("Team A", "Blue") or nothing."""
+    return bool(name and name.strip()) and " ".join(name.casefold().split()) not in _NAMELESS_TEAMS
+
+
+# the team each row's player faced, trimmed, or NULL for a stand-in name: every use of opponents (Ask's
+# filter and ranking, Charts, Players, Match day) reads it from here, so they all agree
+_OPPONENT_NAME = "TRIM(CASE t.team WHEN 0 THEN m.team1 ELSE m.team0 END)"
+OPPONENT_SQL = (f"CASE WHEN LOWER({_OPPONENT_NAME}) IN ({', '.join(repr(n) for n in sorted(_NAMELESS_TEAMS))}) "
+                f"OR {_OPPONENT_NAME} = '' THEN NULL ELSE {_OPPONENT_NAME} END")
+
+
 @dataclass(frozen=True)
 class Dim:
     key: str
@@ -163,7 +182,7 @@ DIMS: dict[str, Dim] = {d.key: d for d in [
     Dim("side", "Side", "t.side"),
     Dim("site", "Site", "t.site"),
     Dim("match_type", "Match type", "m.match_type"),
-    Dim("opponent", "Opponent", "CASE t.team WHEN 0 THEN m.team1 ELSE m.team0 END"),
+    Dim("opponent", "Opponent", OPPONENT_SQL),
     Dim("match", "Match", "t.match_id"),
     Dim("player_match", "Player · match", "t.player_key || ' ' || t.match_id"),  # one player's one match
     Dim("day", "Day", "substr(m.played_at, 1, 10)"),
@@ -300,25 +319,13 @@ class Entity:
     end: int
 
 
-# team names a replay gives when it has none of its own: not an opponent anyone means
-# (Ranked replays say "YOUR TEAM" and "ENEMY TEAM": season_stats.GENERIC_TEAM_NAMES, which the season tracker uses)
-_NAMELESS_TEAMS = {n.casefold() for n in GENERIC_TEAM_NAMES} | {
-    "team 1", "team 2", "opponents", "opponent", "enemy", "enemies", "allies", "attackers", "defenders", "yellow",
-    "alpha", "bravo"}
-
-
-def named_team(name: str | None) -> bool:
-    """Whether a team name is a real one, not a replay's stand-in ("Team A", "Blue") or nothing."""
-    return bool(name and name.strip()) and " ".join(name.casefold().split()) not in _NAMELESS_TEAMS
-
-
 def opponent_names(db: StatsDB, me: str | None) -> list[str]:
     """The teams `me` has played against, by the names the replays give them (not "Team A" or "Blue")."""
     if not me:
         return []
-    rows = db.query("SELECT DISTINCT CASE mp.team WHEN 0 THEN m.team1 ELSE m.team0 END AS name FROM match_players mp "
-                    "JOIN matches m ON m.match_id = mp.match_id WHERE mp.player_key = ?", [me.casefold()])
-    return sorted({r["name"].strip() for r in rows if named_team(r["name"])}, key=str.casefold)
+    rows = db.query(f"SELECT DISTINCT {OPPONENT_SQL} AS name FROM match_players t "
+                    "JOIN matches m ON m.match_id = t.match_id WHERE t.player_key = ?", [me.casefold()])
+    return sorted({r["name"] for r in rows if named_team(r["name"])}, key=str.casefold)
 
 
 @dataclass
@@ -769,9 +776,9 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
     if q.most_played:
         q.order = "high"
     if group == "opponent":  # a hard opponent is one you win little against, an easy one much
-        if _has(r"\b(hardest|toughest|strongest|best|struggle|lose to|lost to)\b", text):
+        if _has(r"\b(hardest|toughest|strongest|struggle|lose to|lost to)\b", text):
             q.order = "worst"
-        elif _has(r"\b(easiest|weakest|worst|beat)\b", text):
+        elif _has(r"\b(easiest|weakest)\b", text):
             q.order = "best"
     if m := re.search(r"\b(?:top|best|worst|bottom|highest|lowest) " + _NUM + r"\b", text) or \
             re.search(r"\b" + _NUM + r" (?:best|worst|top|highest|lowest|most|least)\b", text):
@@ -949,7 +956,7 @@ class _SQL:
         if q.until:
             self.where.append("m.played_at < ?")
             self.params.append(q.until)
-        if q.group in ROUND_DIMS and self.level == "round":
+        if (q.group in ROUND_DIMS and self.level == "round") or q.group == "opponent":
             self.where.append(f"{DIMS[q.group].sql} IS NOT NULL")
 
     def only(self, match_ids: list[str] | None) -> "_SQL":
