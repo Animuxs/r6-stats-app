@@ -5,8 +5,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from html import escape
 
-from ask_engine import OPPONENT_SQL
-from stats_db import nice_day
+from scouting import scout
 
 AVAILABILITY = ("Unconfirmed", "Confirmed", "Unavailable")
 
@@ -73,22 +72,22 @@ def head_to_head(db, opponent: str, before: str | None = None, leave_out: str | 
     "Your record: 1–1 · last met Oct 9, lost 5–7"; with `before` (a played_at), only the matches before
     then, and never the match `leave_out` (its id: the one on screen, whose saved time can be a little
     earlier than the replay's). None when there's no name or it's not known who you are."""
-    me = db.me()
-    if not me or not opponent.strip():
+    if not db.me() or not opponent.strip():
         return None
-    rows = db.query(
-        f"""SELECT m.played_at, m.score0, m.score1, t.team, t.won FROM match_players t
-            JOIN matches m ON m.match_id = t.match_id
-            WHERE t.player_key = ? AND LOWER({OPPONENT_SQL}) = ? AND m.match_id IS NOT ?
-              AND (? IS NULL OR m.played_at < ?)
-            ORDER BY m.played_at DESC""", [me.casefold(), " ".join(opponent.casefold().split()), leave_out, before, before])
-    if not rows:
+    report = scout(db, opponent, before, leave_out)  # the same meetings as Match day's scouting report
+    if not report.meetings:
         return "First meeting in your stats"
-    wins, losses = sum(r["won"] == 1 for r in rows), sum(r["won"] == 0 for r in rows)
-    last = rows[0]
-    own, other = (last["score1"], last["score0"]) if last["team"] == 1 else (last["score0"], last["score1"])
-    result = {1: "won", 0: "lost"}.get(last["won"], "drew")
-    return f"Your record: {wins}–{losses} · last met {nice_day(last['played_at'])}, {result} {own}–{other}"
+    wins, losses, draws = report.record
+    last = report.meetings[0]
+    when = f" {last['When']}" if last["When"] else ""
+    return (f"Your record: {wins}–{losses}" + (f"–{draws}" if draws else "")
+            + f" · last met{when}, {last['Result'].lower()} {last['Score']}")
+
+
+def fixture_when(fixture: dict, zone: bool = True) -> str:
+    """When a fixture is, the same everywhere: "Mon, Oct 19 · 19:00 · Central Time"."""
+    when = f"{datetime.fromisoformat(fixture['when']):%a, %b %d · %H:%M}"
+    return when + (f" · {fixture['timezone']}" if zone and fixture.get("timezone") else "")
 
 
 def panel_html(workspace: MatchdayWorkspace, recent: list[dict], roster: list[str], demo: bool = False,
@@ -98,7 +97,7 @@ def panel_html(workspace: MatchdayWorkspace, recent: list[dict], roster: list[st
     label = "Example schedule · demo only" if demo else "Manually entered schedule"
     cards = []
     for fixture in workspace.upcoming()[:3]:
-        when = datetime.fromisoformat(fixture["when"]).strftime("%a, %b %d · %H:%M")
+        when = fixture_when(fixture, zone=False)
         record = (records or {}).get(fixture["opponent"].casefold())
         record_html = f'<small class="md-record">{esc(record)}</small>' if record else ""
         cards.append(f'<article class="md-fixture"><small>{esc(when)} · {esc(fixture["timezone"])}</small>'

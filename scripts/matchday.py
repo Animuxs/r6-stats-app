@@ -6,7 +6,7 @@ from uuid import uuid4
 import streamlit as st
 
 from ask_engine import opponent_names
-from matchday_data import AVAILABILITY, MatchdayWorkspace
+from matchday_data import AVAILABILITY, MatchdayWorkspace, fixture_when
 from scouting import scout
 from tab import Tab
 from ui import md
@@ -44,8 +44,7 @@ class MatchdayTab(Tab):
         if workspace.fixtures:
             choices = {f["id"]: f for f in workspace.fixtures}
             selected = st.selectbox("Saved fixture", list(choices),
-                                    format_func=lambda key: f'{datetime.fromisoformat(choices[key]["when"]):%a %b %d · %H:%M} · '
-                                                            f'{choices[key]["opponent"]}')
+                                    format_func=lambda key: f'{fixture_when(choices[key])} · {choices[key]["opponent"]}')
             if st.button("Remove fixture"):
                 workspace.fixtures = [f for f in workspace.fixtures if f["id"] != selected]
                 self.session.save_matchday(workspace)
@@ -86,7 +85,9 @@ class MatchdayTab(Tab):
         """A report on a team you've played: the next fixture's opponent first, then everyone else you've met."""
         with self.stats() as db:
             met = opponent_names(db, db.me())
-            upcoming = [f["opponent"] for f in workspace.upcoming()]
+            spelled = {" ".join(n.casefold().split()): n for n in met}  # a fixture's "metro tech" is Metro Tech
+            upcoming = [spelled.get(" ".join(f["opponent"].casefold().split()), f["opponent"].strip())
+                        for f in workspace.upcoming()]
             choices = list(dict.fromkeys(upcoming + met))
             if not choices:
                 return

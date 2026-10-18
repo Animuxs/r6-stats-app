@@ -711,7 +711,8 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
     if group == "rank":  # "where do I rank", "leaderboard": players, unless it says what else to rank
         group = next((g for g in ("map", "operator", "side", "site") if _has(_GROUP_WORDS[g], text)), "player")
     if q.most_played and group is None:
-        group = "operator" if q.operators or _has(r"\b(characters?|mains?)\b", text) else "map"
+        group = "operator" if q.operators or (_has(r"\b(characters?|mains?)\b", text)
+                                              and not _has(r"\bmaps?\b", text)) else "map"
     if attack and defense:
         group = "side"
     elif attack or defense:
@@ -767,9 +768,12 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
         q.metrics = [m for m in q.metrics if m not in SAMPLE_METRICS]  # "how many matches have we won": wins
     if not q.metrics and counting:
         q.metrics = [m for m in found if m in SAMPLE_METRICS][:1]
-    if counting and "win_rate" in q.metrics:  # "how many matches did we win?": a count, not a rate
+    if counting and "win_rate" in q.metrics and not _has(r"\bhow often\b", text):  # "how many matches did we win?"
         q.metrics = list(dict.fromkeys("wins" if m == "win_rate" else m for m in q.metrics))
-    if set(q.metrics) & RESULT_METRICS and _has(r"\brounds?\b", text):  # "how many rounds did we win on Border?"
+    # "how many rounds did we win on Border?", "rounds lost", "my round win rate" (not "kills per round")
+    if set(q.metrics) & RESULT_METRICS and _has(r"\brounds? (won|lost|wins?|losses|win rate|win %)\b|"
+                                                 r"\b(won|lost|win|lose|wins|losses) (\w+ ){0,3}rounds?\b|"
+                                                 r"\brounds? (did|do|have|has) \w+ (win|won|lose|lost)\b", text):
         q.by_rounds = True
         q.metrics = [m for m in q.metrics if m != "rounds"] or q.metrics
     if _has(_WORDS["record"], text):
