@@ -121,7 +121,7 @@ METRIC_WORDS: dict[str, list[str]] = {
     "kpr": ["kpr", "kills per round", "kills a round", "kills each round"],
     "dpr": ["dpr", "deaths per round", "deaths a round"],
     "hs": ["headshot percentage", "headshot percent", "headshot rate", "headshots", "headshot", "head shots",
-           "head shot", "hs percent", "hs"],
+           "head shot", "hs percent", "hs", "aim", "aiming", "accuracy"],
     "kost": ["kost"],
     "survival": ["survival rate", "survival", "survive", "surviving", "srv", "stay alive"],
     "entry_kills": ["entry kills", "entry kill", "opening kills", "opening kill", "first kills", "first bloods",
@@ -240,6 +240,8 @@ _WORDS = {  # each idea's wordings, matched as whole words in the cleaned questi
     "opponents": r"\b(opponents?|enem(y|ies)|against me|against us|the other team)\b",
     "everyone": r"\b(everyone|everyones|everybody|everybodys|all players|anyone|any player|the lobby|in the lobby)\b",
     "trend": r"\b(over time|trend|trends|trending|progress|progression|improv(e|ed|es|ing|ement)|getting (better|worse)"
+             r"|(going|gone|went|go|gotten|got) (up|down|better|worse)|dropp(ed|ing)|falling|fell off|rising|risen"
+             r"|climbing|slipp(ed|ing)"
              r"|declin(e|ed|ing)|change[ds]?|changing|timeline|graph|chart|plot|per match|each match|every match|"
              r"match by match|per game|each game|by match|by game|over my|over our|over the)\b(?! types?\b)",
     "day": r"\b(per day|by day|each day|daily|day by day)\b",
@@ -1108,8 +1110,8 @@ def fmt(value: Any, kind: str) -> str:
         return f"{value:.2f}"
     if kind == "pct":
         return f"{value:.0f}%"
-    if kind == "signed":
-        return f"{round_eps(value):+d}"
+    if kind == "signed":  # "+3", "-2", and plain "0"
+        return f"{round_eps(value):+d}" if round_eps(value) else "0"
     return f"{round_eps(value)}"
 
 
