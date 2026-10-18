@@ -15,6 +15,8 @@ Whatever is asked, it gives an answer: one of these, tried in order.
     a best guess    what it could work out (a player, map or operator it recognized, a part of the app,
                     a stat it knows), or the closest questions it can answer
 
+Each is a small handler (HANDLERS, near the end), tried in that order.
+
 A reply says whether the question was really answered; one that wasn't (or that the user says missed
 the point) can be reported to the developers (question_reports.py).
 
@@ -31,6 +33,7 @@ import operator as op
 import re
 from dataclasses import dataclass, field, replace
 from datetime import datetime
+from functools import cached_property
 from typing import Any
 
 import assistant_knowledge as kb
@@ -1055,129 +1058,275 @@ def _small_talk(text: str) -> Reply | None:
 
 # ---------------------------------------------------------- the one entry --
 
-def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, now: datetime | None = None,
-                    page: str | None = None) -> Reply:
-    """An answer to anything: see the top of this file for what's tried, in order."""
-    question = (question or "").strip()
-    if not question:
+class Asked:
+    """One question as it's being answered: what was asked, and what's worked out about it. Each piece
+    is worked out when a handler first needs it, so "hi" never opens the stats or reads the question."""
+
+    def __init__(self, question: str, db: StatsDB, vocab: Vocab | None, now: datetime | None, page: str | None):
+        self.db, self.now, self.page = db, now, page
+        self._vocab = vocab
+        self.rephrase(question)
+
+    def rephrase(self, question: str) -> None:
+        """Answer it as `question` from here on ("how was last night?" as "how did I do last night")."""
+        self.question = question
+        self.text = _norm(question)
+
+    @cached_property
+    def matches(self) -> int:
+        return self.db.summary()["matches"]
+
+    @cached_property
+    def vocab(self) -> Vocab | None:
+        """The names the stats know; read from them only when there are matches."""
+        return (self._vocab or Vocab.from_db(self.db)) if self.matches else self._vocab
+
+    @cached_property
+    def q(self) -> Query | None:
+        """The question as the Ask engine reads it (None with no matches)."""
+        return interpret(self.question, self.vocab, self.now) if self.matches else None
+
+    @cached_property
+    def stats_kind(self) -> bool:
+        return self.q is not None and self.q.kind in ("rank", "trend", "compare", "count", "value")
+
+    @cached_property
+    def clean_metrics(self) -> list:
+        """The stats it names, with the names of players, maps and so on taken out."""
+        return _find_metrics(_clean(self.question, [])) if self.matches else []
+
+    @cached_property
+    def context(self) -> bool:
+        """Whether it says whose stats or which matches: then "what is KOST?" wants a number."""
+        q = self.q
+        return bool(q and (q.players or q.team or q.won is not None or q.since or q.maps or q.side or q.operators
+                           or q.match_type or q.tag or q.last_matches)) or bool(_STATS_CONTEXT.search(self.text))
+
+    @cached_property
+    def who(self) -> tuple[str | None, str | None]:
+        return _who(self.question, self.vocab) if self.matches else (None, None)
+
+    @cached_property
+    def asking(self) -> str:
+        """The text without "tell me" / "show me": the "me" asking isn't whose stats."""
+        return re.sub(r"\b(tell|show|give|get) me\b", " ", self.text)
+
+
+# Each handler answers one kind of question, or returns None to let the next one try. HANDLERS
+# tries them in order; the order matters ("what is KOST?" is a definition, "what is my KOST?" a stat).
+
+def _on_empty(a: Asked) -> Reply | None:
+    if not a.question:
         return Reply("Ask me anything about your matches, or how to use the app.", "empty", answered=False)
-    text = _norm(question)
-    if (talk := _small_talk(text)) is not None:
-        talk.question = question
-        return talk
-    if (value := _arithmetic(question)) is not None:
-        return Reply(f"**{value:g}**", "smalltalk", question=question)
-    if re.search(r"\b(this page|this tab|here|current page)\b", text) and page and (t := kb.page_topic(page)):
-        return _topic_reply(t, question)
 
-    if m := _HOW_WAS.match(text):
+
+def _on_small_talk(a: Asked) -> Reply | None:
+    return _small_talk(a.text)
+
+
+def _on_arithmetic(a: Asked) -> Reply | None:
+    value = _arithmetic(a.question)
+    return None if value is None else Reply(f"**{value:g}**", "smalltalk")
+
+
+def _on_this_page(a: Asked) -> Reply | None:
+    if re.search(r"\b(this page|this tab|here|current page)\b", a.text) and a.page and (t := kb.page_topic(a.page)):
+        return _topic_reply(t, a.question)
+
+
+def _rephrase_how_was(a: Asked) -> None:
+    """ "How was last night?" is asked as "how did I do last night" (never answers by itself)."""
+    if m := _HOW_WAS.match(a.text):
         period = m.group("period")
-        question = f"how did I do {'in ' if re.fullmatch(_MONTH, period) else ''}{period}"
-        text = _norm(question)
+        a.rephrase(f"how did I do {'in ' if re.fullmatch(_MONTH, period) else ''}{period}")
 
-    if _OPEN_PAGE.search(text) and (topic := kb.guide(question, any_wording=True)) and topic.page:
-        return _topic_reply(topic, question)  # "open the players page": what's there, and a link
-    if _SCHEDULE.search(text):  # Match day has the schedule; the stats don't
-        return _topic_reply(kb.topic("matchday"), question)
 
-    matches = db.summary()["matches"]
-    if matches:
-        vocab = vocab or Vocab.from_db(db)
-    q = interpret(question, vocab, now) if matches else None
-    stats_kind = q is not None and q.kind in ("rank", "trend", "compare", "count", "value")
-    clean_metrics = _find_metrics(_clean(question, [])) if matches else []
+def _on_open_page(a: Asked) -> Reply | None:
+    """ "Open the players page": what's there, and a link."""
+    if _OPEN_PAGE.search(a.text) and (topic := kb.guide(a.question, any_wording=True)) and topic.page:
+        return _topic_reply(topic, a.question)
 
-    # a stat explained: "what is KOST?" (not "what is my KOST?")
-    context = bool(q and (q.players or q.team or q.won is not None or q.since or q.maps or q.side or q.operators
-                          or q.match_type or q.tag or q.last_matches)) or bool(_STATS_CONTEXT.search(text))
-    if (topic := kb.define(question)) and not (_ME.search(text) or context):
-        reply = _topic_reply(topic, question, "define")
+
+def _on_schedule(a: Asked) -> Reply | None:
+    """Match day has the schedule; the stats don't."""
+    if _SCHEDULE.search(a.text):
+        return _topic_reply(kb.topic("matchday"), a.question)
+
+
+def _on_define(a: Asked) -> Reply | None:
+    """A stat explained: "what is KOST?" (not "what is my KOST?")."""
+    if (topic := kb.define(a.question)) and not (_ME.search(a.text) or a.context):
+        reply = _topic_reply(topic, a.question, "define")
         reply.suggestions = [f"My {topic.title} over time" if topic.key in METRIC_WORDS else "Analyze my stats"]
         return reply
-    # a session's recap: "how did I do last night?" (not the time of day, nor "where's the session recap?")
-    # (a teammate named: "how did Typhoon do last night?" is their numbers, from Ask)
-    kind, key = _who(question, vocab) if matches else (None, None)
-    if matches and _RECAP.search(text) and not _HOW_TO.search(text) and (kind != "player" or key == vocab.me):
-        return _with_question(_session_recap(db, vocab), question)
-    # the app: "how do I add my matches?"
-    if (topic := kb.guide(question)) and (topic.key in ("about", "privacy") or not (
-            stats_kind and (clean_metrics or q.kind in ("rank", "compare", "count")))):
-        return _topic_reply(topic, question)
-    if not matches:
-        if _ANALYZE.search(text) or q is None:
-            topic = kb.topic("load")
-            reply = _topic_reply(topic, question)
-            reply.text = "There are no matches in your stats yet, so there's nothing to look at. " + reply.text
-            return reply
-    # a chart: "chart my K/D over time", "pie of the operators I play"
-    if _CHART.search(text) and not kb.guide(question):  # "how do charts work?" is the guide
-        return _with_question(chart_reply(question, db, vocab, now), question)
-    asking = re.sub(r"\b(tell|show|give|get) me\b", " ", text)  # the "me" asking isn't whose stats
-    if _SCOUT.search(text) and q and len(q.opponents) == 1 and not clean_metrics and not _ME.search(asking) \
-            and not re.search(r"\bstats\b", text):  # "scout Metro Tech", not "tell me about my stats against them"
-        report = scouting.scout(db, q.opponents[0])
-        return Reply(report.headline, "stats", rows=report.ours, columns=list(report.ours[0]) if report.ours else [],
-                     links=[("matchday", "Their full scouting report on Match day")], question=question,
-                     suggestions=[f"My stats vs {report.opponent}", "Which opponent is the hardest?"])
-    if _GOALS.search(text) and matches and not kb.guide(question):  # "how am I doing on my goals?"
-        return _with_question(_goals(question, db, vocab), question)
-    # analysis: "analyze my team", "what should I work on?"
-    if _ANALYZE.search(text) and not (stats_kind and clean_metrics and q.kind in ("trend", "rank")):
-        reply = _analysis(question, db, vocab)
-        reply.question = question
-        return reply
-    if _STREAK.search(text):
-        return _with_question(_streaks(question, db, vocab), question)
-    if _SITUATION.search(text):  # "our post-plant win rate" too: it names a stat, but one only rounds can tell
-        return _with_question(_situations(text, db, vocab, q), question)
-    if _BENCH.search(text):
-        return _with_question(_bench(db, vocab), question)
-    if _OPPONENTS.search(text) and not _HOW_TO.search(text):
-        return _with_question(_opponents(text, db, vocab), question)
-    if _ROUND_BEST.search(text) and not _ROUND_RESULT.search(text) and not _HOW_TO.search(text):
-        return _with_question(_round_best(question, db, vocab, q), question)
-    one_last = _LAST_RESULT.search(text) and not re.search(r"\blast (\d+|two|three|four|five|six|seven|eight|nine|ten)\b",
-                                                             text) and not (q and q.operators)
-    if one_last or _LAST_PLAYED.search(text):
-        return _with_question(_last_played(question, db, vocab, q=q), question)
-    if _FIRST_PLAYED.search(text) and not clean_metrics:
-        return _with_question(_last_played(question, db, vocab, first=True, q=q), question)
-    if _DUO.search(text):
-        return _with_question(_duos(question, db, vocab), question)
-    if _BAN_LOOSE.search(text) and (_NOT_MAPS.search(text) or (q and q.maps)) and matches:
-        picks = re.sub(r"\bwhat (should|do) (we|i) pick\b|\bpick (suggestions?|advice|ideas?)\b", "my best operators",
-                       question, flags=re.I)
-        if picks != question:
-            return _with_question(answer_anything(picks, db, vocab=vocab, now=now, page=page), question)
-    if _BAN.search(text) or (_BAN_LOOSE.search(text) and not _NOT_MAPS.search(text) and not (q and q.maps)):
-        return _with_question(_ban(question, db, vocab), question)
-    if _IMPROVING.search(text):
-        return _with_question(_improving(db, vocab, decline=bool(_DECLINE.search(text))), question)
-    if _CONSISTENT.search(text):
-        return _with_question(_consistency(question, db, vocab), question)
-    if _TIME_OF_DAY.search(text) and not (q and q.since):
-        return _with_question(_when_best(question, db, vocab), question)
-    if _AVERAGE.search(text) and clean_metrics:
-        if (reply := _average(question, db, vocab, now)) is not None:
-            return _with_question(reply, question)
-    if _GAME_GUIDE.search(text) and (ops := [e for e in vocab.find(question)[0] if e.kind in ("operator", "map")]):
-        return _with_question(_game_guide(ops[0], db, vocab), question)
 
-    answer = ask(question, db, now=now, vocab=vocab)
-    if answer.ok or (answer.understood and answer.query and answer.query.kind != "unknown"):
-        reply = Reply(answer.headline, "stats", answered=True, answer=answer, question=question,
-                      suggestions=_next_questions(answer, vocab))
-        q = answer.query
-        if answer.ok and q and q.kind == "compare" and q.compare == "player" and len(q.players) == 2:
-            reply.links.append(("players", "See them side by side on Players",
-                                {"player": q.players[0], "vs": q.players[1]}))
-        elif answer.ok and q and q.kind == "summary" and not q.group:  # "tell me about Sacri", "my profile"
-            key = q.players[0] if q.who == "players" and len(q.players) == 1 else vocab.me if q.who == "me" else None
-            if key:
-                reply.links.append(("players", "Full profile on Players", {"player": key}))
+
+def _on_recap(a: Asked) -> Reply | None:
+    """A session's recap: "how did I do last night?" (not the time of day, nor "where's the session recap?").
+    A teammate named ("how did Typhoon do last night?") is their numbers, from Ask."""
+    kind, key = a.who
+    if a.matches and _RECAP.search(a.text) and not _HOW_TO.search(a.text) and (kind != "player" or key == a.vocab.me):
+        return _session_recap(a.db, a.vocab)
+
+
+def _on_app_guide(a: Asked) -> Reply | None:
+    """The app: "how do I add my matches?" (but "how many kills do I have" is a stat)."""
+    if (topic := kb.guide(a.question)) and (topic.key in ("about", "privacy") or not (
+            a.stats_kind and (a.clean_metrics or a.q.kind in ("rank", "compare", "count")))):
+        return _topic_reply(topic, a.question)
+
+
+def _on_nothing_yet(a: Asked) -> Reply | None:
+    """No matches in the stats: how to add them."""
+    if not a.matches and (_ANALYZE.search(a.text) or a.q is None):
+        reply = _topic_reply(kb.topic("load"), a.question)
+        reply.text = "There are no matches in your stats yet, so there's nothing to look at. " + reply.text
         return reply
-    reply = _best_guess(question, db, vocab, answer.notes)
-    reply.question = question
+
+
+def _on_chart(a: Asked) -> Reply | None:
+    """A chart: "chart my K/D over time", "pie of the operators I play" ("how do charts work?" is the guide)."""
+    if _CHART.search(a.text) and not kb.guide(a.question):
+        return chart_reply(a.question, a.db, a.vocab, a.now)
+
+
+def _on_scout(a: Asked) -> Reply | None:
+    """ "Scout Metro Tech", not "tell me about my stats against them"."""
+    q = a.q
+    if _SCOUT.search(a.text) and q and len(q.opponents) == 1 and not a.clean_metrics and not _ME.search(a.asking) \
+            and not re.search(r"\bstats\b", a.text):
+        report = scouting.scout(a.db, q.opponents[0])
+        return Reply(report.headline, "stats", rows=report.ours, columns=list(report.ours[0]) if report.ours else [],
+                     links=[("matchday", "Their full scouting report on Match day")],
+                     suggestions=[f"My stats vs {report.opponent}", "Which opponent is the hardest?"])
+
+
+def _on_goals(a: Asked) -> Reply | None:
+    """ "How am I doing on my goals?" """
+    if _GOALS.search(a.text) and a.matches and not kb.guide(a.question):
+        return _goals(a.question, a.db, a.vocab)
+
+
+def _on_analysis(a: Asked) -> Reply | None:
+    """ "Analyze my team", "what should I work on?" (but "analyze my KD trend" is a trend)."""
+    if _ANALYZE.search(a.text) and not (a.stats_kind and a.clean_metrics and a.q.kind in ("trend", "rank")):
+        return _analysis(a.question, a.db, a.vocab)
+
+
+def _on_streak(a: Asked) -> Reply | None:
+    if _STREAK.search(a.text):
+        return _streaks(a.question, a.db, a.vocab)
+
+
+def _on_situation(a: Asked) -> Reply | None:
+    """ "Our post-plant win rate" too: it names a stat, but one only rounds can tell."""
+    if _SITUATION.search(a.text):
+        return _situations(a.text, a.db, a.vocab, a.q)
+
+
+def _on_bench(a: Asked) -> Reply | None:
+    if _BENCH.search(a.text):
+        return _bench(a.db, a.vocab)
+
+
+def _on_opponents(a: Asked) -> Reply | None:
+    if _OPPONENTS.search(a.text) and not _HOW_TO.search(a.text):
+        return _opponents(a.text, a.db, a.vocab)
+
+
+def _on_round_best(a: Asked) -> Reply | None:
+    if _ROUND_BEST.search(a.text) and not _ROUND_RESULT.search(a.text) and not _HOW_TO.search(a.text):
+        return _round_best(a.question, a.db, a.vocab, a.q)
+
+
+def _on_last_played(a: Asked) -> Reply | None:
+    """ "When did I last play?", "how did my last match go?" (not "my last 5 matches")."""
+    one_last = _LAST_RESULT.search(a.text) and not re.search(
+        r"\blast (\d+|two|three|four|five|six|seven|eight|nine|ten)\b", a.text) and not (a.q and a.q.operators)
+    if one_last or _LAST_PLAYED.search(a.text):
+        return _last_played(a.question, a.db, a.vocab, q=a.q)
+
+
+def _on_first_played(a: Asked) -> Reply | None:
+    if _FIRST_PLAYED.search(a.text) and not a.clean_metrics:
+        return _last_played(a.question, a.db, a.vocab, first=True, q=a.q)
+
+
+def _on_duo(a: Asked) -> Reply | None:
+    if _DUO.search(a.text):
+        return _duos(a.question, a.db, a.vocab)
+
+
+def _on_pick(a: Asked) -> Reply | None:
+    """ "What should we pick?" on a map is asked as "my best operators"."""
+    if _BAN_LOOSE.search(a.text) and (_NOT_MAPS.search(a.text) or (a.q and a.q.maps)) and a.matches:
+        picks = re.sub(r"\bwhat (should|do) (we|i) pick\b|\bpick (suggestions?|advice|ideas?)\b", "my best operators",
+                       a.question, flags=re.I)
+        if picks != a.question:
+            return answer_anything(picks, a.db, vocab=a.vocab, now=a.now, page=a.page)
+
+
+def _on_ban(a: Asked) -> Reply | None:
+    if _BAN.search(a.text) or (_BAN_LOOSE.search(a.text) and not _NOT_MAPS.search(a.text) and not (a.q and a.q.maps)):
+        return _ban(a.question, a.db, a.vocab)
+
+
+def _on_improving(a: Asked) -> Reply | None:
+    if _IMPROVING.search(a.text):
+        return _improving(a.db, a.vocab, decline=bool(_DECLINE.search(a.text)))
+
+
+def _on_consistent(a: Asked) -> Reply | None:
+    if _CONSISTENT.search(a.text):
+        return _consistency(a.question, a.db, a.vocab)
+
+
+def _on_time_of_day(a: Asked) -> Reply | None:
+    if _TIME_OF_DAY.search(a.text) and not (a.q and a.q.since):
+        return _when_best(a.question, a.db, a.vocab)
+
+
+def _on_average(a: Asked) -> Reply | None:
+    if _AVERAGE.search(a.text) and a.clean_metrics:
+        return _average(a.question, a.db, a.vocab, a.now)
+
+
+def _on_game_guide(a: Asked) -> Reply | None:
+    """ "How do I play Thermite?", "tips for Bank": the game, with your own numbers."""
+    if _GAME_GUIDE.search(a.text) and (ops := [e for e in a.vocab.find(a.question)[0] if e.kind in ("operator", "map")]):
+        return _game_guide(ops[0], a.db, a.vocab)
+
+
+def _ask_or_guess(a: Asked) -> Reply:
+    """Anything the Ask engine answers; else a best guess. Always answers, so it comes last."""
+    answer = ask(a.question, a.db, now=a.now, vocab=a.vocab)
+    if not (answer.ok or (answer.understood and answer.query and answer.query.kind != "unknown")):
+        return _best_guess(a.question, a.db, a.vocab, answer.notes)
+    reply = Reply(answer.headline, "stats", answered=True, answer=answer, suggestions=_next_questions(answer, a.vocab))
+    q = answer.query
+    if answer.ok and q and q.kind == "compare" and q.compare == "player" and len(q.players) == 2:
+        reply.links.append(("players", "See them side by side on Players", {"player": q.players[0], "vs": q.players[1]}))
+    elif answer.ok and q and q.kind == "summary" and not q.group:  # "tell me about Sacri", "my profile"
+        key = q.players[0] if q.who == "players" and len(q.players) == 1 else a.vocab.me if q.who == "me" else None
+        if key:
+            reply.links.append(("players", "Full profile on Players", {"player": key}))
+    return reply
+
+
+HANDLERS = (
+    _on_empty, _on_small_talk, _on_arithmetic, _on_this_page, _rephrase_how_was, _on_open_page, _on_schedule,
+    _on_define, _on_recap, _on_app_guide, _on_nothing_yet, _on_chart, _on_scout, _on_goals, _on_analysis,
+    _on_streak, _on_situation, _on_bench, _on_opponents, _on_round_best, _on_last_played, _on_first_played,
+    _on_duo, _on_pick, _on_ban, _on_improving, _on_consistent, _on_time_of_day, _on_average, _on_game_guide,
+)
+
+
+def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, now: datetime | None = None,
+                    page: str | None = None) -> Reply:
+    """An answer to anything: the first of HANDLERS that answers, else the Ask engine or a best guess."""
+    asked = Asked((question or "").strip(), db, vocab, now, page)
+    reply = next((r for handler in HANDLERS if (r := handler(asked)) is not None), None) or _ask_or_guess(asked)
+    reply.question = asked.question
     return reply
 
 
