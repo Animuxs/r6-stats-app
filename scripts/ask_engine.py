@@ -76,6 +76,7 @@ METRICS: dict[str, Metric] = {m.key: m for m in [
     Metric("dpr", "Deaths per round", "deaths per round", "SUM(t.deaths) * 1.0 / NULLIF(SUM(t.rounds), 0)",
            "SUM(t.died) * 1.0 / COUNT(*)", "ratio", False),
     Metric("hs", "Headshot %", "headshot rate", _HS, _HS, "pct"),
+    Metric("headshots", "Headshots", "headshot kills", "SUM(t.headshots)", "SUM(t.headshots)", "count"),
     Metric("kost", "KOST %", "KOST", "100.0 * SUM(t.kost_rounds) / NULLIF(SUM(t.rounds), 0)",
            "100.0 * SUM(t.kost) / COUNT(*)", "pct"),
     Metric("survival", "Survival %", "survival rate", "100.0 * SUM(t.rounds_survived) / NULLIF(SUM(t.rounds), 0)",
@@ -122,6 +123,7 @@ METRIC_WORDS: dict[str, list[str]] = {
     "dpr": ["dpr", "deaths per round", "deaths a round"],
     "hs": ["headshot percentage", "headshot percent", "headshot rate", "headshots", "headshot", "head shots",
            "head shot", "hs percent", "hs", "aim", "aiming", "accuracy"],
+    "headshots": ["headshot kills", "headshot kill", "kills by headshot", "kills with a headshot"],
     "kost": ["kost"],
     "survival": ["survival rate", "survival", "survive", "surviving", "srv", "stay alive"],
     "entry_kills": ["entry kills", "entry kill", "opening kills", "opening kill", "first kills", "first bloods",
@@ -137,7 +139,7 @@ METRIC_WORDS: dict[str, list[str]] = {
     "entry": ["entry differential", "entry diff", "entries", "entry", "entrying", "opening duels", "opening duel"],
     "clutches": ["clutches", "clutch", "clutched", "1vx"],
     "multikills": ["multikill rounds", "multikills", "multikill", "multi kills", "multi kill"],
-    "aces": ["aces", "5ks", "5k", "five kill rounds", "5 kill rounds"],
+    "aces": ["aces", "ace", "aced", "5ks", "5k", "five kill rounds", "5 kill rounds"],
     "traded": ["dead for trade kill", "dead for trade", "deaths traded", "traded deaths", "got traded", "was traded"],
     "trade_kills": ["trade kills", "trade kill", "trades", "trading"],
     "plants": ["plants", "plant", "planted", "planting"],
@@ -674,6 +676,10 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
     now = now or datetime.now()
     q = Query()
     entities, q.notes = vocab.find(question)
+    # "who got the ace?", "any aces?": the five-kill round, not the operator Ace (who you play "as")
+    if re.search(r"\b(an|the|any|got|get|gets|getting|hit|hits|had|have|has) aces?\b|\baced\b", fold(question)) \
+            and not re.search(r"\b(as|play|plays|played|playing|on) ace\b", fold(question)):
+        entities = [e for e in entities if not (e.kind == "operator" and fold(e.value) == "ace")]
     text = _clean(question, entities)
     text = _read_time(text, q, now)
     text = _read_conditions(text, q)
@@ -719,7 +725,8 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
 
     attack = _has(r"\b(attack|attacking|attacker|attackers|atk|offense|offence)\b", text)
     defense = _has(r"\b(defen[cs]e|defending|defender|defenders|def|defend)\b", text)
-    q.most_played = _has(_WORDS["most_played"], text)
+    q.most_played = _has(_WORDS["most_played"], text) or \
+        _has(r"\b(what|which) (operators?|ops|characters?|maps?) (do|does|did) .{0,20}\b(play|use|pick|run)\b", text)
     # "who plays Twitch?": the players who've played that operator, most rounds first
     who_plays = bool(q.operators) and _has(r"\bwho (plays|played|mains|picks|picked|uses|used|runs|ran)\b", text)
     q.most_played = q.most_played or who_plays
@@ -787,6 +794,9 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
         q.metrics = [m for m in q.metrics if m not in SAMPLE_METRICS]  # "how many matches have we won": wins
     if not q.metrics and counting:
         q.metrics = [m for m in found if m in SAMPLE_METRICS][:1]
+    if "hs" in q.metrics and (counting and _has(r"\b(headshots|head shots)\b", text)
+                              or _has(r"\b(most|fewest|least) (headshots|head shots)\b", text)):  # "how many headshots?"
+        q.metrics = ["headshots" if m == "hs" else m for m in q.metrics]
     if counting and "win_rate" in q.metrics and not _has(r"\bhow often\b", text):  # "how many matches did we win?"
         q.metrics = list(dict.fromkeys("wins" if m == "win_rate" else m for m in q.metrics))
     # "how many rounds did we win on Border?", "rounds lost", "my round win rate" (not "kills per round")
@@ -839,6 +849,9 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
         q.kind, q.group = "trend", group
     elif group:
         q.kind, q.group = "rank", group
+    elif q.metrics in (["wins"], ["losses"]) and not counting and _has(r"\b(show|list|see|view)\b", text):
+        # "show my losses": those matches, not how many
+        q.kind, q.won, q.metrics = "matches", int(q.metrics == ["wins"]), []
     elif counting:
         # "how many teabags": something it can't count is said so, not answered with a count of matches
         noun = re.search(r"\b(?:how many|number of|count of) ([a-z]+)", text)
@@ -848,7 +861,8 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
         else:
             q.kind = "count"
     elif (_has(_WORDS["list"], text) or (q.conditions and not q.metrics)) and \
-            (_has(r"\b(matches|match|games|game)\b", text) or q.last_matches or q.conditions):
+            (_has(r"\b(matches|match|games|game)\b", text) or q.last_matches or q.conditions
+             or (q.won is not None and not q.metrics and not _has(_WORDS["summary"], text))):  # "show matches we lost"
         q.kind = "matches"
     elif not q.metrics and _has(_WORDS["summary"], text):
         q.kind = "summary"
@@ -1127,7 +1141,7 @@ def _value(value: Any, kind: str) -> Any:
 
 
 def _plural(n: int, word: str) -> str:
-    return f"{n} {word}{'' if n == 1 else ('es' if word.endswith('ch') else 's')}"
+    return f"{n} {word}{'' if n == 1 else ('es' if word.endswith(('ch', 'ss', 'sh', 'x')) else 's')}"
 
 
 _SINGULAR = {"kills": "kill", "deaths": "death", "assists": "assist", "clutches": "clutch", "plants": "plant",
@@ -1626,6 +1640,10 @@ def _answer_matches(db: StatsDB, q: Query, vocab: Vocab) -> Answer:
         headline = f"{_cap(whose)} {edge} match{filters}: {result} on {only['Map']}{against}, {only['Score']}."
     elif edge:
         headline = f"{_cap(whose)} {edge} {len(table)} matches{filters}: {wins} won, {losses} lost."
+    elif q.won is not None and not edge:  # "show my losses": "Your 2 losses on Villa, newest first."
+        rest = _filters_text(replace(q, won=None))
+        order = ", newest first" if len(table) > 1 else ""
+        headline = f"{_cap(whose)} {_plural(len(table), 'win' if q.won else 'loss')}{rest}{order}."
     else:
         headline = f"{_plural(len(table), 'match').capitalize()}{filters}: {wins} won, {losses} lost."
     return Answer(True, understood, headline, list(table[0]), table, None, [],

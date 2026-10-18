@@ -57,7 +57,8 @@ class TestDemo(unittest.TestCase):
 
     def test_several_last_matches_are_asks(self):
         self.assertNotIn("You last played", self.answer("did we win our last 5 matches?").text)
-        self.assertNotIn("You last played", self.answer("did I win my last match on Bank?").text)
+        # one match on a map: the last match on that map, not the last match
+        self.assertRegex(self.answer("did I win my last match on Bank?").text, r"^You last played .+, on Bank, ")
         self.assertIn("You last played", self.answer("did we win our last match").text)
 
     def test_him_after_a_comparison_is_the_other_player(self):
