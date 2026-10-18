@@ -171,5 +171,25 @@ class TestLinkFromAnswers(unittest.TestCase):
         db.close()
 
 
+class TestAgainstOpponents(unittest.TestCase):
+    def test_each_opponent(self):
+        db = StatsDB(":memory:")
+        demo_season.load(db)
+        rows = pp.against(db, db.me().casefold())
+        self.assertEqual({r["Opponent"] for r in rows}, set(Vocab.from_db(db).opponents))
+        self.assertEqual(sum(r["Matches"] for r in rows), 12)
+        for r in rows:
+            wins, losses = map(int, r["Record"].split("–"))
+            self.assertEqual(wins + losses, r["Matches"])
+        self.assertEqual(pp.profile(db, db.me()).opponents, rows)
+        db.close()
+
+    def test_stand_in_names_are_left_out(self):
+        db = StatsDB(":memory:")
+        db.import_match("sample", {**SAMPLE_MATCH, "team_names": ["Team A", "Team B"]})
+        self.assertEqual(pp.against(db, next(iter(db.players()))), [])
+        db.close()
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -304,14 +304,18 @@ _NAMELESS_TEAMS = {"team a", "team b", "team 1", "team 2", "blue", "orange", "yo
                    "enemy", "enemies", "allies", "attackers", "defenders", "yellow", "alpha", "bravo"}
 
 
+def named_team(name: str | None) -> bool:
+    """Whether a team name is a real one, not a replay's stand-in ("Team A", "Blue") or nothing."""
+    return bool(name and name.strip()) and " ".join(name.casefold().split()) not in _NAMELESS_TEAMS
+
+
 def opponent_names(db: StatsDB, me: str | None) -> list[str]:
     """The teams `me` has played against, by the names the replays give them (not "Team A" or "Blue")."""
     if not me:
         return []
     rows = db.query("SELECT DISTINCT CASE mp.team WHEN 0 THEN m.team1 ELSE m.team0 END AS name FROM match_players mp "
                     "JOIN matches m ON m.match_id = mp.match_id WHERE mp.player_key = ?", [me.casefold()])
-    names = {r["name"].strip() for r in rows if r["name"] and r["name"].strip()}
-    return sorted((n for n in names if " ".join(n.casefold().split()) not in _NAMELESS_TEAMS), key=str.casefold)
+    return sorted({r["name"].strip() for r in rows if named_team(r["name"])}, key=str.casefold)
 
 
 @dataclass

@@ -14,7 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from ask_engine import METRICS, fmt, rate
+from ask_engine import DIMS, METRICS, fmt, named_team, rate
 from stats_db import StatsDB, nice_day
 
 # the profile's headline numbers, in the order they're shown
@@ -38,6 +38,7 @@ class Profile:
     operators: list[dict[str, Any]] = field(default_factory=list)  # most played first
     sides: dict[str, dict[str, Any]] = field(default_factory=dict)  # "attack"/"defense" -> numbers
     bests: list[dict[str, Any]] = field(default_factory=list)      # personal bests, see bests()
+    opponents: list[dict[str, Any]] = field(default_factory=list)  # their record against each team, most played first
     streak: Streaks | None = None
 
     @property
@@ -205,13 +206,29 @@ def bests(db: StatsDB, key: str) -> list[dict[str, Any]]:
     return out
 
 
+def against(db: StatsDB, key: str) -> list[dict[str, Any]]:
+    """The player's record and K/D against each team they've played, by name (not "Team A" or "Blue"),
+    most played first."""
+    rows = db.query(
+        f"""SELECT {DIMS['opponent'].sql} AS opponent, {METRICS['matches'].match_sql} AS matches,
+                   {METRICS['wins'].match_sql} AS wins, {METRICS['losses'].match_sql} AS losses,
+                   {METRICS['kd'].match_sql} AS kd, {METRICS['eps'].match_sql} AS eps
+            FROM match_players t JOIN matches m ON m.match_id = t.match_id
+            WHERE t.player_key = ? GROUP BY 1 ORDER BY matches DESC, opponent""", (key,))
+    return [{"Opponent": r["opponent"], "Matches": r["matches"], "Record": f"{r['wins']}–{r['losses']}",
+             "Win %": _round(rate(r["wins"], r["wins"] + r["losses"]), 0), "K/D": _round(r["kd"], 2),
+             "EPS": _round(r["eps"], 0)}
+            for r in rows if named_team(r["opponent"])]
+
+
 def profile(db: StatsDB, key: str) -> Profile:
     """Everything the Players tab shows about one player."""
     key = key.casefold()
     name = db.players().get(key, key)
     results = [m["won"] for m in db.match_list(key) if m.get("player")]
-    return Profile(key, name, stats_for(db, key), form(db, key), maps(db, key), operators(db, key), sides(db, key),
-                   bests(db, key), streaks(results) if results else None)
+    return Profile(key, name, stats_for(db, key), form=form(db, key), maps=maps(db, key), operators=operators(db, key),
+                   sides=sides(db, key), bests=bests(db, key), streak=streaks(results) if results else None,
+                   opponents=against(db, key))
 
 
 def _round(value: float | None, digits: int) -> float | int | None:
