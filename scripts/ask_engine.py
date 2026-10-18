@@ -237,7 +237,8 @@ practicing casual casuals tag tagged
 
 _WORDS = {  # each idea's wordings, matched as whole words in the cleaned question
     "me": r"\b(i|me|my|mine|myself|im|ive|id)\b",
-    "we": r"\b(we|us|our|ours|ourselves|my team|our team|my squad|the team|the teams|the squad)\b",
+    "we": r"\b(we|us|our|ours|ourselves|my team|our team|my squad|the team|the teams|the squad)\b|"
+          r"^team\b|\bteam (stats|summary|overview|record|numbers|report)\b",
     "teammates": r"\b(teammates?|team mates?|who i play with|played with|play with)\b",
     "opponents": r"\b(opponents?|enem(y|ies)|against me|against us|the other team)\b",
     "everyone": r"\b(everyone|everyones|everybody|everybodys|all players|anyone|any player|the lobby|in the lobby)\b",
@@ -263,7 +264,8 @@ _WORDS = {  # each idea's wordings, matched as whole words in the cleaned questi
 }
 _GROUP_WORDS = {  # the first that matches decides the grouping
     "opponent": r"\b(which opponents?|what opponents?|by opponent|per opponent|each opponent|every opponent|"
-                r"(hardest|toughest|easiest|best|worst|strongest|weakest) (opponents?|teams? (we|i) (play|played|face|faced))|"
+                r"(hardest|toughest|easiest|best|worst|strongest|weakest) (opponents?|teams? (we|i)(ve| have)? "
+                r"(play|played|face|faced))|"
                 r"opponents? (we|i) (beat|lose to|lost to|struggle against)|which teams? (do|did|have) (we|i) "
                 r"(beat|lose to|lost to|struggle against|play|played)|against which teams?|record against (each|every))\b",
     "side": r"\b(sides|by side|per side|each side|which side|what side)\b",
@@ -695,6 +697,9 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
     q.maps = list(dict.fromkeys(e.value for e in entities if e.kind == "map"))
     q.operators = list(dict.fromkeys(e.value for e in entities if e.kind == "operator"))
     q.opponents = list(dict.fromkeys(e.value for e in entities if e.kind == "opponent"))
+    # "PSU's best player", "PSU's K/D": theirs (the name found takes its "'s" along)
+    their = any(e.kind == "opponent" and (question[e.start:e.end].endswith(("'s", "’s"))
+                                          or re.match(r"['’]s\b", question[e.end:])) for e in entities)
     wants_we = _has(_WORDS["we"], text)
     # "tell me about Sacri", "show me the top players": that "me" is who's asking, not whose stats
     asking = re.sub(r"\b(tell|show|give|get|let|help|remind|find|send) me\b", " ", text)
@@ -775,8 +780,8 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
             q.who, q.highlight_me = "my_team", True  # my whole side, me included
         else:
             q.who = "teammates"
-    elif _has(_WORDS["opponents"], text) and group != "opponent":
-        q.who = "opponents"
+    elif (_has(_WORDS["opponents"], text) or their) and group != "opponent":
+        q.who = "opponents"  # "PSU's best player": one of theirs, from the matches against them
     elif _has(_WORDS["everyone"], text):
         q.who = "everyone"
     elif q.team:
@@ -1282,8 +1287,16 @@ def ask(question: str, db: StatsDB, now: datetime | None = None, vocab: Vocab | 
     return answer
 
 
+def _untracked(q: Query) -> str:
+    """Why an opponent's players can be missing: a match keeps only the players picked when it was added."""
+    return (f"None of {' or '.join(q.opponents)}'s players are in your stats: a match keeps only the players "
+            "picked when it's added. Pick theirs on the Dashboard to see them here.")
+
+
 def _no_matches(q: Query, vocab: Vocab, understood: str) -> Answer:
     who = _subject(q, vocab)[0]
+    if q.who == "opponents" and q.opponents:  # "PSU's K/D", their players never picked
+        return Answer(False, understood, _untracked(q))
     return Answer(False, understood, f"No matches found for {who}{_filters_text(q)}.")
 
 
@@ -1424,6 +1437,8 @@ def _answer_rank(db: StatsDB, q: Query, vocab: Vocab) -> Answer:
         if q.min_rounds and level == "round":
             understood += f" (at least {q.min_rounds} rounds)"
     if not shown:
+        if q.who == "opponents" and q.opponents and q.group == "player":
+            return Answer(False, understood, _untracked(q), notes=notes)
         return Answer(False, understood, f"No {dim.label.lower()}s found{among}{_filters_text(q)}.", notes=notes)
     top = shown[0]
     kind = METRICS[first].kind
@@ -1459,7 +1474,9 @@ def _answer_rank(db: StatsDB, q: Query, vocab: Vocab) -> Answer:
     else:
         what = dim.label.lower()
         if q.most_played:
-            headline = f"{_cap(whose)} most played {what} is {top['name']}: {value} {_phrase(first, level)}."
+            played = _plural(top[first], {"matches": "match", "rounds": "round"}[first]) \
+                if first in SAMPLE_METRICS else f"{value} {_phrase(first, level)}"  # "1 match", not "1 matches"
+            headline = f"{_cap(whose)} most played {what} is {top['name']}: {played}."
         else:
             # "Your best map by K/D is Bank", "Your map with the most kills is Border"
             if q.group == "opponent":  # the opponent you win least against is the hardest, not the "worst"

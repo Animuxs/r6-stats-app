@@ -6,6 +6,7 @@ import unittest
 from datetime import datetime, timedelta
 
 import demo_season
+import player_profile
 from ask_engine import Vocab, ask, interpret
 from assistant import Conversation, answer_anything
 from stats_db import StatsDB, nice_time
@@ -143,6 +144,60 @@ class TestFollowUps(unittest.TestCase):
         _, safe = self.chat("my K/D on Bank", "is it safe?")
         self.assertFalse(safe.resolved)
         self.assertNotIn("K/D", safe.text)
+
+
+class TestOpponents(unittest.TestCase):
+    """Questions about the teams you've played that got the wrong answer on real replays."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.db = StatsDB(":memory:")
+        demo_season.load(cls.db)
+        cls.vocab = Vocab.from_db(cls.db)
+        cls.against = player_profile.against(cls.db, cls.vocab.me)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.db.close()
+
+    def answer(self, question):
+        return answer_anything(question, self.db).text
+
+    def test_which_teams_have_we_played(self):  # was: the easiest opponent
+        reply = self.answer("which teams have we played?")
+        self.assertTrue(reply.startswith(f"You've played {len(self.against)} teams"), reply)
+        for row in self.against:
+            self.assertIn(f"**{row['Opponent']}** {row['Record']}", reply)
+        self.assertEqual(self.answer("how many teams have we played?"), reply)
+
+    def test_who_beat_us_and_who_we_beat(self):  # were: a player ranking
+        lost_to = [r["Opponent"] for r in self.against if not r["Record"].endswith("–0")]
+        beat = [r["Opponent"] for r in self.against if not r["Record"].startswith("0–")]
+        beaten_us = self.answer("who beat us?")
+        self.assertEqual([t for t in (r["Opponent"] for r in self.against) if f"**{t}**" in beaten_us], lost_to)
+        we_beat = self.answer("who have we beaten?")
+        self.assertEqual([t for t in (r["Opponent"] for r in self.against) if f"**{t}**" in we_beat], beat)
+
+    def test_the_toughest_team_weve_faced(self):  # was: a player ranking
+        self.assertEqual(ask("who's the toughest team we've faced?", self.db, vocab=self.vocab).query.group,
+                         "opponent")
+
+    def test_team_stats_are_your_teams(self):  # was: yours
+        self.assertEqual(ask("team stats", self.db, vocab=self.vocab).query.who, "my_team")
+
+    def test_an_opponents_numbers_are_theirs(self):  # was: yours against them
+        team = self.against[0]["Opponent"]
+        for question in (f"{team}'s K/D", f"who is {team}'s best player?"):
+            query = ask(question, self.db, vocab=self.vocab).query
+            self.assertEqual((query.who, query.opponents), ("opponents", [team]), question)
+        theirs = ask(f"who is {team}'s best player?", self.db, vocab=self.vocab)
+        mine = {self.vocab.players[k] for k in self.db.players() if k == self.vocab.me}
+        self.assertNotIn(theirs.rows[0]["Player"] if theirs.ok else None, mine)
+
+    def test_who_did_we_play_last(self):  # was: every opponent
+        newest = next(m for m in self.db.match_list(self.vocab.me) if m.get("player"))
+        them = newest[f"team{1 - newest['team']}"]
+        self.assertIn(f"against **{them}**", self.answer("who did we play last?"))
 
 
 if __name__ == "__main__":

@@ -92,7 +92,7 @@ class TestAnswers(unittest.TestCase):
 
     def test_more_stats_than_ask(self):
         self.assertIn("losing streak", self.answer("what's my win streak").text)
-        self.assertIn("You last played on", self.answer("when did I last play?").text)
+        self.assertIn("You last played against **Metro Tech** on", self.answer("when did I last play?").text)
         duo = self.answer("who do I win most with")
         self.assertIn("You win most with", duo.text)
         self.assertEqual(duo.columns, ["Teammate", "Matches", "Record", "Win %"])
