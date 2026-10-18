@@ -32,7 +32,8 @@ KINDS = {"line": "Line (progression)", "area": "Area", "bar": "Bar (comparison)"
          "heatmap": "Heatmap (two groupings)", "histogram": "Histogram (spread)", "box": "Box plot (spread)"}
 # what a chart can go along (or split by), with a name for the menus
 AXES = {"match": "Match (over time)", "day": "Day", "week": "Week", "month": "Month", "map": "Map",
-        "operator": "Operator", "side": "Side", "site": "Site", "match_type": "Match type", "player": "Player"}
+        "operator": "Operator", "side": "Side", "site": "Site", "match_type": "Match type", "opponent": "Opponent",
+        "player": "Player"}
 SPLITS = {"none": "Nothing", "who": "Who (each player or team)", "side": "Side", "map": "Map",
           "match_type": "Match type"}
 TIME_AXES = {"match", "day", "week", "month"}
@@ -65,6 +66,8 @@ _AXIS_WORDS = {
     "operator": r"\b(operators?|ops?|characters?)\b", "site": r"\b(sites?|bomb ?sites?)\b",
     "map": r"\b(maps?)\b", "side": r"\b(sides?|attack (and|vs|or) defen[cs]e)\b",
     "match_type": r"\b(match ?types?|playlists?|ranked (and|vs|or) unranked|modes?)\b",
+    "opponent": r"\b(by opponent|per opponent|each opponent|every opponent|which opponents?|opponent teams?|"
+                r"against each (team|opponent))\b",
     "player": r"\b(players?|teammates?|everyone|each player|who)\b",
     "month": r"\b(months?|monthly)\b", "week": r"\b(weeks?|weekly)\b", "day": r"\b(days?|daily)\b",
 }
@@ -210,7 +213,8 @@ def parse(request: str, vocab: Vocab, now: datetime | None = None) -> ChartSpec:
             spec.metric = "win_rate"
         return spec
     time_axis = next((a for a in ("day", "week", "month") if a in axes), None)
-    group_axis = next((a for a in ("operator", "site", "map", "match_type", "side", "player") if a in axes), None)
+    group_axis = next((a for a in ("operator", "site", "map", "match_type", "side", "opponent", "player") if a in axes),
+                      None)
     if q.group in AXES and q.group not in ("match",) and not group_axis and not time_axis:
         group_axis = q.group if q.group not in TIME_AXES else None
         time_axis = q.group if q.group in TIME_AXES else None
