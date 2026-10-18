@@ -35,12 +35,13 @@ from typing import Any
 
 import assistant_knowledge as kb
 import chart_engine
-from ask_engine import (METRIC_WORDS, METRICS, Answer, Query, Vocab, _aggregate, _clean,
+from ask_engine import (_MONTH, METRIC_WORDS, METRICS, Answer, Query, Vocab, _aggregate, _clean,
                         _find_metrics, ask, fmt, fold, interpret, operator_table, rate, suggestions,
                         team_report, team_summary)
-from map_pool import map_pool, veto_hint
-from player_profile import streaks
 import recap
+from map_pool import map_pool, veto_hint
+from metrics_engine import round_eps
+from player_profile import streaks
 from stats_db import StatsDB, nice_time
 
 
@@ -111,11 +112,22 @@ _TIME_OF_DAY = re.compile(r"\b(morning|afternoon|evening|night|late|what time|ti
 _CONSISTENT = re.compile(r"\b(consistent|consistency|inconsistent|steady|streaky|up and down|reliable|variance|"
                          r"volatile|swingy)\b")
 _IMPROVING = re.compile(r"\b(improv\w* the most|most improved|who\W*s improving|who is improving|who improved|"
-                        r"who\W*s getting better|getting worse the most|who\W*s declining|biggest improvement)\b")
+                        r"who\W*s getting better|getting worse the most|who\W*s declining|biggest improvement|"
+                        r"slump|slumping|cold streak|falling off|fallen off|dropping off|declin\w*|who\W*s slipping)\b")
+_DECLINE = re.compile(r"\b(worse|slump|slumping|cold streak|falling off|fallen off|dropping off|declin\w*|slipping)\b")
+_BENCH = re.compile(r"\b(bench|benched|sit out|sits out|weakest link|liability|dead weight|"
+                    r"holding (us|me|the team) back|worst (player|teammate) on (my|our|the) team)\b")
+_LAST_RESULT = re.compile(r"\b(did (we|i) (win|lose|won|lost)( (our|my|the) last| last)|"
+                          r"how did (our|my|the) last (match|game) go|result of (our|my|the) last (match|game)|"
+                          r"^how was (the|our|my|that) (last )?(match|game)$|"
+                          r"(our|my|the) last (match|game)\W*s result)\b")
 _AVERAGE = re.compile(r"\b(average|avg|on average|typical|usually)\b.*\bper (game|match)\b|\bper (game|match) average\b|"
                       r"\b(average|avg) (\w+ ){0,2}(a|each|every) (game|match)\b|\bon average\b")
 _STATS_CONTEXT = re.compile(r"\b(our|we|team|teams|when|in my|in our|since|last|this|on|as|vs|versus|by|per|over)\b")
 _STREAK = re.compile(r"\bstreaks?\b|\bin a row\b|\bstraight (wins|losses)\b")
+# "how was September?", "how was last week?": your stats over that time
+_HOW_WAS = re.compile(r"^how (was|were|is|has been|have been) (?P<period>(this|last|the past|past) (week|weekend|month|year)|"
+                      r"(this|last) (season)|today|yesterday|" + _MONTH + r")\W*$")
 _HOW_TO = re.compile(r"^(how (do|can|to)|where|what is|what's|what does)\b")  # about the app, not the stats
 # a sitting's recap: "how did I do last night?", "recap tonight", "my last session"
 _RECAP = re.compile(r"\b(last night|tonight|last session|this session|latest session|session recap|recap|"
@@ -490,6 +502,8 @@ def _session_recap(db: StatsDB, vocab: Vocab) -> Reply:
 
 def _last_played(question: str, db: StatsDB, vocab: Vocab, first: bool = False) -> Reply:
     kind, key = _who(question, vocab)
+    if kind == "my_team":
+        key = vocab.me  # "did we win our last match?": your side's result
     played = [m for m in db.match_list(key) if m.get("player")] if key else db.match_list()
     if not played:
         return Reply("There are no matches for that yet.", "stats")
@@ -497,10 +511,36 @@ def _last_played(question: str, db: StatsDB, vocab: Vocab, first: bool = False) 
     who = "You" if key == vocab.me else _name(vocab, key) if key else "The"
     what = "first" if first else "last"
     result = {1: ", and won", 0: ", and lost"}.get(m.get("won"), "")
+    own, other = (m["score1"], m["score0"]) if m.get("team") == 1 else (m["score0"], m["score1"])
     lead = f"{who} {'first' if first else 'last'} played" if key else f"The {what} match in your stats was"
     return Reply(f"{lead} on **{nice_time(m['played_at'])}**, on {m.get('map') or 'an unknown map'}"
-                 f"{result} ({m['score0']}–{m['score1']}).", "stats",
+                 f"{result} ({own}–{other}).", "stats",
                  suggestions=["Analyze my last match", "Show my last 5 matches"])
+
+
+def _bench(db: StatsDB, vocab: Vocab) -> Reply:
+    """"Who should I bench?": your side's players by EPS, lowest first, with the numbers behind it."""
+    if not vocab.me:
+        return Reply("I need to know which player is you first: add a match you recorded.", "stats", answered=False)
+    rows = db.query(
+        f"""SELECT MAX(t.player) AS player, {METRICS['matches'].match_sql} AS matches, {METRICS['eps'].match_sql} AS eps,
+                   {METRICS['kd'].match_sql} AS kd, {METRICS['kost'].match_sql} AS kost
+            FROM match_players t JOIN matches m ON m.match_id = t.match_id
+            WHERE EXISTS (SELECT 1 FROM match_players s WHERE s.match_id = t.match_id AND s.player_key = ?
+                          AND s.team = t.team)
+            GROUP BY t.player_key HAVING COUNT(*) >= 2""", [vocab.me])
+    rows = [r for r in rows if r["eps"] is not None]
+    if len(rows) < 2:
+        return Reply("I need at least two of your side's players with two matches each to compare.", "stats")
+    rows.sort(key=lambda r: r["eps"])
+    table = [{"Player": r["player"], "Matches": r["matches"], "EPS": round_eps(r["eps"]), "K/D": round(r["kd"], 2),
+              "KOST": f"{r['kost']:.0f}%"} for r in rows]
+    low = table[0]
+    average = round_eps(sum(r["eps"] * r["matches"] for r in rows) / sum(r["matches"] for r in rows))
+    return Reply(f"On the numbers, **{low['Player']}** has had the lowest EPS on your side: {low['EPS']} over "
+                 f"{low['Matches']} matches (your side's average is {average}). One number isn't the whole story: "
+                 f"role, KOST and trades matter too.", "stats", rows=table, columns=list(table[0]),
+                 suggestions=[f"Analyze {low['Player']}", f"Is {low['Player']} improving?"])
 
 
 def _duos(question: str, db: StatsDB, vocab: Vocab) -> Reply:
@@ -666,7 +706,7 @@ def _consistency(question: str, db: StatsDB, vocab: Vocab) -> Reply:
                  suggestions=["Rolling average of my EPS", "Analyze my stats"])
 
 
-def _improving(db: StatsDB, vocab: Vocab) -> Reply:
+def _improving(db: StatsDB, vocab: Vocab, decline: bool = False) -> Reply:
     """Each player's EPS in their earlier matches against their later ones, most improved first."""
     rows = []
     for key, name in vocab.players.items():
@@ -681,6 +721,17 @@ def _improving(db: StatsDB, vocab: Vocab) -> Reply:
         return Reply("Nobody has 6 matches yet, which is what I need to compare earlier and recent games.", "stats")
     rows.sort(key=lambda r: -r["Change"])
     top, bottom = rows[0], rows[-1]
+    if decline:  # "who's in a slump?": the biggest drop first
+        rows.reverse()
+        if bottom["Change"] >= 0:
+            text = (f"Nobody's slipping: everyone's recent EPS is at or above their earlier matches. "
+                    f"{top['Player']} has improved the most ({top['Earlier EPS']} → {top['Recent EPS']}).")
+        else:
+            text = (f"**{bottom['Player']}** has dropped the most: EPS {bottom['Earlier EPS']} → "
+                    f"{bottom['Recent EPS']} ({bottom['Change']:+d}), comparing their earlier half of matches with "
+                    f"their recent half.")
+        return Reply(text, "stats", rows=rows, columns=list(rows[0]),
+                     suggestions=[f"Chart {bottom['Player']}'s EPS over time", f"Analyze {bottom['Player']}"])
     text = (f"**{top['Player']}** has improved the most: EPS {top['Earlier EPS']} → {top['Recent EPS']} "
             f"({top['Change']:+d}), comparing their earlier half of matches with their recent half.")
     if bottom is not top and bottom["Change"] < 0:
@@ -814,6 +865,11 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
     if re.search(r"\b(this page|this tab|here|current page)\b", text) and page and (t := kb.page_topic(page)):
         return _topic_reply(t, question)
 
+    if m := _HOW_WAS.match(text):
+        period = m.group("period")
+        question = f"how did I do {'in ' if re.fullmatch(_MONTH, period) else ''}{period}"
+        text = _norm(question)
+
     matches = db.summary()["matches"]
     if matches:
         vocab = vocab or Vocab.from_db(db)
@@ -832,7 +888,8 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
     if matches and _RECAP.search(text) and not _HOW_TO.search(text):
         return _with_question(_session_recap(db, vocab), question)
     # the app: "how do I add my matches?"
-    if (topic := kb.guide(question)) and not (stats_kind and (clean_metrics or q.kind in ("rank", "compare", "count"))):
+    if (topic := kb.guide(question)) and (topic.key in ("about", "privacy") or not (
+            stats_kind and (clean_metrics or q.kind in ("rank", "compare", "count")))):
         return _topic_reply(topic, question)
     if not matches:
         if _ANALYZE.search(text) or q is None:
@@ -850,7 +907,9 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
         return reply
     if _STREAK.search(text):
         return _with_question(_streaks(question, db, vocab), question)
-    if _LAST_PLAYED.search(text):
+    if _BENCH.search(text):
+        return _with_question(_bench(db, vocab), question)
+    if _LAST_RESULT.search(text) or _LAST_PLAYED.search(text):
         return _with_question(_last_played(question, db, vocab), question)
     if _FIRST_PLAYED.search(text) and not clean_metrics:
         return _with_question(_last_played(question, db, vocab, first=True), question)
@@ -859,7 +918,7 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
     if _BAN.search(text):
         return _with_question(_ban(question, db, vocab), question)
     if _IMPROVING.search(text):
-        return _with_question(_improving(db, vocab), question)
+        return _with_question(_improving(db, vocab, decline=bool(_DECLINE.search(text))), question)
     if _CONSISTENT.search(text):
         return _with_question(_consistency(question, db, vocab), question)
     if _TIME_OF_DAY.search(text) and not (q and q.since):
