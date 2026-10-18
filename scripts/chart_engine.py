@@ -83,6 +83,7 @@ class ChartSpec:
     teams: list[str] = field(default_factory=list)    # team names (who == "team": one series each)
     maps: list[str] = field(default_factory=list)
     operators: list[str] = field(default_factory=list)
+    opponents: list[str] = field(default_factory=list)  # only matches against these teams
     side: str | None = None
     match_type: str | None = None
     tag: str | None = None
@@ -103,6 +104,8 @@ class ChartSpec:
         prefix = "Running total of " if self.cumulative else ""
         text = f"{prefix}{stat} by {along}" + (f" and {self.split.replace('_', ' ')}" if self.kind == "heatmap" else "")
         bits = []
+        if self.opponents:
+            bits.append("against " + ", ".join(self.opponents))
         if self.maps:
             bits.append("on " + ", ".join(self.maps))
         if self.operators:
@@ -172,6 +175,7 @@ def parse(request: str, vocab: Vocab, now: datetime | None = None) -> ChartSpec:
     q = interpret(re.sub(_CHART_WORDS, " ", request, flags=re.I), vocab, now)
     spec = ChartSpec(notes=list(q.notes))
     spec.maps, spec.operators, spec.side, spec.match_type, spec.tag = q.maps, q.operators, q.side, q.match_type, q.tag
+    spec.opponents = q.opponents
     spec.since, spec.until, spec.last_matches = q.since, q.until, q.last_matches or q.first_matches
     metrics = [m for m in q.metrics if m in CHART_METRICS]
     axes = [a for a, pattern in _AXIS_WORDS.items() if re.search(pattern, re.sub(r"\bon (attack|defen[cs]e)\b", "", text))]
@@ -251,7 +255,8 @@ def parse(request: str, vocab: Vocab, now: datetime | None = None) -> ChartSpec:
 
 def _query(spec: ChartSpec, who: str, players: list[str], team: str | None) -> Query:
     return Query(kind="rank", who=who, players=players, team=team, teams=[team] if team else [], maps=spec.maps,
-                 operators=spec.operators, side=spec.side, match_type=spec.match_type, tag=spec.tag,
+                 operators=spec.operators, opponents=spec.opponents, side=spec.side, match_type=spec.match_type,
+                 tag=spec.tag,
                  since=spec.since, until=spec.until, last_matches=spec.last_matches)
 
 

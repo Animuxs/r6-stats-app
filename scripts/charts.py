@@ -51,7 +51,7 @@ def _put(session: Session, spec: ChartSpec) -> None:
         session.set(_KEY + name, getattr(spec, name))
     session.set(_KEY + "match_type", spec.match_type or EVERY_TYPE)
     session.set(_KEY + "last_n", spec.last_matches or 0)
-    for name in ("since", "until", "tag"):
+    for name in ("since", "until", "tag", "opponents"):
         session.set(_KEY + name, getattr(spec, name))
     session.set(_KEY + "notes", list(spec.notes))
 
@@ -92,10 +92,10 @@ def _forget(index: int) -> None:
 
 def _edited() -> None:
     """A menu was changed by hand: it's no longer just the request's chart, and the filters a request set
-    without a menu (dates, a tag) go."""
+    without a menu (dates, a tag, an opponent) go."""
     session = Session()
-    for name in ("since", "until", "tag", "notes"):
-        session.set(_KEY + name, None if name != "notes" else [])
+    for name in ("since", "until", "tag", "opponents", "notes"):
+        session.set(_KEY + name, [] if name in ("notes", "opponents") else None)
     session.set("chart_asked", None)
     session.set("chart_customizing", True)  # keep the menus open while they're being used
 
@@ -194,6 +194,7 @@ class ChartsTab(Tab):
                          side=_value(s, "side") or None, match_type=None if match_type == EVERY_TYPE else match_type,
                          last_matches=s.get(_KEY + "last_n") or None, since=s.get(_KEY + "since"),
                          until=s.get(_KEY + "until"), tag=s.get(_KEY + "tag"),
+                         opponents=list(s.get(_KEY + "opponents") or []),
                          rolling=(s.get(_KEY + "rolling") or 0) if kind in ("line", "area") else 0,
                          cumulative=bool(s.get(_KEY + "cumulative")) and kind in ("line", "area"),
                          notes=list(s.get(_KEY + "notes") or []))
