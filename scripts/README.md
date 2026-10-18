@@ -122,7 +122,7 @@ Dashboard:
   page opens a chat (see below). Turn it off with the **Assistant** switch in the
   sidebar.
 - **Match History**: every match you've added, newest first, with your record,
-  K/D and EPS, and who's **Tracked** in each. Select a match to open its
+  K/D and EPS, who it was against, and who's **Tracked** in each. Select a match to open its
   scoreboards on the Dashboard, to remove it from your stats, or to write about
   it: a **tag** (Official, Scrim, Practice or Casual), a note and a link to its
   video. Once a match is tagged, **Show** lists just one tag's matches, and Ask

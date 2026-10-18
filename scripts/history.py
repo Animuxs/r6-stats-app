@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import streamlit as st
 
+from ask_engine import named_team
 from metrics_engine import eps_from_rating, round_eps, rows_csv
 from recap import headline, recap, sittings
 from session import Session
@@ -46,6 +47,16 @@ def _save_note(match_id: str, label: str) -> None:
         _note("error", str(e))
         return
     _note("success", f"Saved your note on {label}.")
+
+
+def _opponent(r: dict) -> str:
+    """Who a match was against: the other team, when you played and it has a name of its own (not Ranked's
+    "ENEMY TEAM"); both teams when you didn't."""
+    names = [r.get("team0"), r.get("team1")]
+    if r.get("player"):
+        other = names[1 - (r.get("team") or 0)]
+        return other if named_team(other) else ""
+    return " vs ".join(names) if all(named_team(n) for n in names) else ""
 
 
 def _new_filter() -> None:
@@ -186,7 +197,8 @@ class HistoryTab(Tab):
                 rows = [r for r in rows if notes.get(r["match_id"], {}).get("tag") == show]
         table = []
         for r in rows:
-            row = {"When": nice_time(r["played_at"]), "Map": r["map"] or "", "Type": r["match_type"] or ""}
+            row = {"When": nice_time(r["played_at"]), "Map": r["map"] or "", "Type": r["match_type"] or "",
+                   "Opponent": _opponent(r)}
             if r["player"]:
                 own, other = (r["score0"], r["score1"]) if r["team"] == 0 else (r["score1"], r["score0"])
                 row |= {"Result": {1: "Win", 0: "Loss"}.get(r["won"], "Draw"), "Score": f"{own}–{other}",

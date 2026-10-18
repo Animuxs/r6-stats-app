@@ -362,6 +362,8 @@ class TestAnalyticsPages(unittest.TestCase):
         self.assertFalse(at.exception)
         self.assertEqual(len(at.dataframe[0].value), 3)
         self.assertEqual({m.label: m.value for m in at.metric}["Matches"], "3")
+        # who each was against: Fabian plays for Team Liquid in the sample match
+        self.assertEqual(set(at.dataframe[0].value["Opponent"]), {"Spacestation Gaming"})
 
     def test_match_notes(self):
         from stats_db import StatsDB
