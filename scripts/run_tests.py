@@ -72,8 +72,8 @@ def _run(folder: str, names: list[str]) -> tuple[int, list[str], int, dict[str, 
 
 HERE = Path(__file__).parent
 COVERAGE_CONFIG = HERE / ".coveragerc"
-MIN_TOTAL = 93  # percent of the app's statements the tests run
-MIN_MODULE = 75  # and of each module's
+MIN_TOTAL = 92  # percent of the app's statements and branches (each if/else way) the tests run
+MIN_MODULE = 75  # and of each module's statements
 
 
 def _covered() -> int:

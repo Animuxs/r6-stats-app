@@ -6,6 +6,8 @@ omit =
     scripts/run_tests.py
     scripts/capture_necc_rosters.py
     scripts/example_season_stats.py
+# both ways of every if, loop and and/or, not just each line
+branch = true
 concurrency = multiprocessing,thread
 parallel = true
 data_file = build/.coverage

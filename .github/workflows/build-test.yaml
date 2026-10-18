@@ -25,7 +25,7 @@ jobs:
 
   # The app's tests on every pull request, before anything is merged: pyflakes, then every test in
   # scripts/ and desktop/ on all the runner's cores, and the coverage the tests must keep
-  # (scripts/run_tests.py: at least 93% of the app, and 75% of each module).
+  # (scripts/run_tests.py: at least 92% of the app counting both ways of every if, and 75% of each module).
   app-tests:
     runs-on: windows-latest
     steps:
