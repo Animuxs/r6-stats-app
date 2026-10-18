@@ -221,6 +221,37 @@ def against(db: StatsDB, key: str) -> list[dict[str, Any]]:
             for r in rows if named_team(r["opponent"])]
 
 
+# the stats a goal can be set on: the headline ones and the counts that tell how a player plays
+GOAL_STATS = ["kd", "eps", "kpr", "hs", "kost", "survival", "entry", "win_rate", "dpr", "clutches", "trade_kills"]
+GOAL_MATCHES = 10  # a goal is measured over the newest this many matches
+
+
+def goal_progress(db: StatsDB, key: str) -> list[dict[str, Any]]:
+    """A player's goals, each with their number over the newest GOAL_MATCHES matches and whether it's met:
+    [{"key", "label", "target", "value", "shown", "target_shown", "met", "progress" (0-1)}]."""
+    key = key.casefold()
+    goals = db.goals(key)
+    if not goals:
+        return []
+    recent = [r["match_id"] for r in form(db, key, GOAL_MATCHES)]
+    numbers = stats_for(db, key, recent) if recent else {}
+    out = []
+    for stat, target in goals.items():
+        if stat not in METRICS:
+            continue
+        metric, value = METRICS[stat], numbers.get(stat)
+        if value is None:
+            met, progress = False, 0.0
+        elif metric.higher_is_better:
+            met, progress = value >= target, (min(1.0, value / target) if target > 0 else float(value >= target))
+        else:
+            met, progress = value <= target, (min(1.0, target / value) if value > 0 else 1.0)
+        out.append({"key": stat, "label": metric.label, "target": target, "value": value,
+                    "shown": fmt(value, metric.kind), "target_shown": fmt(target, metric.kind), "met": met,
+                    "progress": progress})
+    return out
+
+
 def profile(db: StatsDB, key: str) -> Profile:
     """Everything the Players tab shows about one player."""
     key = key.casefold()
