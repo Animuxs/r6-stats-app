@@ -128,6 +128,11 @@ _STREAK = re.compile(r"\bstreaks?\b|\bin a row\b|\bstraight (wins|losses)\b")
 # "how was September?", "how was last week?": your stats over that time
 _HOW_WAS = re.compile(r"^how (was|were|is|has been|have been) (?P<period>(this|last|the past|past) (week|weekend|month|year)|"
                       r"(this|last) (season)|today|yesterday|" + _MONTH + r")\W*$")
+# the round situations a team's stats cover: "how often do we win after planting?", "our retake %"
+_SITUATION = re.compile(r"\b(post ?plants?|after (we|i) plant(ed)?|when (we|i) plant(ed)?|once (we|i) plant(ed)?|"
+                        r"retakes?|retaking|after (they|the enemy|the other team) plant(ed)?|plant (rate|%|percent\w*)|"
+                        r"how often (do|did) (we|i) plant|man ?down|men down|down (a|one|two|2) (players?|men|man)|"
+                        r"player disadvantage|outnumbered|stop(ped)? the plant|deny the plant|situations?)\b")
 _HOW_TO = re.compile(r"^(how (do|can|to)|where|what is|what's|what does)\b")  # about the app, not the stats
 # a sitting's recap: "how did I do last night?", "recap tonight", "my last session"
 _RECAP = re.compile(r"\b(last night|tonight|last session|this session|latest session|session recap|recap|"
@@ -516,6 +521,59 @@ def _last_played(question: str, db: StatsDB, vocab: Vocab, first: bool = False) 
     return Reply(f"{lead} on **{nice_time(m['played_at'])}**, on {m.get('map') or 'an unknown map'}"
                  f"{result} ({own}–{other}).", "stats",
                  suggestions=["Analyze my last match", "Show my last 5 matches"])
+
+
+def _situations(text: str, db: StatsDB, vocab: Vocab) -> Reply:
+    """How your side does in the situations that decide rounds: post-plant, retakes, man down. Your saved team's
+    matches if you have one (like Team Analytics), else your side of every match you're in."""
+    team = _my_team(vocab, db)
+    if team:
+        players, need, who = vocab.rosters[team], min(3, len(vocab.rosters[team])), team
+    elif vocab.me:
+        players, need, who = [vocab.me], 1, "Your side"
+    else:
+        return Reply("I need to know which player is you first: add a match you recorded.", "stats", answered=False)
+    s = team_summary(db, players, need)
+    if not s["rounds"]:
+        return Reply(f"{who} has no rounds with the details this needs yet: replays from recent seasons have them.",
+                     "stats")
+
+    def pct(part: int, whole: int) -> str:
+        return f"{fmt(rate(part, whole), 'pct')} ({part} of {whole})" if whole else "— (no rounds yet)"
+
+    lines = {
+        "plant": f"On attack, {who} planted in {pct(s['plants'], s['attack_rounds'])} of rounds.",
+        "post": f"After planting, {who} won {pct(s['post_plant_won'], s['post_plant'])}.",
+        "stop": f"On defense, {who} stopped the plant in "
+                f"{pct(s['defense_rounds'] - s['enemy_plants'], s['defense_rounds'])} of rounds.",
+        "retake": f"After the other team planted, {who} won {pct(s['retakes_won'], s['retakes'])} (retakes).",
+        "down": f"Down 2+ players, {who} got back to even in {pct(s['man_down_even'], s['man_down'])} and won "
+                f"{pct(s['man_down_won'], s['man_down'])}.",
+    }
+    if re.search(r"\bretak|after (they|the enemy|the other team) plant", text):
+        order = ["retake", "stop"]
+    elif re.search(r"\b(post ?plant|after (we|i) plant|when (we|i) plant|once (we|i) plant)", text):
+        order = ["post", "plant"]
+    elif re.search(r"\bplant (rate|%|percent)|how often (do|did) (we|i) plant", text):
+        order = ["plant", "post"]
+    elif re.search(r"\bstop(ped)? the plant|deny the plant", text):
+        order = ["stop", "retake"]
+    elif re.search(r"\b(man ?down|men down|down (a|one|two|2)|disadvantage|outnumbered)", text):
+        order = ["down"]
+    else:
+        order = ["plant", "post", "stop", "retake", "down"]
+    rows = [{"Situation": name, "%": rate(part, whole), "Rounds": f"{part} of {whole}"} for name, part, whole in (
+        ("Attack: planted the defuser", s["plants"], s["attack_rounds"]),
+        ("Attack: won after planting", s["post_plant_won"], s["post_plant"]),
+        ("Defense: stopped the plant", s["defense_rounds"] - s["enemy_plants"], s["defense_rounds"]),
+        ("Defense: won after their plant", s["retakes_won"], s["retakes"]),
+        ("Man down: got back to even", s["man_down_even"], s["man_down"]),
+        ("Man down: won the round anyway", s["man_down_won"], s["man_down"]))]
+    for r in rows:
+        r["%"] = None if r["%"] is None else round(r["%"])
+    note = "" if team else " Save your team on Team Analytics to count just its matches."
+    return Reply(" ".join(lines[k] for k in order) + note, "stats", rows=rows, columns=["Situation", "%", "Rounds"],
+                 links=[("teams", "Team Analytics")], suggestions=["Analyze my team", "Which opponent is the hardest?"])
 
 
 def _bench(db: StatsDB, vocab: Vocab) -> Reply:
@@ -907,6 +965,8 @@ def answer_anything(question: str, db: StatsDB, *, vocab: Vocab | None = None, n
         return reply
     if _STREAK.search(text):
         return _with_question(_streaks(question, db, vocab), question)
+    if _SITUATION.search(text):  # "our post-plant win rate" too: it names a stat, but one only rounds can tell
+        return _with_question(_situations(text, db, vocab), question)
     if _BENCH.search(text):
         return _with_question(_bench(db, vocab), question)
     if _LAST_RESULT.search(text) or _LAST_PLAYED.search(text):
