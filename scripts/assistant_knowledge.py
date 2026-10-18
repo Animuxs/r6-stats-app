@@ -158,6 +158,8 @@ GUIDE: list[Topic] = [
           "“compare me and Paltry”, “who's our best entry?”\n"
           "- **Analyze** a player or a team: “analyze my stats”, “analyze Paltry”, “analyze my team”, "
           "“what should I work on?”\n"
+          "- **Recap and scout**: “how did we do last night?”, “scout Metro Tech”, “who beat us?”, "
+          "“my best round”, “my goals”\n"
           "- **Guide you around the app**: “how do I add my matches?”, “where are my replays?”\n"
           "- **Explain stats**: “what is KOST?”\n\n"
           "I remember the conversation, so you can follow up with “what about on defense?” or “and Paltry?”. "
