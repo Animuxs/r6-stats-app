@@ -678,43 +678,83 @@ def _read_conditions(text: str, q: Query) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
+@dataclass
+class _Reading:
+    """What interpret has read of a question so far, shared by its steps: the text left to read (each
+    step takes out the words it used) and what earlier steps found that later ones decide by."""
+
+    question: str
+    text: str = ""
+    entities: list[Entity] = field(default_factory=list)
+    players: list[str] = field(default_factory=list)
+    their: bool = False           # "PSU's best player": one of theirs
+    wants_me: bool = False
+    wants_we: bool = False
+    named_types: list[str] = field(default_factory=list)
+    attack: bool = False
+    defense: bool = False
+    group: str | None = None
+    single_match: bool = False
+    counting: bool = False
+
+
 def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query:
-    """Read a plain-English question into a Query."""
-    now = now or datetime.now()
-    q = Query()
+    """Read a plain-English question into a Query, one step at a time: who and what it names, which
+    matches, how to group them, whose stats, which stats, in what order, and what kind of answer."""
+    q, r = Query(), _Reading(question)
+    _read_names(r, q, vocab, now or datetime.now())
+    _read_match_filters(r, q, vocab)
+    _read_grouping(r, q)
+    _read_whose(r, q, vocab)
+    _read_metrics(r, q)
+    _read_order(r, q)
+    _read_kind(r, q)
+    _fill_defaults(q, vocab)
+    return q
+
+
+def _read_names(r: _Reading, q: Query, vocab: Vocab, now: datetime) -> None:
+    """The players, teams, maps, operators and opponents it names, its time and conditions, and whether
+    it asks about me or us."""
+    question = r.question
     entities, q.notes = vocab.find(question)
     # "who got the ace?", "any aces?": the five-kill round, not the operator Ace (who you play "as")
     if re.search(r"\b(an|the|any|got|get|gets|getting|hit|hits|had|have|has) aces?\b|\baced\b", fold(question)) \
             and not re.search(r"\b(as|play|plays|played|playing|on) ace\b", fold(question)):
         entities = [e for e in entities if not (e.kind == "operator" and fold(e.value) == "ace")]
+    r.entities = entities
     text = _clean(question, entities)
     text = _read_time(text, q, now)
-    text = _read_conditions(text, q)
+    r.text = _read_conditions(text, q)
 
-    players = list(dict.fromkeys(e.value for e in entities if e.kind == "player"))
+    r.players = list(dict.fromkeys(e.value for e in entities if e.kind == "player"))
     q.teams = list(dict.fromkeys(e.value for e in entities if e.kind == "team"))
     q.team = q.teams[0] if q.teams else None
     q.maps = list(dict.fromkeys(e.value for e in entities if e.kind == "map"))
     q.operators = list(dict.fromkeys(e.value for e in entities if e.kind == "operator"))
     q.opponents = list(dict.fromkeys(e.value for e in entities if e.kind == "opponent"))
     # "PSU's best player", "PSU's K/D": theirs (the name found takes its "'s" along)
-    their = any(e.kind == "opponent" and (question[e.start:e.end].endswith(("'s", "’s"))
-                                          or re.match(r"['’]s\b", question[e.end:])) for e in entities)
-    wants_we = _has(_WORDS["we"], text)
+    r.their = any(e.kind == "opponent" and (question[e.start:e.end].endswith(("'s", "’s"))
+                                            or re.match(r"['’]s\b", question[e.end:])) for e in entities)
+    r.wants_we = _has(_WORDS["we"], r.text)
     # "tell me about Sacri", "show me the top players": that "me" is who's asking, not whose stats
-    asking = re.sub(r"\b(tell|show|give|get|let|help|remind|find|send) me\b", " ", text)
-    wants_me = _has(_WORDS["me"], re.sub(_WORDS["we"], " ", asking))
-    if wants_me and vocab.me and vocab.me not in players:
-        players.insert(0, vocab.me)
+    asking = re.sub(r"\b(tell|show|give|get|let|help|remind|find|send) me\b", " ", r.text)
+    r.wants_me = _has(_WORDS["me"], re.sub(_WORDS["we"], " ", asking))
+    if r.wants_me and vocab.me and vocab.me not in r.players:
+        r.players.insert(0, vocab.me)
 
-    text = re.sub(r"\branked (by|on|in terms of)\b", "rank by", text)  # "ranked by K/D" orders; it isn't Ranked
+
+def _read_match_filters(r: _Reading, q: Query, vocab: Vocab) -> None:
+    """Which matches: a match type ("ranked"), a tag ("scrims"), only wins or only losses."""
+    r.text = re.sub(r"\branked (by|on|in terms of)\b", "rank by", r.text)  # "ranked by K/D" orders; it isn't Ranked
+    text = r.text
     types = text.replace("quick play", "quick").replace("quickplay", "quick")
-    named_types = [mt for mt in vocab.match_types  # "ranked", "unranked", "quick match", "custom games", "customs"
-                   if (word := re.sub(r" ?(match|game)$", "", loose(mt))) and _has(r"\b" + word + r"s?\b", types)]
+    r.named_types = [mt for mt in vocab.match_types  # "ranked", "unranked", "quick match", "custom games", "customs"
+                     if (word := re.sub(r" ?(match|game)$", "", loose(mt))) and _has(r"\b" + word + r"s?\b", types)]
     # one named that isn't in the stats ("my kd in unranked" with no Unranked matches) finds nothing, and says why
     missing = [(match_type, phrase) for word, (match_type, phrase) in _MATCH_TYPE_WORDS.items()
                if match_type not in vocab.match_types and _has(r"\b" + word + r"s?\b", types)]
-    q.match_type = named_types[-1] if named_types else missing[-1][0] if missing else None
+    q.match_type = r.named_types[-1] if r.named_types else missing[-1][0] if missing else None
     q.notes += [f"There are no {phrase} in your stats." for _, phrase in missing]
     tags = [tag for tag, pattern in _TAG_WORDS.items() if _has(pattern, text)]
     q.tag = tags[0] if len(tags) == 1 else None
@@ -729,11 +769,15 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
                              r"\bmatches (i|we) lost\b")):
         if m := re.search(pattern, text):
             q.won = won
-            text = text[:m.start()] + " " + text[m.end():]
+            r.text = text[:m.start()] + " " + text[m.end():]
             break
 
-    attack = _has(r"\b(attack|attacking|attacker|attackers|atk|offense|offence)\b", text)
-    defense = _has(r"\b(defen[cs]e|defending|defender|defenders|def|defend)\b", text)
+
+def _read_grouping(r: _Reading, q: Query) -> None:
+    """How to group the matches: by map, operator, side, week, match..., or not at all; and a side."""
+    text = r.text
+    r.attack = attack = _has(r"\b(attack|attacking|attacker|attackers|atk|offense|offence)\b", text)
+    r.defense = defense = _has(r"\b(defen[cs]e|defending|defender|defenders|def|defend)\b", text)
     q.most_played = _has(_WORDS["most_played"], text) or \
         _has(r"\b(what|which) (operators?|ops|characters?|maps?) (do|does|did) .{0,20}\b(play|use|pick|run)\b", text)
     # "who plays Twitch?": the players who've played that operator, most rounds first
@@ -758,28 +802,32 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
     if _has(_WORDS["trend"], text) and group not in ("day", "week", "month"):
         group = "match"
     # "most kills in a match", "my best games": single matches ranked, not totals or a trend
-    single_match = _has(r"\bin (?:a|one|1|a single|one single|any) (?:match|game)\b|\bsingle (?:match|game)\b|"
-                        r"\b(?:best|worst|top|highest|lowest) (?:match|game)(?:es|s)?\b(?! type)", text)
-    if single_match and group in (None, "match", "player"):
+    r.single_match = _has(r"\bin (?:a|one|1|a single|one single|any) (?:match|game)\b|\bsingle (?:match|game)\b|"
+                          r"\b(?:best|worst|top|highest|lowest) (?:match|game)(?:es|s)?\b(?! type)", text)
+    if r.single_match and group in (None, "match", "player"):
         group = "player_match" if group == "player" else "match"
-    if group is None and len(named_types) >= 2:
+    if group is None and len(r.named_types) >= 2:
         group = "match_type"  # "ranked vs custom"
     if group == "match_type":
         q.match_type = None  # "ranked vs unranked" compares them rather than keeping one
     # "most defuses", "best K/D", "opponents with the best K/D": with nobody named, that's a ranking of players
     if group is None and _has("|".join((_BEST, _WORST, _HIGH, _LOW)), text) and not (
-            wants_me or wants_we or players or q.team or q.maps or q.operators or q.side
+            r.wants_me or r.wants_we or r.players or q.team or q.maps or q.operators or q.side
             or _has(_WORDS["record"], text) or _has(_WORDS["count"], text)):
         group = "player"
+    r.group = group
 
-    # whose stats
+
+def _read_whose(r: _Reading, q: Query, vocab: Vocab) -> None:
+    """Whose stats: mine, my team's, named players', a team's, the opponents', or everyone's."""
+    text, group, players = r.text, r.group, r.players
     ranking_players = group in ("player", "player_match")
     if _has(_WORDS["teammates"], text) and ranking_players:
         if vocab.me and _has(_WITH_ME, text) and _has(_WORDS["me"], re.sub(_TEAMMATES_PHRASE, " ", text)):
             q.who, q.highlight_me = "my_team", True  # my whole side, me included
         else:
             q.who = "teammates"
-    elif (_has(_WORDS["opponents"], text) or their) and group != "opponent":
+    elif (_has(_WORDS["opponents"], text) or r.their) and group != "opponent":
         q.who = "opponents"  # "PSU's best player": one of theirs, from the matches against them
     elif vocab.me and ranking_players and _has(r"\b(carr(y|ies|ied|ying)|mvp|most valuable)\b", text):
         q.who = "my_team"  # "who carries?": one of yours
@@ -789,17 +837,20 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
         q.who = "team"
     elif players and not (ranking_players and players == [vocab.me]):
         q.who, q.players = "players", players
-    elif wants_we:
+    elif r.wants_we:
         q.who = "my_team"
     elif ranking_players:
         q.who = "everyone"
-        q.highlight_me = wants_me and vocab.me is not None
+        q.highlight_me = r.wants_me and vocab.me is not None
     else:
         q.who = "me"
 
-    # what to measure: "matches"/"rounds" are only the thing asked about in counts and "most played"
+
+def _read_metrics(r: _Reading, q: Query) -> None:
+    """What to measure: "matches"/"rounds" are only the thing asked about in counts and "most played"."""
+    text = r.text
     found = _find_metrics(text)
-    counting = _has(_WORDS["count"], text)
+    r.counting = counting = _has(_WORDS["count"], text)
     q.metrics = [m for m in found if m not in SAMPLE_METRICS or counting or q.most_played]
     if counting and any(m not in SAMPLE_METRICS for m in q.metrics):
         q.metrics = [m for m in q.metrics if m not in SAMPLE_METRICS]  # "how many matches have we won": wins
@@ -819,6 +870,10 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
     if _has(_WORDS["record"], text):
         q.metrics = RECORD + [m for m in q.metrics if m not in RESULT_METRICS]
 
+
+def _read_order(r: _Reading, q: Query) -> None:
+    """Best or worst first, highest or lowest, and how many ("top 5")."""
+    text = r.text
     if _has(_BEST, text):
         q.order = "best"
     elif _has(_WORST, text):
@@ -829,7 +884,7 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
         q.order = "low"
     if q.most_played:
         q.order = "high"
-    if group == "opponent":  # a hard opponent is one you win little against, an easy one much
+    if r.group == "opponent":  # a hard opponent is one you win little against, an easy one much
         if _has(r"\b(hardest|toughest|strongest|struggle|lose to|lost to)\b", text):
             q.order = "worst"
         elif _has(r"\b(easiest|weakest)\b", text):
@@ -838,7 +893,10 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
             re.search(r"\b" + _NUM + r" (?:best|worst|top|highest|lowest|most|least)\b", text):
         q.limit = _number(m.group(1))
 
-    # what kind of answer
+
+def _read_kind(r: _Reading, q: Query) -> None:
+    """What kind of answer: a comparison, a ranking, a trend, a count, a list of matches, a summary or a value."""
+    text, group, players, counting = r.text, r.group, r.players, r.counting
     compare = [k for k, n in (("player", len(players)), ("team", len(q.teams)), ("map", len(q.maps)),
                               ("operator", len(q.operators)), ("opponent", len(q.opponents))) if n >= 2]
     if len(q.periods) >= 2:
@@ -850,12 +908,12 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
             q.who, q.players = "players", players
         elif q.compare == "team":
             q.who = "team"
-    elif group == "side" and attack and defense:
+    elif group == "side" and r.attack and r.defense:
         q.kind, q.compare, q.group = "compare", "side", "side"
-    elif single_match and group in ("match", "player_match"):
+    elif r.single_match and group in ("match", "player_match"):
         q.kind, q.group = "rank", group
-    elif group == "match_type" and len(named_types) == 2:
-        q.kind, q.compare, q.group, q.match_types = "compare", "match_type", "match_type", named_types
+    elif group == "match_type" and len(r.named_types) == 2:
+        q.kind, q.compare, q.group, q.match_types = "compare", "match_type", "match_type", r.named_types
     elif group in TIME_DIMS:
         q.kind, q.group = "trend", group
     elif group:
@@ -879,15 +937,12 @@ def interpret(question: str, vocab: Vocab, now: datetime | None = None) -> Query
         q.kind = "summary"
     elif not q.metrics and q.last_matches:
         q.kind = "matches"
-    elif not q.metrics and (entities or wants_me or wants_we or q.side or q.match_type or q.tag):
+    elif not q.metrics and (r.entities or r.wants_me or r.wants_we or q.side or q.match_type or q.tag):
         q.kind = "summary"
     elif q.metrics:
         q.kind = "value"
     else:
         q.kind = "unknown"
-
-    _fill_defaults(q, vocab)
-    return q
 
 
 def _fill_defaults(q: Query, vocab: Vocab) -> None:
