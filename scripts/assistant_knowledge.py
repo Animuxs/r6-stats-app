@@ -278,9 +278,11 @@ def _score(topic: Topic, text: str) -> int:
 
 
 _DEFINE = re.compile(r"\b(what (is|are|s|does|do)|whats|define|definition|meaning|mean|means|explain|"
-                     r"stand for|stands for|how is .* (worked out|calculated|counted)|how do you (count|calculate))\b")
+                     r"stand for|stands for|how is .* (worked out|calculated|counted)|how do you (count|calculate)|"
+                     r"how (does|do) (an? |the )?\w+( \w+)? work)\b")
 _HOW_TO = re.compile(r"\b(how (do|can|to|should)|where (do|can|is|are)|can i|help|guide|walk me|show me how|"
-                     r"tutorial|what does .* page|what is the .* (page|tab)|whats the .* (page|tab)|"
+                     r"tutorial|what does .* page|what is the .* (page|tab|hub)|whats the .* (page|tab|hub)|"
+                     r"how (does|do) .{1,40} work|"
                      r"turn (on|off)|is it|does it|will i|whats new|what s new|who (made|makes|built|created|wrote|developed) (this|the|r6)\b(?! best| most| top)|"
                      r"(uploaded|uploads|sent|shared|stored) (anywhere|online|to|somewhere))\b")
 
