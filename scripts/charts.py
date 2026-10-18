@@ -112,6 +112,9 @@ class ChartsTab(Tab):
             if not self.has_matches(db):
                 return
             vocab = Vocab.from_db(db)
+            me = db.me()
+            # the example names someone you actually play with, not a demo player
+            mate = next((name for name, _ in db.teammates(me, limit=1)), None) if me else None
             if asked := self.session.pop("chart_from_elsewhere", None):  # the assistant's or Ask's chart
                 self.session.set("chart_prompt", asked)
                 _put(self.session, parse(asked, vocab))
@@ -119,7 +122,8 @@ class ChartsTab(Tab):
             with st.form("chart_form", border=False):
                 left, right = st.columns([5, 1], vertical_alignment="bottom")
                 left.text_input("What do you want to see?", key="chart_prompt",
-                                placeholder="e.g. my K/D over time vs Sacri, or a pie of the operators I play")
+                                placeholder=f"e.g. my K/D over time{f' vs {mate}' if mate else ''}, or a pie "
+                                            "of the operators I play")
                 right.form_submit_button("Draw", type="primary", on_click=_from_prompt, width="stretch")
             columns = st.columns(4)
             for i, example in enumerate(EXAMPLES):
