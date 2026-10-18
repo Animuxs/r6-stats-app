@@ -57,6 +57,12 @@ class TestDemoSeason(unittest.TestCase):
         self.assertTrue(self.ask("easiest opponent").headline.startswith("Your easiest opponent"))
         self.assertTrue(self.ask("toughest opponents").headline.startswith("Your hardest opponent"))
 
+    def test_match_lists_say_who_it_was_against(self):
+        answer = self.ask("my last 3 matches")
+        self.assertIn("Opponent", answer.columns)
+        last = self.ask("my last match")
+        self.assertIn(f" against {last.rows[0]['Opponent']}, ", last.headline)
+
     def test_a_chart_keeps_to_the_opponent(self):
         spec = chart_engine.parse("my K/D over time against Metro Tech", self.vocab)
         self.assertEqual(spec.opponents, ["Metro Tech"])
@@ -86,6 +92,11 @@ class TestNamelessTeams(unittest.TestCase):
         expected = ["Spacestation" if team == 0 else "Liquid"]
         self.assertEqual(opponent_names(db, "Fabian"), expected)
         self.assertEqual(opponent_names(db, None), [])
+        # Ranked's YOUR TEAM vs ENEMY TEAM alone: no Opponent column of blanks
+        ranked = StatsDB(":memory:")
+        ranked.import_match("ranked", {**SAMPLE_MATCH, "team_names": ["YOUR TEAM", "ENEMY TEAM"]})
+        self.assertNotIn("Opponent", ask("Fabian's last 3 matches", ranked).columns)
+        ranked.close()
         # "opponents" on their own are still the other team's players
         answer = ask("top 5 opponents by K/D", db, vocab=Vocab.from_db(db))
         self.assertEqual(answer.columns[0], "Player")
