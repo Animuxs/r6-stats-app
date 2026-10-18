@@ -53,7 +53,7 @@ On macOS/Linux, use `go build` (it produces `r6-dissect`), `source
 ## Using the dashboard
 
 The top navigation has **Dashboard**, **Ask** and **Charts**, then three menus:
-**Stats** (Match History, Team Analytics, Operator Analytics), **Team** (Match day,
+**Stats** (Players, Match History, Team Analytics, Operator Analytics), **Team** (Match day,
 Team hub, League & Team, Team Theme) and **App** (Get the Windows app). Dashboard
 takes a **Replay source**:
 
@@ -113,6 +113,10 @@ Dashboard:
 
 - **Ask**: type a question, or tap one of the examples (see below).
 - **Charts**: any chart of any stat (see below).
+- **Players**: one player's profile (headline numbers, recent form and whether
+  it's trending up or down, best maps, top operators, attack vs defense), or two
+  players side by side under **Compare with**: who's ahead on each stat, and
+  their record as teammates and against each other.
 - **The assistant**: the **Assistant** button in the bottom-right corner of every
   page opens a chat (see below). Turn it off with the **Assistant** switch in the
   sidebar.

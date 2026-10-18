@@ -295,5 +295,21 @@ class TestMatchHistoryActions(unittest.TestCase):
         self.assertEqual(len(at.dataframe[0].value), 2)
 
 
+class TestPlayersTab(unittest.TestCase):
+    """Players: one player's profile, then a second player under Compare with."""
+
+    def test_profile_then_compare(self):
+        at = SITUATIONS[3].start(self)  # a season with replays and teams
+        at.switch_page("players.py").run()
+        self.assertFalse(problems(at))
+        self.assertEqual([m.label for m in at.metric][:2], ["EPS", "K/D"])
+        at.selectbox(key="players_second").select_index(1).run()
+        self.assertFalse(problems(at))
+        table = at.dataframe[0].value
+        self.assertEqual(table.columns[0], "Stat")
+        self.assertTrue(table.iloc[:, 1:].apply(lambda col: col.str.startswith("✅")).any().any())
+        self.assertTrue(any(m.label == "Matches as teammates" for m in at.metric))
+
+
 if __name__ == "__main__":
     unittest.main()
