@@ -266,6 +266,12 @@ def on_roster(match_players: Iterable[str], roster: dict[str, str]) -> list[str]
     return [name for name in match_players if name.casefold() in roster]
 
 
+def default_selection(names: Iterable[str], roster: dict[str, str], saved: Iterable[str] = ()) -> list[str]:
+    """Offer current roster members as well as previously kept players, without strangers."""
+    wanted = {name.casefold() for name in saved} | set(roster)
+    return [name for name in names if name.casefold() in wanted]
+
+
 def identify(match: dict[str, Any], limit_to: Iterable[dict[str, Any]] | None = None) -> dict[int, dict[str, Any]]:
     """{side: NECC team} for each side of a match whose players are mostly one team's roster (at
     least MIN_SHARED of them, and more than any other team). Replays only say "YOUR TEAM" and
