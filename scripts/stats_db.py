@@ -314,7 +314,7 @@ class StatsDB:
     # ---------------------------------------------------------- importing ----
 
     def import_match(self, source: str, match: dict[str, Any], files: int = 0,
-                     players: Iterable[str] | None = None) -> str:
+                     players: Iterable[str] | None = None, *, rehost_ids: Iterable[str] = ()) -> str:
         """Add (or replace) a parsed match (parser.parse_match's MatchData) read from the replay
         folder `source`, keeping only `players`' stats (usernames, any case; None keeps everyone);
         returns its match id. Raises NotAdded for a recording with no players (an aborted one),
@@ -323,7 +323,15 @@ class StatsDB:
         match_id = str(match.get("match_id") or "")
         if not match_id or match_id == "unknown":
             match_id = f"folder:{source}"
+        rehost_ids = set(rehost_ids)
+        alias = self._conn.execute("SELECT value FROM stats_meta WHERE key=?", ('rehost:' + match_id,)).fetchone()
+        if alias and not rehost_ids:
+            raise NotAdded('This recording is already part of a combined rehost map. Open the combined match instead.')
         rounds = match.get("rounds") or []
+        combined = self._conn.execute("SELECT rounds FROM matches WHERE match_id=?", (match_id,)).fetchone()
+        protected = self._conn.execute("SELECT 1 FROM stats_meta WHERE key=?", ('rehost_parts:' + match_id,)).fetchone()
+        if protected and combined and len(rounds) < combined['rounds']:
+            raise NotAdded('This replay is only one part of a combined rehost map; importing it would discard earlier rounds.')
         if not match.get("players"):
             raise NotAdded("This recording has no players in it (the match was left while loading).")
         other = self._conn.execute("SELECT source, files, rounds FROM matches WHERE match_id = ? AND source != ?",
@@ -384,7 +392,7 @@ class StatsDB:
             for prefix in ("", "review_"):
                 old = {r[0] for r in self._conn.execute(
                     f"SELECT match_id FROM {prefix}matches WHERE match_id = ? OR source = ?", (match_id, source))}
-                for mid in old | {match_id}:
+                for mid in old | {match_id} | rehost_ids:
                     for table in MATCH_TABLES:
                         self._conn.execute(f"DELETE FROM {prefix}{table} WHERE match_id = ?", (mid,))
             self._conn.execute(_INSERT_MATCH, (
@@ -395,7 +403,32 @@ class StatsDB:
             self._conn.executemany(_INSERT_PLAYER, player_rows)
             self._conn.executemany(_INSERT_ROUND, round_rows)
             self._conn.executemany(_INSERT_TEAM_ROUND, [(match_id, *row) for row in team_rounds(match)])
+            if rehost_ids:
+                self._conn.execute("INSERT OR REPLACE INTO stats_meta VALUES (?,?)",
+                                   ('rehost_match:' + match_id, json.dumps(match)))
+                self._conn.execute("INSERT OR REPLACE INTO stats_meta VALUES (?,?)",
+                                   ('rehost_parts:' + match_id, json.dumps(sorted(rehost_ids))))
+                for mid in rehost_ids - {match_id}:
+                    self._conn.execute("INSERT OR REPLACE INTO stats_meta VALUES (?,?)", ('rehost:' + mid, match_id))
         return match_id
+
+    def import_rehost(self, source: str, parts: list[dict], files: int = 0,
+                      players: Iterable[str] | None = None) -> str:
+        """Explicitly replace the selected replay parts with one map, atomically."""
+        from rehost import combine
+        merged = combine(parts)
+        return self.import_match(source, merged, files=files, players=players,
+                                 rehost_ids=[part['match_id'] for part in parts])
+
+    def saved_rehost(self, match_id: str) -> dict | None:
+        """The complete parsed map for either original recording, for Dashboard display."""
+        alias = self._conn.execute("SELECT value FROM stats_meta WHERE key=?", ('rehost:' + match_id,)).fetchone()
+        canonical = alias['value'] if alias else match_id
+        data = self._conn.execute("SELECT value FROM stats_meta WHERE key=?", ('rehost_match:' + canonical,)).fetchone()
+        saved = self._conn.execute('SELECT source,files FROM matches WHERE match_id=?', (canonical,)).fetchone()
+        if not data or not saved:
+            return None
+        return {'source': saved['source'], 'files': saved['files'], 'match': json.loads(data['value'])}
 
     def remove_match(self, match_id: str) -> None:
         """Take a match out of your stats (or out of the ones waiting to be checked), and its note."""
@@ -404,6 +437,9 @@ class StatsDB:
                 for table in MATCH_TABLES:
                     self._conn.execute(f"DELETE FROM {prefix}{table} WHERE match_id = ?", (match_id,))
             self._conn.execute("DELETE FROM match_notes WHERE match_id = ?", (match_id,))
+            self._conn.execute("DELETE FROM stats_meta WHERE key=? OR (key LIKE 'rehost:%' AND value=?)",
+                               ('rehost_parts:' + match_id, match_id))
+            self._conn.execute('DELETE FROM stats_meta WHERE key=?', ('rehost_match:' + match_id,))
 
     # -------------------------------------------------------------- notes ----
 
