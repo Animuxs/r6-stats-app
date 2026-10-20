@@ -22,6 +22,8 @@ APP_FILES = ["app.py", "report.py", "dock.py", "ask.py", "history.py", "operator
              "assistant.py", "assistant_knowledge.py", "assistant_ui.py", "question_reports.py",
              "charts.py", "chart_engine.py", "chart_view.py", "players.py", "player_profile.py", "recap.py", "scouting.py", "team_finder.py", "parse_cache.py", "icon.png"]
 datas = [(str(ROOT / "scripts" / name), "scripts") for name in APP_FILES]
+# the fonts the pages use, served by Streamlit at /app/static (scripts/presentation.py)
+datas.append((str(ROOT / "scripts" / "static"), "scripts/static"))
 for stamp in ("repo.txt", "version.txt"):
     if (ROOT / "build" / stamp).is_file():
         datas.append((str(ROOT / "build" / stamp), "scripts"))

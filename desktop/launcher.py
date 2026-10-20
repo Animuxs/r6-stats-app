@@ -127,6 +127,7 @@ def serve(port: int, parent_pid: int) -> int:
         "--server.fileWatcherType=none",
         "--server.maxUploadSize=2048",
         "--browser.gatherUsageStats=false",
+        "--server.enableStaticServing=true",  # the bundled fonts (scripts/static), so pages load nothing online
         "--client.toolbarMode=minimal",  # no Streamlit developer menu (Deploy, Rerun, ...)
         "--theme.base=dark",
         "--theme.primaryColor=#52d5f2",  # the default school theme's color on sliders, toggles, options
