@@ -44,7 +44,7 @@ PYODIDE_CDN = f"https://cdn.jsdelivr.net/pyodide/v{PYODIDE_VERSION}/full/"
 PYODIDE_FILES = ("pyodide.js", "pyodide.asm.js", "pyodide.asm.wasm", "pyodide-lock.json", "sqlite3-1.0.0-cp312-cp312-pyodide_2024_0_wasm32.whl")  # + python_stdlib.zip, inlined
 # the app's own Python the page runs: the parser's normalizer and the stats engine, unchanged
 PYTHON = {name: SCRIPTS / name for name in ("parser.py", "file_guard.py", "metrics_engine.py", "sample_data.py",
-                                           "stats_db.py", "operator_stats.py", "team_tables.py", "season_stats.py", "ask_engine.py", "demo_season.py", "matchday_data.py",
+                                           "stats_db.py", "rehost.py", "operator_stats.py", "team_tables.py", "season_stats.py", "ask_engine.py", "demo_season.py", "matchday_data.py",
                                            "scouting.py")}
 PYTHON["bridge.py"] = HERE / "bridge.py"
 LIGHT_EVENT_KEYS = ("id", "name", "source", "tier", "kind", "organizer", "location", "region", "mode", "start", "end",
