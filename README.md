@@ -1,12 +1,13 @@
-# r6-dissect
-[![](https://discordapp.com/api/guilds/936737628756271114/widget.png?style=shield)](https://discord.gg/XdEXWQZZAa)
-[![Go Reference](https://pkg.go.dev/badge/github.com/redraskal/r6-dissect.svg)](https://pkg.go.dev/github.com/redraskal/r6-dissect)
+# R6 Match Stats
 
-Match Replay API/CLI for Rainbow Six: Siege's Dissect (.rec) format.
+Pro League-style match stats from your Rainbow Six Siege replays, on your own PC.
 
-**This is a work in progress. The data format is subject to change until a stable version is released.**
+**[Download the Windows app](https://github.com/Animuxs/r6-stats-app/releases/latest)** ·
+[Code signing policy](CODE_SIGNING.md) · [Privacy](CODE_SIGNING.md#privacy)
 
-Download the latest version here: https://github.com/redraskal/r6-dissect/releases
+R6 Match Stats is free and open source (MIT). It's built on
+[r6-dissect](https://github.com/redraskal/r6-dissect) by redraskal: this repository is a fork
+that keeps the replay parser ([below](#the-r6-dissect-replay-parser)) and adds the app.
 
 ## Pro League-style match stats
 
@@ -49,18 +50,29 @@ remains the verified release until a licensed Unity build is available.
 R6 Match Stats is an unofficial fan project and isn't endorsed by Ubisoft. See
 [its notes on Ubisoft's terms](scripts/README.md#ubisofts-terms).
 
-## Current Features
+## The r6-dissect replay parser
+[![](https://discordapp.com/api/guilds/936737628756271114/widget.png?style=shield)](https://discord.gg/XdEXWQZZAa)
+[![Go Reference](https://pkg.go.dev/badge/github.com/redraskal/r6-dissect.svg)](https://pkg.go.dev/github.com/redraskal/r6-dissect)
+
+Match Replay API/CLI for Rainbow Six: Siege's Dissect (.rec) format, from
+[redraskal/r6-dissect](https://github.com/redraskal/r6-dissect).
+
+**This is a work in progress. The data format is subject to change until a stable version is released.**
+
+The parser's own releases: https://github.com/redraskal/r6-dissect/releases
+
+### Current Features
 - Match Info (Game version, map, gamemode, match type, teams, players)
 - Match Feedback (Kills, headshots, objective locates, defuser plants/disables, BattlEye bans, DCs)
 - JSON or Excel output
 
-## Planned Features
+### Planned Features
 - UI alternative
 - Track bullet hits/misses
 - Track movement packets
 - Track other player statistics
 
-### See roadmap at https://github.com/users/redraskal/projects/1.
+See the roadmap at https://github.com/users/redraskal/projects/1.
 
 ## CLI Usage
 Print a match overview by specifying a match folder or .rec file:

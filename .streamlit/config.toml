@@ -9,6 +9,8 @@ headless = true
 # disables both; the forwarded port stays private to your GitHub account.
 enableCORS = false
 enableXsrfProtection = false
+# serves scripts/static at /app/static: the fonts ship with the app instead of loading from Google Fonts
+enableStaticServing = true
 
 [browser]
 gatherUsageStats = false
