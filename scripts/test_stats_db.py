@@ -203,6 +203,9 @@ class TestImport(unittest.TestCase):
         self.assertEqual([r["match_id"] for r in self.db.match_list()], ["other"])
         for table in ("match_players", "round_players", "team_rounds"):
             self.assertEqual(self.db.query(f"SELECT DISTINCT match_id FROM {table}"), [{"match_id": "other"}])
+        self.db.import_match("third", dict(SAMPLE_MATCH, match_id="third"))
+        self.db.remove_match("other", "third")  # several at once
+        self.assertEqual(self.db.match_list(), [])
 
     def test_the_same_match_in_two_folders_keeps_the_fuller_one_in_any_order(self):
         # seen in real replays: an aborted recording shares its match id with the real match after it
@@ -314,6 +317,15 @@ class TestAddedByAnEarlierVersion(unittest.TestCase):
             db.import_match("Match-2026-09-21_19-00-00-1", dict(SAMPLE_MATCH, match_id="ranked"), players=TEAM0[:1])
             self.assertEqual([r["match_id"] for r in db.to_check()], [SAMPLE_MATCH["match_id"]])
             self.assertEqual(db.players_by_match(), {"ranked": TEAM0[:1]})
+
+    def test_keep_just_the_recorder_in_all_of_them(self):
+        with StatsDB(self.path) as db:
+            db._conn.execute("UPDATE review_matches SET recorder = ?", (TEAM0[0].upper(),))
+            db._conn.execute("UPDATE review_matches SET recorder = 'Nobody' WHERE match_id = 'ranked'")
+            db._conn.commit()
+            self.assertEqual(db.keep_recorders(), (1, 1))  # not in "ranked", so it still waits
+            self.assertEqual(db.players_by_match(), {SAMPLE_MATCH["match_id"]: [TEAM0[0]]})
+            self.assertEqual([r["match_id"] for r in db.to_check()], ["ranked"])
 
     def test_a_match_saved_to_a_season_stays_with_the_players_saved(self):
         from season_stats import StatsManager

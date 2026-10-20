@@ -66,14 +66,8 @@ def _new_filter() -> None:
 def _keep_recorders() -> None:
     """Every match waiting to be checked, with just the player who recorded it: that's you, and
     your own numbers from your own replay are always right."""
-    kept = left = 0
     with Session().stats() as db:
-        for row in db.to_check():
-            try:
-                db.confirm_checked(row["match_id"], [row["recorder"] or ""])
-                kept += 1
-            except NotAdded:
-                left += 1
+        kept, left = db.keep_recorders()
     _note("success", f"Kept your own stats in {kept} match{'es' if kept != 1 else ''}."
           + (f" {left} didn't have you in them, so they're still waiting." if left else ""))
 
@@ -81,8 +75,7 @@ def _keep_recorders() -> None:
 def _remove_all_waiting() -> None:
     with Session().stats() as db:
         waiting = db.to_check()
-        for row in waiting:
-            db.remove_match(row["match_id"])
+        db.remove_match(*[row["match_id"] for row in waiting])
     _note("success", f"Removed {len(waiting)} match{'es' if len(waiting) != 1 else ''}.")
 
 

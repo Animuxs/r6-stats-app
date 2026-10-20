@@ -397,13 +397,15 @@ class StatsDB:
             self._conn.executemany(_INSERT_TEAM_ROUND, [(match_id, *row) for row in team_rounds(match)])
         return match_id
 
-    def remove_match(self, match_id: str) -> None:
-        """Take a match out of your stats (or out of the ones waiting to be checked), and its note."""
+    def remove_match(self, *match_ids: str) -> None:
+        """Take matches out of your stats (or out of the ones waiting to be checked), and their
+        notes, all at once."""
+        ids = [(match_id,) for match_id in match_ids]
         with self._conn:
             for prefix in ("", "review_"):
                 for table in MATCH_TABLES:
-                    self._conn.execute(f"DELETE FROM {prefix}{table} WHERE match_id = ?", (match_id,))
-            self._conn.execute("DELETE FROM match_notes WHERE match_id = ?", (match_id,))
+                    self._conn.executemany(f"DELETE FROM {prefix}{table} WHERE match_id = ?", ids)
+            self._conn.executemany("DELETE FROM match_notes WHERE match_id = ?", ids)
 
     # -------------------------------------------------------------- notes ----
 
@@ -542,8 +544,8 @@ class StatsDB:
             row["players"] = players.get(row["match_id"], [])
         return rows
 
-    def confirm_checked(self, match_id: str, players: Iterable[str]) -> None:
-        """Count a match that was waiting to be checked, with only `players`' stats kept."""
+    def _checked_keep(self, match_id: str, players: Iterable[str]) -> set[str]:
+        """`players` casefolded, if any of them played in a match waiting to be checked; else NotAdded."""
         keep = {p.strip().casefold() for p in players if p.strip()}
         if not keep:
             raise NotAdded("Pick at least one player to keep.")
@@ -552,8 +554,28 @@ class StatsDB:
             f"({', '.join('?' * len(keep))})", (match_id, *sorted(keep))).fetchone()[0]
         if not found:
             raise NotAdded("None of those players played in this match.")
+        return keep
+
+    def confirm_checked(self, match_id: str, players: Iterable[str]) -> None:
+        """Count a match that was waiting to be checked, with only `players`' stats kept."""
+        keep = self._checked_keep(match_id, players)
         with self._conn:
             self._move(match_id, to_review=False, players=keep)
+
+    def keep_recorders(self) -> tuple[int, int]:
+        """Count every match waiting to be checked with just the player who recorded it (you), all
+        at once; returns (kept, left), left being the ones you weren't in, still waiting."""
+        kept = left = 0
+        with self._conn:
+            for row in self._conn.execute("SELECT match_id, recorder FROM review_matches").fetchall():
+                try:
+                    keep = self._checked_keep(row["match_id"], [row["recorder"] or ""])
+                except NotAdded:
+                    left += 1
+                    continue
+                self._move(row["match_id"], to_review=False, players=keep)
+                kept += 1
+        return kept, left
 
     # ------------------------------------------------------------ rosters ----
 
