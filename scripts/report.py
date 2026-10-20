@@ -248,6 +248,44 @@ def _add_match(source: str, match: dict, files: int) -> None:
     session.leave_note("dashboard", kind, " ".join(notes))
 
 
+def _combine_rehost(source: str, match: dict, files: int) -> None:
+    """A person explicitly selects earlier recordings; never guess from a shared map name."""
+    from rehost import combine
+    session = Session()
+    earlier = session.get(f"rehost_parts:{match['match_id']}", [])
+    replay_source = session.replays
+    if not earlier or replay_source is None:
+        return
+    try:
+        parts, total_files = [], files
+        for name in sorted(earlier):
+            parsed = replay_source.open(name)
+            if not parsed or isinstance(parsed, Exception):
+                raise ValueError(f'Could not read {name}.')
+            parts.append(parsed[0])
+            total_files += replay_source.round_files(name)
+        parts.append(match)
+        merged = combine(parts)
+        players = list(session.get(_picked_key(match, 0), [])) + list(session.get(_picked_key(match, 1), []))
+        ids = [p['match_id'] for p in parts]
+        with session.stats() as db:
+            marks = ','.join('?' for _ in ids)
+            players += [r['player'] for r in db.query(f'SELECT DISTINCT player FROM match_players WHERE match_id IN ({marks})', ids)]
+            seasons = []
+            if db.query("SELECT name FROM sqlite_master WHERE name='logged_rounds'"):
+                seasons = [r['season'] for r in db.query(f'SELECT DISTINCT season FROM logged_rounds WHERE match_id IN ({marks})', ids)]
+            players = list(dict.fromkeys(players))
+            db.import_rehost(source, parts, files=total_files, players=players)
+        for season in seasons:
+            with session.tracker(season) as tracker:
+                for mid in ids:
+                    tracker.remove_match(mid)
+                tracker.log_match(merged, players=players)
+        session.leave_note('dashboard', 'success', f"Combined {len(parts)} rehost parts into one map with {len(merged['rounds'])} rounds. Match History and saved seasons were updated.")
+    except (NotAdded, ValueError, StatsError) as error:
+        session.leave_note('dashboard', 'error', str(error))
+
+
 def confirm_match(source: str, match: dict, files: int, team: str = "", roster: dict[str, str] | None = None,
                   mine: int | None = None) -> None:
     """The step that adds a match to your stats: a person checks the match and picks exactly whose
@@ -278,8 +316,10 @@ def confirm_match(source: str, match: dict, files: int, team: str = "", roster: 
         # what's in the database for this match, else your team's players: never a stranger
         on_roster = rosters.on_roster(names, roster)
         if not session.has(key):
-            session.set(key, [n for n in (added or {}).get("players", []) if n in names] if added else on_roster)
-            from_roster += [] if added else on_roster
+            defaults = rosters.default_selection(names, roster, (added or {}).get('players', []))
+            session.set(key, defaults)
+            saved_keys = {n.casefold() for n in (added or {}).get('players', [])}
+            from_roster += [n for n in on_roster if n.casefold() not in saved_keys]
         picked[side] = column.multiselect(team_names[side], names, key=key, placeholder="Players to track")
     if from_roster:
         st.caption(f"Picked from **{md(team)}**'s roster: {md(', '.join(from_roster))}. Check them, then confirm.")
@@ -312,6 +352,17 @@ def confirm_match(source: str, match: dict, files: int, team: str = "", roster: 
             )
     st.button("Update players" if added else "Confirm match and players", type="primary",
               disabled=not (picked[0] or picked[1]), on_click=_add_match, args=(source, match, files))
+    if session.replays is not None:
+        with session.stats() as db:
+            earlier = [r['source'] for r in db.query('SELECT source FROM matches WHERE map=? AND source < ? ORDER BY source',
+                       (match.get('map'), source)) if session.replays.has(r['source'])]
+        if earlier:
+            with st.expander('Combine an earlier rehost recording'):
+                st.caption('Only select earlier parts of this same map. All rounds will count once; the selected recordings become one match. Replays stay unchanged.')
+                st.multiselect('Earlier parts of this map', earlier, key=f"rehost_parts:{match['match_id']}")
+                st.button('Combine rehost parts', key=f"combine_rehost:{match['match_id']}",
+                          disabled=not session.get(f"rehost_parts:{match['match_id']}") or not (picked[0] or picked[1]),
+                          on_click=_combine_rehost, args=(source, match, files))
 
 
 def _keep_replay_folder() -> None:
@@ -366,6 +417,13 @@ class DashboardTab(Tab):
             st.error(f"{name}: {result}")
             return
         match, raw, warnings = result
+        combined_files = None
+        if source.adds_to_stats:
+            with self.stats() as db:
+                combined = db.saved_rehost(match.get('match_id', ''))
+            if combined:
+                match, name, combined_files = combined['match'], combined['source'], combined['files']
+                st.caption('Combined rehost map: every saved replay part is included below.')
         if note := source.note():
             st.caption(note)
         mine = ("", {}, {"mine": None, "logos": {}, "found": {}})
@@ -379,7 +437,7 @@ class DashboardTab(Tab):
             with st.sidebar:
                 with st.expander("🔍 Parser debug info"):
                     st.json(raw_shape_preview(raw))
-        self.show_match(match, name, source.round_files(name), source, *mine)
+        self.show_match(match, name, combined_files if combined_files is not None else source.round_files(name), source, *mine)
 
     def getting_started(self) -> None:
         """What to do with nothing loaded yet: the steps, and the demo season a click away."""
